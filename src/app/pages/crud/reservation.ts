@@ -1,0 +1,244 @@
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Table, TableModule } from 'primeng/table';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { ToastModule } from 'primeng/toast';
+import { ToolbarModule } from 'primeng/toolbar';
+import { InputTextModule } from 'primeng/inputtext';
+import { DialogModule } from 'primeng/dialog';
+import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DatePickerModule } from 'primeng/datepicker';
+import { Reservation, ReservationService } from '../service/reservation.service';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+
+
+interface Column {
+    field: string;
+    header: string;
+}
+
+interface ExportColumn {
+    title: string;
+    dataKey: string;
+}
+
+@Component({
+    selector: 'app-reservation',
+    standalone: true,
+    imports: [
+        CommonModule,
+        TableModule,
+        FormsModule,
+        ButtonModule,
+        RippleModule,
+        ToastModule,
+        ToolbarModule,
+        InputTextModule,
+        DialogModule,
+        TagModule,
+        ConfirmDialogModule,
+        DatePickerModule,
+        IconFieldModule,
+        InputIconModule,
+    ],
+    template: `
+        <p-toolbar styleClass="mb-6">
+            <ng-template #end>
+                <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+            </ng-template>
+        </p-toolbar>
+
+        <p-table
+            #dt
+            [value]="reservations()"
+            [rows]="10"
+            [columns]="cols"
+            [paginator]="true"
+            [globalFilterFields]="['equipement', 'user', 'dateDebut', 'dateFin', 'statut']"
+            [tableStyle]="{ 'min-width': '75rem' }"
+            [rowHover]="true"
+            dataKey="id"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} reservations"
+            [showCurrentPageReport]="true"
+            [rowsPerPageOptions]="[10, 20, 30]"
+        >
+            <ng-template #caption>
+                <div class="flex items-center justify-between">
+                    <h5 class="m-0">Gestion des Réservations</h5>
+                    <p-iconfield>
+                        <p-inputicon styleClass="pi pi-search" />
+                        <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+                    </p-iconfield>
+                </div>
+            </ng-template>
+            <ng-template #header>
+                <tr>
+                    <th pSortableColumn="equipement" style="min-width:16rem">
+                        Équipement
+                        <p-sortIcon field="equipement" />
+                    </th>
+                    <th pSortableColumn="user" style="min-width:16rem">
+                        Utilisateur
+                        <p-sortIcon field="user" />
+                    </th>
+                    <th pSortableColumn="dateDebut" style="min-width:16rem">
+                        Date Début
+                        <p-sortIcon field="dateDebut" />
+                    </th>
+                    <th pSortableColumn="dateFin" style="min-width:16rem">
+                        Date Fin
+                        <p-sortIcon field="dateFin" />
+                    </th>
+                    <th pSortableColumn="statut" style="min-width:16rem">
+                        Statut
+                        <p-sortIcon field="statut" />
+                    </th>
+                    <th style="min-width: 12rem">Actions</th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-reservation>
+                <tr>
+                    <td style="min-width: 16rem">{{ reservation.equipement }}</td>
+                    <td style="min-width: 16rem">{{ reservation.user }}</td>
+                    <td style="min-width: 16rem">{{ reservation.dateDebut }}</td>
+                    <td style="min-width: 16rem">{{ reservation.dateFin }}</td>
+                    <td style="min-width: 16rem">{{ reservation.statut }}</td>
+                    <td>
+                        <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (click)="validateReservation(reservation)" [disabled]="reservation.statut !== 'En attente'" />
+                        <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true" (click)="cancelReservation(reservation)" [disabled]="reservation.statut !== 'En attente'" />
+                        <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" (click)="viewReservation(reservation)" />
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+
+        <p-dialog [(visible)]="reservationDialog" [style]="{ width: '450px' }" header="Détails de la Réservation" [modal]="true">
+            <ng-template #content>
+                <div class="flex flex-col gap-6">
+                    <div>
+                        <label for="equipement" class="block font-bold mb-3">Équipement</label>
+                        <input type="text" pInputText id="equipement" [(ngModel)]="reservation.equipement" readonly />
+                    </div>
+                    <div>
+                        <label for="user" class="block font-bold mb-3">Utilisateur</label>
+                        <input type="text" pInputText id="user" [(ngModel)]="reservation.user" readonly />
+                    </div>
+                    <div>
+                        <label for="dateDebut" class="block font-bold mb-3">Date Début</label>
+                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.dateDebut" readonly />
+                    </div>
+                    <div>
+                        <label for="dateFin" class="block font-bold mb-3">Date Fin</label>
+                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.dateFin" readonly />
+                    </div>
+                    <div>
+                        <label for="statut" class="block font-bold mb-3">Statut</label>
+                        <input type="text" pInputText id="statut" [(ngModel)]="reservation.statut" readonly />
+                    </div>
+                </div>
+            </ng-template>
+
+            <ng-template #footer>
+                <p-button label="Fermer" icon="pi pi-times" text (click)="hideDialog()" />
+            </ng-template>
+        </p-dialog>
+
+        <p-confirmdialog [style]="{ width: '450px' }" />
+    `,
+    providers: [MessageService, ReservationService, ConfirmationService],
+})
+export class ReservationComponent implements OnInit {
+    reservationDialog: boolean = false;
+
+    reservations = signal<Reservation[]>([]);
+
+    reservation!: Reservation;
+
+    @ViewChild('dt') dt!: Table;
+
+    exportColumns!: ExportColumn[];
+
+    cols!: Column[];
+
+    constructor(
+        private reservationService: ReservationService,
+        private messageService: MessageService,
+        private confirmationService: ConfirmationService
+    ) {}
+
+    exportCSV() {
+        this.dt.exportCSV();
+    }
+
+    ngOnInit() {
+        this.loadDemoData();
+    }
+
+    loadDemoData() {
+        this.reservationService.getReservations().then((data) => {
+            this.reservations.set((data || []));
+        });
+
+        this.cols = [
+            { field: 'equipement', header: 'Équipement' },
+            { field: 'user', header: 'Utilisateur' },
+            { field: 'dateDebut', header: 'Date Début' },
+            { field: 'dateFin', header: 'Date Fin' },
+            { field: 'statut', header: 'Statut' },
+        ];
+
+        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+    }
+
+    onGlobalFilter(table: Table, event: Event) {
+        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+    }
+
+    viewReservation(reservation: Reservation) {
+        this.reservation = { ...reservation };
+        this.reservationDialog = true;
+    }
+
+    validateReservation(reservation: Reservation) {
+        this.confirmationService.confirm({
+            message: 'Êtes-vous sûr de vouloir valider cette réservation ?',
+            header: 'Confirmation',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                reservation.statut = 'Validée';
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Succès',
+                    detail: 'Réservation validée',
+                    life: 3000,
+                });
+            },
+        });
+    }
+
+    cancelReservation(reservation: Reservation) {
+        this.confirmationService.confirm({
+            message: 'Êtes-vous sûr de vouloir annuler cette réservation ?',
+            header: 'Confirmation',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                reservation.statut = 'Annulée';
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Succès',
+                    detail: 'Réservation annulée',
+                    life: 3000,
+                });
+            },
+        });
+    }
+
+    hideDialog() {
+        this.reservationDialog = false;
+    }
+}
