@@ -1,111 +1,38 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-
-interface InventoryStatus {
-    label: string;
-    value: string;
-}
+import { map, Observable } from 'rxjs';
 
 export interface Laboratoire {
-    id?: string;
+    _id?: string;
     name?: string;
     description?: string;
-    dateAjout?: Date;
-    dateModification?: Date; 
+    updatedAt?: Date;
+    createdAt?: Date; 
 }
 
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class Laboratoireservice {
-    getLaboratoiresData() {
-        return [
-            {
-            }
-        ];
-    }
-
-    getLaboratoiresWithOrdersData() {
-        return [
-            {
-                
-               
-            },
-            
-        ];
-    }
-
-
-    laboratoireNames: string[] = [
-       
-    ];
-    laboratoireIntitules: string[] = [
-       
-    ];
-    laboratoireDescriptions: string[] = [
-       
-    ];
-
-    laboratoireDateAjouts: Date[] = [
-       
-    ];
-
-    laboratoireDateModifications: Date[] = [
-       
-    ];
+    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1'; 
 
     constructor(private http: HttpClient) {}
 
-    getLaboratoiresMini() {
-        return Promise.resolve(this.getLaboratoiresData().slice(0, 5));
-    }
-
-    getLaboratoiresSmall() {
-        return Promise.resolve(this.getLaboratoiresData().slice(0, 10));
-    }
-
-    getLaboratoires() {
-        return Promise.resolve(this.getLaboratoiresData());
-    }
-
-    getLaboratoiresWithOrdersSmall() {
-        return Promise.resolve(this.getLaboratoiresWithOrdersData().slice(0, 10));
-    }
-
-    generateLaboratoire(): Laboratoire {
-        const laboratoire: Laboratoire = {
-            id: this.generateId(),
-            name: this.generateName(),
-            description: this.generateDescription(),
-            dateAjout: this.generateDateAjout(),
-            dateModification: this.generateDateModification()
-        };
-        return laboratoire;
-    }
-
-    generateId() {
-        let text = '';
-        let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-        for (var i = 0; i < 5; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
+    getLaboratoires(): Observable<Laboratoire[]> {
+            return this.http.get<{ content: Laboratoire[] }>(`${this.apiUrl}/laboratory/all`).pipe(
+                map(response => response.content) 
+            );
         }
 
-        return text;
+    createLaboratoire(laboratoire: Laboratoire): Observable<Laboratoire> {
+        return this.http.post<Laboratoire>(`${this.apiUrl}/laboratory` , laboratoire);
     }
 
-    generateName() {
-        return this.laboratoireNames[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateIntitule() {
-        return this.laboratoireIntitules[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateDescription() {
-        return this.laboratoireDescriptions[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateDateAjout() {
-        return this.laboratoireDateAjouts[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateDateModification() {
-        return this.laboratoireDateModifications[Math.floor(Math.random() * Math.floor(30))];
+    updateLaboratoire(laboratoire: Laboratoire): Observable<Laboratoire> {
+        return this.http.put<Laboratoire>(`${this.apiUrl}/laboratory/${laboratoire._id}`, laboratoire);
     }
 
+    deleteLaboratoire(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/laboratory/${id}`);
+    }
 }

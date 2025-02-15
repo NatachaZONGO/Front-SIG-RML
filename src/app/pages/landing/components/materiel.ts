@@ -94,7 +94,7 @@ export class Materiel implements OnInit {
     constructor(private equipementService: Equipementservice) {}
 
     ngOnInit(): void {
-        this.equipementService.getAllEquipements().subscribe((data) => {
+        this.equipementService.getEquipements().subscribe((data) => {
             this.equipements = data;
         });
     }

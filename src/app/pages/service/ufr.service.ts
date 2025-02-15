@@ -1,113 +1,51 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { map, Observable } from 'rxjs';
 
-interface InventoryStatus {
-    label: string;
-    value: string;
-}
-
-export interface Ufr {
+/*export interface Ufr {
     id?: string;
     name?: string;
     intitule?: string;
     description?: string;
     dateAjout?: Date;
     dateModification?: Date; 
+}*/
+
+export interface Ufr {
+    _id?: string;
+    name?: string;
+    description?: string;
+    createdAt?: Date; 
+    updatedAt?: Date;
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class Ufrservice {
-    getUfrsData() {
-        return [
-            {
-            }
-        ];
-    }
-
-    getUfrsWithOrdersData() {
-        return [
-            {
-                
-               
-            },
-            
-        ];
-    }
-
-
-    ufrNames: string[] = [
-       
-    ];
-    ufrIntitules: string[] = [
-       
-    ];
-    ufrDescriptions: string[] = [
-       
-    ];
-
-    ufrDateAjouts: Date[] = [
-       
-    ];
-
-    ufrDateModifications: Date[] = [
-       
-    ];
+    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1'; // Remplacez par l'URL de votre API
 
     constructor(private http: HttpClient) {}
 
-    getUfrsMini() {
-        return Promise.resolve(this.getUfrsData().slice(0, 5));
+    getUfrs(): Observable<Ufr[]> {
+        return this.http.get<{ content: Ufr[] }>(`${this.apiUrl}/ufr/all`).pipe(
+            map(response => response.content) // Extrait la propriété `content`
+        );
     }
 
-    getUfrsSmall() {
-        return Promise.resolve(this.getUfrsData().slice(0, 10));
+    getUfrById(id: string): Observable<Ufr> {
+        return this.http.get<Ufr>(`${this.apiUrl}/${id}`);
     }
 
-    getUfrs() {
-        return Promise.resolve(this.getUfrsData());
+    createUfr(ufr: Ufr): Observable<Ufr> {
+        return this.http.post<Ufr>(`${this.apiUrl}/ufr`, ufr);
+    }
+    
+    updateUfr(ufr: Ufr): Observable<Ufr> {
+        return this.http.put<Ufr>(`${this.apiUrl}/ufr/${ufr._id}`, ufr);
     }
 
-    getUfrsWithOrdersSmall() {
-        return Promise.resolve(this.getUfrsWithOrdersData().slice(0, 10));
+    deleteUfr(id: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/ufr/${id}`);
     }
-
-    generateUfr(): Ufr {
-        const ufr: Ufr = {
-            id: this.generateId(),
-            name: this.generateName(),
-            intitule: this.generateIntitule(),
-            description: this.generateDescription(),
-            dateAjout: this.generateDateAjout(),
-            dateModification: this.generateDateModification()
-        };
-        return ufr;
-    }
-
-    generateId() {
-        let text = '';
-        let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-        for (var i = 0; i < 5; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-
-        return text;
-    }
-
-    generateName() {
-        return this.ufrNames[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateIntitule() {
-        return this.ufrIntitules[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateDescription() {
-        return this.ufrDescriptions[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateDateAjout() {
-        return this.ufrDateAjouts[Math.floor(Math.random() * Math.floor(30))];
-    }
-    generateDateModification() {
-        return this.ufrDateModifications[Math.floor(Math.random() * Math.floor(30))];
-    }
-
 }

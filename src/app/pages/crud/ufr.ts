@@ -18,9 +18,9 @@ import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { User, ProductService } from '../service/product.service';
 import { DatePickerModule } from 'primeng/datepicker';
 import { Ufr, Ufrservice } from '../service/ufr.service';
+import { CalendarIcon } from 'primeng/icons';
 
 interface Column {
     field: string;
@@ -56,9 +56,12 @@ interface ExportColumn {
         IconFieldModule,
         ConfirmDialogModule,
         DatePickerModule,
-
+   
     ],
     template: `
+        <p-toast />
+        <p-confirmDialog />
+
         <p-toolbar styleClass="mb-6">
             <ng-template #start>
                 <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
@@ -76,22 +79,22 @@ interface ExportColumn {
             [rows]="10"
             [columns]="cols"
             [paginator]="true"
-            [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+            [globalFilterFields]="['name', 'intitule', 'description']"
             [tableStyle]="{ 'min-width': '75rem' }"
             [(selection)]="selectedUfrs"
             [rowHover]="true"
             dataKey="id"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
             [showCurrentPageReport]="true"
             [rowsPerPageOptions]="[10, 20, 30]"
         >
             <ng-template #caption>
                 <div class="flex items-center justify-between">
                     <h5 class="m-0">Gestion des UFR</h5>
-                    <p-iconfield>
-                        <p-inputicon styleClass="pi pi-search" />
+                    <p-iconField>
+                        <p-inputIcon styleClass="pi pi-search" />
                         <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
-                    </p-iconfield>
+                    </p-iconField>
                 </div>
             </ng-template>
             <ng-template #header>
@@ -99,28 +102,21 @@ interface ExportColumn {
                     <th style="width: 3rem">
                         <p-tableHeaderCheckbox />
                     </th>
-                   
                     <th pSortableColumn="name" style="min-width:16rem">
-                        Nom
-                        <p-sortIcon field="name" />
+                        Nom <p-sortIcon field="name" />
                     </th>
                     <th pSortableColumn="intitule" style="min-width:16rem">
-                        intitule
-                        <p-sortIcon field="intitule" />
+                        Intitulé <p-sortIcon field="intitule" />
                     </th>
                     <th pSortableColumn="description" style="min-width:16rem">
-                        Description
-                        <p-sortIcon field="description" />
+                        Description <p-sortIcon field="description" />
                     </th>
                     <th pSortableColumn="dateAjout" style="min-width:16rem">
-                        Date Ajout
-                        <p-sortIcon field="dateAjout" />
+                        Date Ajout <p-sortIcon field="dateAjout" />
                     </th>
                     <th pSortableColumn="dateModification" style="min-width:16rem">
-                        Date Modification
-                        <p-sortIcon field="dateModification" />
+                        Date Modification <p-sortIcon field="dateModification" />
                     </th>
-                    
                     <th style="min-width: 12rem"></th>
                 </tr>
             </ng-template>
@@ -129,12 +125,12 @@ interface ExportColumn {
                     <td style="width: 3rem">
                         <p-tableCheckbox [value]="ufr" />
                     </td>
-                   
                     <td style="min-width: 16rem">{{ ufr.name }}</td>
                     <td style="min-width: 16rem">{{ ufr.intitule }}</td>
                     <td style="min-width: 16rem">{{ ufr.description }}</td>
-                    <td style="min-width: 16rem">{{ ufr.dateAjout }}</td>
-                    <td style="min-width: 16rem">{{ ufr.dateModification }}</td>
+                    <td style="min-width: 16rem">{{ ufr.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                    <td style="min-width: 16rem">{{ ufr.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+
                     <td>
                         <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editUfr(ufr)" />
                         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteUfr(ufr)" />
@@ -148,26 +144,14 @@ interface ExportColumn {
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="name" class="block font-bold mb-3">Nom</label>
-                        <input type="text" pInputText id="name" [(ngModel)]="ufr.name" required autofocus fluid />
+                        <input type="text" pInputText id="name" [(ngModel)]="ufr.name" required autofocus />
                         <small class="text-red-500" *ngIf="submitted && !ufr.name">Le nom est obligatoire.</small>
                     </div>
+                   
                     <div>
-                        <label for="intitule" class="block font-bold mb-3">intitule</label>
-                        <input type="text" pInputText id="intitule" [(ngModel)]="ufr.intitule" required autofocus fluid />
-                        <small class="text-red-500" *ngIf="submitted && !ufr.intitule">Le intitule est obligatoire.</small>
-                    </div>
-                    <div>
-                        <label for="description" class="block font-bold mb-3">description</label>
-                        <input type="text" pInputText id="description" [(ngModel)]="ufr.description" required autofocus fluid />
+                        <label for="description" class="block font-bold mb-3">Description</label>
+                        <input type="text" pInputText id="description" [(ngModel)]="ufr.description" required />
                         <small class="text-red-500" *ngIf="submitted && !ufr.description">La description est obligatoire.</small>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-xl">Date Ajout</div>
-                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="calendarValue"></p-datepicker>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-xl">Date Modification</div>
-                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="calendarValue"></p-datepicker>
                     </div>
                 </div>
             </ng-template>
@@ -177,29 +161,20 @@ interface ExportColumn {
                 <p-button label="Save" icon="pi pi-check" (click)="saveUfr()" />
             </ng-template>
         </p-dialog>
-
-        <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [MessageService, Ufrservice, ConfirmationService]
+    providers: [MessageService, Ufrservice, ConfirmationService],
 })
 export class Ufrr implements OnInit {
     ufrDialog: boolean = false;
-
     ufrs = signal<Ufr[]>([]);
-
-    ufr!: Ufr;
-
-    selectedUfrs!: Ufr[] | null;
-
+    ufr: Ufr = {};
+    selectedUfrs: Ufr[] | null = null;
     submitted: boolean = false;
-
-    statuses!: any[];
 
     @ViewChild('dt') dt!: Table;
 
-    exportColumns!: ExportColumn[];
-
     cols!: Column[];
+    exportColumns!: ExportColumn[];
     calendarValue: any = null;
 
     constructor(
@@ -208,33 +183,22 @@ export class Ufrr implements OnInit {
         private confirmationService: ConfirmationService
     ) {}
 
-    exportCSV() {
-        this.dt.exportCSV();
-    }
-
     ngOnInit() {
-        this.loadDemoData();
-    }
-
-    loadDemoData() {
-        this.ufrService.getUfrs().then((data) => {
-            this.ufrs.set(data);
-        });
-
+        this.loadUfrs();
         this.cols = [
-            { field: 'name', header: 'Name' },
-            { field: 'intitule', header: 'intitule' },
-            { field: 'description', header: 'description' },
-            { field: 'dateAjout', header: 'dateAjout' },
-            { field: 'dateModification', header: 'dateModification' },
-            
+            { field: 'name', header: 'Nom' },
+            { field: 'description', header: 'Description' },
+            { field: 'createdAt', header: 'Date Ajout' },
+            { field: 'updatedAt', header: 'Date Modification' },
         ];
-
         this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
-    onGlobalFilter(table: Table, event: Event) {
-        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+    loadUfrs() {
+        this.ufrService.getUfrs().subscribe({
+            next: (data) => this.ufrs.set(data),
+            error: (err) => console.error('Erreur lors du chargement des UFRs', err),
+        });
     }
 
     openNew() {
@@ -244,26 +208,81 @@ export class Ufrr implements OnInit {
     }
 
     editUfr(ufr: Ufr) {
-        this.ufr = { ...ufr};
+        this.ufr = { ...ufr };
         this.ufrDialog = true;
     }
 
     deleteSelectedUfrs() {
         this.confirmationService.confirm({
-            message: 'Etes vous sur de vouloir supprimer cet UFR?',
-            header: 'Confirm',
+            message: 'Êtes-vous sûr de vouloir supprimer les UFRs sélectionnés ?',
+            header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.ufrs.set(this.ufrs().filter((val) => !this.selectedUfrs?.includes(val)));
-                this.selectedUfrs = null;
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Utilisateur supprimé',
-                    life: 3000
+                if (this.selectedUfrs) {
+                    this.selectedUfrs.forEach((ufr) => {
+                        if (ufr._id) {
+                            this.ufrService.deleteUfr(ufr._id).subscribe({
+                                next: () => {
+                                    this.ufrs.set(this.ufrs().filter((val) => val._id !== ufr._id));
+                                },
+                                error: (err) => console.error('Erreur lors de la suppression de l\'UFR', err),
+                            });
+                        }
+                    });
+                    this.selectedUfrs = null;
+                    this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFRs supprimés', life: 3000 });
+                }
+            },
+        });
+    }
+
+    deleteUfr(ufr: Ufr) {
+        this.confirmationService.confirm({
+            message: 'Êtes-vous sûr de vouloir supprimer ' + ufr.name + ' ?',
+            header: 'Confirmation',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                if (ufr._id) {
+                    this.ufrService.deleteUfr(ufr._id).subscribe({
+                        next: () => {
+                            this.ufrs.set(this.ufrs().filter((val) => val._id !== ufr._id));
+                            this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR supprimé', life: 3000 });
+                        },
+                        error: (err) => console.error('Erreur lors de la suppression de l\'UFR', err),
+                    });
+                }
+            },
+        });
+    }
+
+    saveUfr() {
+        this.submitted = true;
+        if (this.ufr.name?.trim() && this.ufr.description?.trim()) {
+            if (this.ufr._id) {
+                // Mise à jour d'un UFR existant
+                this.ufr.updatedAt = new Date(); // Met à jour la date de modification
+                this.ufrService.updateUfr(this.ufr).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR modifié', life: 3000 });
+                        this.loadUfrs();
+                    },
+                    error: (err) => console.error('Erreur lors de la mise à jour de l\'UFR', err),
+                });
+            } else {
+                // Création d'un nouvel UFR
+                this.ufr.createdAt = new Date(); // Définit la date de création
+                this.ufr.updatedAt = new Date(); // Définit la date de modification
+                this.ufrService.createUfr(this.ufr).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR ajouté', life: 3000 });
+                        this.loadUfrs();
+                    },
+                    error: (err) => console.error('Erreur lors de la création de l\'UFR', err),
                 });
             }
-        });
+            this.ufrDialog = false;
+            this.ufr = {};
+        }
     }
 
     hideDialog() {
@@ -271,72 +290,11 @@ export class Ufrr implements OnInit {
         this.submitted = false;
     }
 
-    deleteUfr(ufr: Ufr) {
-        this.confirmationService.confirm({
-            message: 'Etes-vous sûr de vouloir supprimer? ' + ufr.name + '?',
-            header: 'Confirm',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.ufrs.set(this.ufrs().filter((val) => val.id !== ufr.id));
-                this.ufr = {};
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'UFR supprimé',
-                    life: 3000
-                });
-            }
-        });
+    onGlobalFilter(table: Table, event: Event) {
+        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
 
-    findIndexById(id: string): number {
-        let index = -1;
-        for (let i = 0; i < this.ufrs().length; i++) {
-            if (this.ufrs()[i].id === id) {
-                index = i;
-                break;
-            }
-        }
-
-        return index;
-    }
-
-    createId(): string {
-        let id = '';
-        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (var i = 0; i < 5; i++) {
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return id;
-    }
-
-   
-    saveUfr() {
-        this.submitted = true;
-        let _ufrs = this.ufrs();
-        if (this.ufr.name?.trim()) {
-            if (this.ufr.id) {
-                _ufrs[this.findIndexById(this.ufr.id)] = this.ufr;
-                this.ufrs.set([..._ufrs]);
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Utilisateur modifié',
-                    life: 3000
-                });
-            } else {
-                this.ufr.id = this.createId();
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'UFR ajouté',
-                    life: 3000
-                });
-                this.ufrs.set([..._ufrs, this.ufr]);
-            }
-
-            this.ufrDialog = false;
-            this.ufr = {};
-        }
+    exportCSV() {
+        this.dt.exportCSV();
     }
 }
