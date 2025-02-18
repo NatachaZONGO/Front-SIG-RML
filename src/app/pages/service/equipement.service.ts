@@ -2,9 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { Laboratoire } from './laboratoire.service';
 
 export interface Equipement {
-    _id?: string; // Utilisation de _id pour correspondre à MongoDB
+    _id?: string; 
     name?: string;
     description?: string;
     estDisponible?: boolean;
@@ -12,10 +13,10 @@ export interface Equipement {
     etat?: string;
     acquereur?: string;
     typeAcquisition?: string;
-    dateAjout?: Date;
-    dateModification?: Date;
+    createAt?: Date;
+    updateAt?: Date;
     photo?: string;
-    laboratoire?: string;
+    laboratoire?: Laboratoire;
     contacts?: string[];
 }
 
@@ -23,17 +24,17 @@ export interface Equipement {
     providedIn: 'root', // Le service est fourni au niveau racine
 })
 export class Equipementservice {
-    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1/equipements'; // URL de l'API
+    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1';
 
     constructor(private http: HttpClient) {}
 
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
-        return this.http.get<{ data: Equipement[] }>(this.apiUrl).pipe(
-            map((response) => response.data), // Extrait le tableau `data` de la réponse
+        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}/equipment/all`).pipe(
+            map((response) => response.content), 
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements', err);
-                return of([]); // Retourne un tableau vide en cas d'erreur
+                return of([]); 
             })
         );
     }
@@ -43,7 +44,7 @@ export class Equipementservice {
         return this.http.get<Equipement>(`${this.apiUrl}/${id}`).pipe(
             catchError((err) => {
                 console.error('Erreur lors de la récupération de l\'équipement', err);
-                throw err; // Relance l'erreur pour la gérer dans le composant
+                throw err; 
             })
         );
     }
@@ -88,4 +89,15 @@ export class Equipementservice {
             })
         );
     }
+
+    getLaboratoires(): Observable<Laboratoire[]> {
+        return this.http.get<{ data: Laboratoire[] }>(`${this.apiUrl}/laboratories/all`).pipe(
+            map((response) => response.data),
+            catchError((err) => {
+                console.error("Erreur lors de la récupération des laboratoires", err);
+                return of([]);
+            })
+        );
+    }
+    
 }

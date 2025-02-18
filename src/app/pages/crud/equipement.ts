@@ -122,6 +122,9 @@ interface ExportColumn {
                     <th pSortableColumn="typeAcquisition" style="min-width:16rem">
                         Type d'Acquisition <p-sortIcon field="typeAcquisition" />
                     </th>
+                    <th pSortableColumn="laboratoire" style="min-width:16rem">
+                        Laboratoire <p-sortIcon field="laboratoire" />
+                    </th>
                     <th pSortableColumn="dateAjout" style="min-width:16rem">
                         Date d'Ajout <p-sortIcon field="dateAjout" />
                     </th>
@@ -138,13 +141,14 @@ interface ExportColumn {
                     </td>
                     <td style="min-width: 16rem">{{ equipement.name }}</td>
                     <td style="min-width: 16rem">{{ equipement.description }}</td>
-                    <td style="min-width: 16rem">{{ equipement.estDisponible ? 'Oui' : 'Non' }}</td>
-                    <td style="min-width: 16rem">{{ equipement.estMutualisable ? 'Oui' : 'Non' }}</td>
-                    <td style="min-width: 16rem">{{ equipement.etat }}</td>
-                    <td style="min-width: 16rem">{{ equipement.acquereur }}</td>
-                    <td style="min-width: 16rem">{{ equipement.typeAcquisition }}</td>
-                    <td style="min-width: 16rem">{{ equipement.dateAjout | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-                    <td style="min-width: 16rem">{{ equipement.dateModification | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                    <td style="min-width: 16rem">{{ equipement.isAvailable ? 'Oui' : 'Non' }}</td>
+                    <td style="min-width: 16rem">{{ equipement.isMutual ? 'Oui' : 'Non' }}</td>
+                    <td style="min-width: 16rem">{{ equipement.state }}</td>
+                    <td style="min-width: 16rem">{{ equipement.owner }}</td>
+                    <td style="min-width: 16rem">{{ equipement.acquisitionType }}</td>
+                    <td style="min-width: 16rem">{{ equipement.laboratory?.name }}</td>
+                    <td style="min-width: 16rem">{{ equipement.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                    <td style="min-width: 16rem">{{ equipement.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
                     <td>
                         <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editEquipement(equipement)" />
                         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteEquipement(equipement)" />
@@ -197,14 +201,18 @@ interface ExportColumn {
                             <input type="text" pInputText id="typeAcquisition" [(ngModel)]="equipement.typeAcquisition" required />
                         </div>
                     </div>
+                    <div>
+                        <label for="laboratoire" class="block font-bold mb-3">Laboratoire</label>
+                        <p-dropdown [(ngModel)]="equipement.laboratoire" [options]="" optionLabel="name" placeholder="Sélectionner un laboratoire"></p-dropdown>
+                    </div>
                     <div class="flex justify-between gap-4">
                         <div class="w-1/2">
                             <label class="font-semibold text-lg">Date d'Ajout</label>
-                            <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.dateAjout"></p-datepicker>
+                            <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.createAt"></p-datepicker>
                         </div>
                         <div class="w-1/2">
                             <label class="font-semibold text-lg">Date de Modification</label>
-                            <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.dateModification"></p-datepicker>
+                            <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.updateAt"></p-datepicker>
                         </div>
                     </div>
                 </div>
@@ -224,13 +232,18 @@ export class Equipementt implements OnInit {
     selectedEquipements: Equipement[] | null = [];
     submitted: boolean = false;
 
+    /*------------------------------
+    equipements: Equipement[] = [];
+    laboratoires: Laboratoire[] = [];
+    -------------------------------*/
+
     @ViewChild('dt') dt!: Table;
 
     cols!: Column[];
     exportColumns!: ExportColumn[];
 
     dropdownValues = [
-        { name: 'Disponible' },
+        { name: 'Neuf' },
         { name: 'En maintenance' },
         { name: 'Hors service' },
     ];
@@ -268,13 +281,13 @@ export class Equipementt implements OnInit {
     }
 
     openNew() {
-        this.equipement = { dateAjout: new Date(), dateModification: new Date() };
+        this.equipement = { createAt: new Date(), updateAt: new Date() };
         this.submitted = false;
         this.equipementDialog = true;
     }
 
     editEquipement(equipement: Equipement) {
-        this.equipement = { ...equipement, dateModification: new Date() };
+        this.equipement = { ...equipement, updateAt: new Date() };
         this.equipementDialog = true;
     }
 
@@ -360,4 +373,6 @@ export class Equipementt implements OnInit {
     exportCSV() {
         this.dt.exportCSV();
     }
+
+
 }

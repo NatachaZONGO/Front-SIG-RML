@@ -8,7 +8,7 @@ import { ButtonModule } from 'primeng/button';
     selector: 'topbar-widget',
     imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule],
     template: `<a class="flex items-center" href="#">
-            <img src="assets/UJKZ.png" alt="UJKZ" class="h-12 mr-2" />
+            <img src="assets/images/UJKZ.png" alt="UJKZ" class="h-12 mr-2" />
             <span class="text-surface-900 dark:text-surface-0 font-medium text-2xl leading-normal mr-20">SIG-RML</span>
         </a>
 

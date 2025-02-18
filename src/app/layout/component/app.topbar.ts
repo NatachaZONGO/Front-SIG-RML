@@ -16,8 +16,8 @@ import { LayoutService } from '../service/layout.service';
                 <i class="pi pi-bars"></i>
             </button>
             <a class="layout-topbar-logo" routerLink="/">
-            <img src="/src/assets/UJKZ.png" alt="ujkz" class="h-12 mr-2" />
-                <span>SIG-RML</span>
+            <img src="assets/images/UJKZ.png" alt="ujkz" class="h-12 mr-2"/>
+                <span><span class="text-red-500">SIG</span><span class="text-green-500">-RML</span></span>
             </a>
         </div>
 

@@ -12,7 +12,7 @@ import { Equipement, Equipementservice } from '../../service/equipement.service'
             <div class="grid grid-cols-12 gap-4 justify-center">
                 <div class="col-span-12 text-center mt-20 mb-6">
                     <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">Équipements</div>
-                    <span class="text-muted-color text-2xl">Liste des équipements disponibles et non disponibles</span>
+                    <span class="text-muted-color text-2xl">Liste des équipements disponibles</span>
                 </div>
 
                 <!-- Boucle pour afficher chaque équipement -->

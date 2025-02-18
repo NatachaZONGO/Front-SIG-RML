@@ -1,3 +1,4 @@
+import { Router } from '@angular/router';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common'; // Importez CommonModule
 import { ButtonModule } from 'primeng/button';
@@ -24,10 +25,10 @@ import { RippleModule } from 'primeng/ripple';
                 <p class="font-normal text-2xl leading-normal md:mt-4 text-gray-700">
                     Réservez facilement le matériel de laboratoire dont vous avez besoin pour vos recherches et travaux pratiques.
                 </p>
-                <button pButton pRipple [rounded]="true" type="button" label="Commencer" class="!text-xl mt-8 !px-4"></button>
+                <button pButton pRipple [rounded]="true" (click)="router.navigate(['/landing'], { fragment: 'features' })" type="button" label="Commencer" class="!text-xl mt-8 !px-4"></button>
             </div>
             <div class="flex justify-center md:justify-end">
-                <img [src]="heroImage" alt="Hero Image" class="w-9/12 md:w-auto" />
+                <img [src]="heroImage" alt="Hero Image" class="w-4/5 md:w-auto" />
             </div>
         </div>
     `
@@ -35,4 +36,6 @@ import { RippleModule } from 'primeng/ripple';
 export class Accueil {
     backgroundImage = 'assets/images/laboratoire.jpg'; 
     heroImage = 'assets/images/presidence.webp';
+
+    constructor(public router: Router) {}
 }
