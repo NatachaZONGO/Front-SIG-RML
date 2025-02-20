@@ -20,7 +20,7 @@ import { Equipement, Equipementservice } from '../../service/equipement.service'
                     <div style="height: 400px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(253, 228, 165, 0.2), rgba(187, 199, 205, 0.2))">
                         <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
                             <!-- Photo de l'équipement -->
-                            <img [src]="equipement.photo" alt="Photo de l'équipement" class="w-full h-32 object-cover mb-4 rounded-lg" />
+                            <img src="http://192.168.11.113:8000/{{equipement.image}}" alt="Photo de l'équipement" class="w-full h-32 object-cover mb-4 rounded-lg" />
 
                             <!-- Nom de l'équipement -->
                             <h5 class="mb-2 text-surface-900 dark:text-surface-0 font-bold text-xl">{{ equipement.name }}</h5>

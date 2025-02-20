@@ -1,13 +1,15 @@
 import { Routes } from '@angular/router';
-import { Crud } from './crud/crud';
 import { Empty } from './empty/empty';
 import { Ufrr } from './crud/ufr';
 import { Laboratoiree } from './crud/laboratoire';
 import { Equipementt } from './crud/equipement';
 import { ReservationComponent } from './crud/reservation';
+import { Userr } from './crud/user';
+import { Login } from './auth/login';
 
 export default [
-    { path: 'crud', component: Crud },
+    {path: 'login', component: Login},
+    { path: 'user', component: Userr },
     { path: 'ufr', component: Ufrr },
     { path: 'equipement', component: Equipementt },
     { path: 'laboratoire', component: Laboratoiree},

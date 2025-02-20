@@ -165,10 +165,10 @@ export class ListDemo {
 
     orderCities: any[] = [];
 
-    constructor(private productService: ProductService) {}
+    constructor(private ProductService: ProductService) {}
 
     ngOnInit() {
-        this.productService.getProductsSmall().then((data) => (this.products = data.slice(0, 6)));
+        this.ProductService.getProductsSmall().then((data) => (this.products = data.slice(0, 6)));
 
         this.sourceCities = [
             { name: 'San Francisco', code: 'SF' },

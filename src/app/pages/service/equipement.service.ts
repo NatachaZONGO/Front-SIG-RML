@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { Laboratoire } from './laboratoire.service';
+import { Laboratoire, Laboratoireservice } from './laboratoire.service';
 
 export interface Equipement {
     _id?: string; 
@@ -16,8 +16,10 @@ export interface Equipement {
     createAt?: Date;
     updateAt?: Date;
     photo?: string;
+    laboratoryId?: string;
     laboratoire?: Laboratoire;
     contacts?: string[];
+    image?: string;
 }
 
 @Injectable({
@@ -25,12 +27,13 @@ export interface Equipement {
 })
 export class Equipementservice {
     private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1';
+    private url ='http://192.168.11.113:8000/api/v1/equipment';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient, private laboratoireService: Laboratoireservice) {}
 
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
-        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}/equipment/all`).pipe(
+        return this.http.get<{ content: Equipement[] }>(`${this.url}/all`).pipe(
             map((response) => response.content), 
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements', err);
@@ -90,11 +93,32 @@ export class Equipementservice {
         );
     }
 
-    getLaboratoires(): Observable<Laboratoire[]> {
-        return this.http.get<{ data: Laboratoire[] }>(`${this.apiUrl}/laboratories/all`).pipe(
-            map((response) => response.data),
+
+    // Récupérer tous les équipements avec les laboratoires associés
+    getEquipementsWithLaboratoires(): Observable<Equipement[]> {
+        return forkJoin({
+            equipements: this.getEquipements(),
+            laboratoires: this.laboratoireService.getLaboratoires(), // Récupère tous les laboratoires
+        }).pipe(
+            map(({ equipements, laboratoires }) => {
+                // Associe chaque équipement à son laboratoire
+                return equipements.map((equipement) => {
+                    const labo = laboratoires.find((l) => l._id === equipement.laboratoryId); // Utilisez laboratoryId
+                    return { ...equipement, laboratoire: labo }; // Ajoute le laboratoire à l'équipement
+                });
+            }),
             catchError((err) => {
-                console.error("Erreur lors de la récupération des laboratoires", err);
+                console.error('Erreur lors de la récupération des équipements avec laboratoires', err);
+                return of([]);
+            })
+        );
+    }
+
+    getEquipementsByLaboratoire(laboratoryId: string): Observable<Equipement[]> {
+        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}/equipment/labo/${laboratoryId}`).pipe(
+            map((response) => response.content),
+            catchError((err) => {
+                console.error('Erreur lors de la récupération des équipements par laboratoire', err);
                 return of([]);
             })
         );

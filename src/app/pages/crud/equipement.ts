@@ -20,6 +20,8 @@ import { Equipement, Equipementservice } from '../service/equipement.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DropdownModule } from 'primeng/dropdown';
+import { catchError, forkJoin, map, Observable, of } from 'rxjs';
+import { Laboratoire, Laboratoireservice } from '../service/laboratoire.service';
 
 interface Column {
     field: string;
@@ -131,6 +133,9 @@ interface ExportColumn {
                     <th pSortableColumn="dateModification" style="min-width:16rem">
                         Date de Modification <p-sortIcon field="dateModification" />
                     </th>
+                    <th pSortableColumn="image" style="min-width:16rem">
+                        Image <p-sortIcon field="image" />
+                    </th>
                     <th style="min-width: 12rem"></th>
                 </tr>
             </ng-template>
@@ -146,9 +151,10 @@ interface ExportColumn {
                     <td style="min-width: 16rem">{{ equipement.state }}</td>
                     <td style="min-width: 16rem">{{ equipement.owner }}</td>
                     <td style="min-width: 16rem">{{ equipement.acquisitionType }}</td>
-                    <td style="min-width: 16rem">{{ equipement.laboratory?.name }}</td>
+                    <td style="min-width: 16rem">{{ equipement.laboratoire?.name }}</td> 
                     <td style="min-width: 16rem">{{ equipement.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
                     <td style="min-width: 16rem">{{ equipement.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+                    <td style="min-width: 12rem"><img src="http://192.168.11.113:8000/{{ equipement.image }}" alt=""></td> 
                     <td>
                         <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editEquipement(equipement)" />
                         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteEquipement(equipement)" />
@@ -203,7 +209,16 @@ interface ExportColumn {
                     </div>
                     <div>
                         <label for="laboratoire" class="block font-bold mb-3">Laboratoire</label>
-                        <p-dropdown [(ngModel)]="equipement.laboratoire" [options]="" optionLabel="name" placeholder="Sélectionner un laboratoire"></p-dropdown>
+                        <p-dropdown [(ngModel)]="equipement.laboratoryId" [options]="laboratoires" optionLabel="name"  placeholder="Sélectionner un laboratoire"></p-dropdown>
+                        <small class="text-red-500" *ngIf="submitted && !equipement.laboratoryId">Le laboratoire est obligatoire.</small>
+                    </div>
+                    <div>
+                        <label for="image" class="block font-bold mb-3">Image de l'équipement</label>
+                        <input type="file" id="image" (change)="onFileChange($event)" accept="image/*" />
+                        <small class="text-red-500" *ngIf="submitted && !equipement.image">L'image est obligatoire.</small>
+                    </div>
+                    <div *ngIf="equipement.image">
+                        <img [src]="equipement.image" alt="Image de l'équipement" class="mt-3 w-32 h-32 object-cover rounded" />
                     </div>
                     <div class="flex justify-between gap-4">
                         <div class="w-1/2">
@@ -223,7 +238,7 @@ interface ExportColumn {
             </ng-template>
         </p-dialog>
     `,
-    providers: [MessageService, Equipementservice, ConfirmationService],
+    providers: [MessageService, Equipementservice, ConfirmationService, Laboratoireservice],
 })
 export class Equipementt implements OnInit {
     equipementDialog: boolean = false;
@@ -231,11 +246,9 @@ export class Equipementt implements OnInit {
     equipement: Equipement = {};
     selectedEquipements: Equipement[] | null = [];
     submitted: boolean = false;
-
-    /*------------------------------
-    equipements: Equipement[] = [];
+    
     laboratoires: Laboratoire[] = [];
-    -------------------------------*/
+   
 
     @ViewChild('dt') dt!: Table;
 
@@ -251,11 +264,13 @@ export class Equipementt implements OnInit {
     constructor(
         private equipementService: Equipementservice,
         private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private laboratoireService: Laboratoireservice,
     ) {}
 
     ngOnInit() {
-        this.loadEquipements();
+        this.loadEquipementsWithLaboratoires();
+        this.loadLaboratoires();
         this.cols = [
             { field: 'name', header: 'Nom' },
             { field: 'description', header: 'Description' },
@@ -264,10 +279,22 @@ export class Equipementt implements OnInit {
             { field: 'etat', header: 'État' },
             { field: 'acquereur', header: 'Acquéreur' },
             { field: 'typeAcquisition', header: 'Type d\'Acquisition' },
+            { field: 'laboratoire.name', header: 'Laboratoire' }, 
             { field: 'dateAjout', header: 'Date d\'Ajout' },
             { field: 'dateModification', header: 'Date de Modification' },
+            { field: 'image', header: 'Images' }, 
         ];
         this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+
+    }
+
+    loadLaboratoires() {
+        this.laboratoireService.getLaboratoires().subscribe({
+            next: (data) => {
+                this.laboratoires = data; // Stocke les laboratoires
+            },
+            error: (err) => console.error('Erreur lors du chargement des laboratoires', err),
+        });
     }
 
     loadEquipements() {
@@ -336,13 +363,13 @@ export class Equipementt implements OnInit {
 
     saveEquipement() {
         this.submitted = true;
-        if (this.equipement.name?.trim() && this.equipement.description?.trim()) {
+        if (this.equipement.name?.trim() && this.equipement.description?.trim() && this.equipement.laboratoryId) {
             if (this.equipement._id) {
                 // Mise à jour d'un équipement existant
                 this.equipementService.updateEquipement(this.equipement).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis à jour', life: 3000 });
-                        this.loadEquipements();
+                        this.loadEquipementsWithLaboratoires();
                     },
                     error: (err) => console.error('Erreur lors de la mise à jour de l\'équipement', err),
                 });
@@ -351,7 +378,7 @@ export class Equipementt implements OnInit {
                 this.equipementService.createEquipement(this.equipement).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement créé', life: 3000 });
-                        this.loadEquipements();
+                        this.loadEquipementsWithLaboratoires();
                     },
                     error: (err) => console.error('Erreur lors de la création de l\'équipement', err),
                 });
@@ -374,5 +401,36 @@ export class Equipementt implements OnInit {
         this.dt.exportCSV();
     }
 
+    getEquipements(): Observable<Equipement[]> {
+        return this.equipementService.getEquipements().pipe(
+            map((response) => response || []),
+            catchError((err) => {
+                console.error("Erreur lors de la récupération des équipements", err);
+                return of([]);
+            })
+        );
+    }
+    
+    loadEquipementsWithLaboratoires() {
+        this.equipementService.getEquipementsWithLaboratoires().subscribe({
+            next: (data) => {
+                console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
+                this.equipements.set(data);
+            },
+            error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
+        });
+    }
 
+    onFileChange(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const imageDataUrl = reader.result as string;
+            const imgElement = document.getElementById('image-preview') as HTMLImageElement;
+            imgElement.src = imageDataUrl;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
 }

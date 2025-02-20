@@ -9,7 +9,7 @@ import { ButtonModule } from 'primeng/button';
     imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule],
     template: `<a class="flex items-center" href="#">
             <img src="assets/images/UJKZ.png" alt="UJKZ" class="h-12 mr-2" />
-            <span class="text-surface-900 dark:text-surface-0 font-medium text-2xl leading-normal mr-20">SIG-RML</span>
+            <span><span class="text-red-500">SIG</span><span class="text-green-500">-RML</span></span>
         </a>
 
         <a pButton [text]="true" severity="secondary" [rounded]="true" pRipple class="lg:!hidden" pStyleClass="@next" enterClass="hidden" leaveToClass="hidden" [hideOnOutsideClick]="true">
@@ -28,11 +28,7 @@ import { ButtonModule } from 'primeng/button';
                         <span>Materiels</span>
                     </a>
                 </li>
-                <li>
-                    <a (click)="router.navigate(['/landing'], { fragment: 'highlights' })" pRipple class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
-                        <span>Resever</span>
-                    </a>
-                </li>
+                
                 <li>
                     <a (click)="router.navigate(['/landing'], { fragment: 'pricing' })" pRipple class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
                         <span>Suivre Reservation</span>

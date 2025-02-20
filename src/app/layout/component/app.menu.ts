@@ -33,7 +33,7 @@ export class AppMenu {
                     {
                         label: 'Utilisateurs',
                         icon: 'pi pi fw pi-users',
-                        routerLink: ['/pages/crud']
+                        routerLink: ['/pages/user']
                     },
                     {
                         label: 'Rôles',

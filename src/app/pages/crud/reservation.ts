@@ -15,6 +15,9 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { Reservation, ReservationService } from '../service/reservation.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { forkJoin, map } from 'rxjs';
+import { Equipementservice } from '../service/equipement.service';
+import { UserService } from '../service/user.service';
 
 
 interface Column {
@@ -103,14 +106,14 @@ interface ExportColumn {
             </ng-template>
             <ng-template #body let-reservation>
                 <tr>
-                    <td style="min-width: 16rem">{{ reservation.equipement }}</td>
-                    <td style="min-width: 16rem">{{ reservation.user }}</td>
-                    <td style="min-width: 16rem">{{ reservation.dateDebut }}</td>
-                    <td style="min-width: 16rem">{{ reservation.dateFin }}</td>
-                    <td style="min-width: 16rem">{{ reservation.statut }}</td>
+                    <td style="min-width: 16rem">{{ reservation.equipementName }}</td>
+                    <td style="min-width: 16rem">{{ reservation.userName }}</td>
+                    <td style="min-width: 16rem">{{ reservation.startAt | date:'dd/MM/yyyy' }}</td>
+                    <td style="min-width: 16rem">{{ reservation.endAt | date:'dd/MM/yyyy' }}</td>
+                    <td style="min-width: 16rem">{{ reservation.state }}</td>
                     <td>
-                        <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (click)="validateReservation(reservation)" [disabled]="reservation.statut !== 'En attente'" />
-                        <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true" (click)="cancelReservation(reservation)" [disabled]="reservation.statut !== 'En attente'" />
+                        <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (click)="validateReservation(reservation)" [disabled]="reservation.state !== 'pending'" />
+                        <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true" (click)="cancelReservation(reservation)" [disabled]="reservation.state !== 'pending'" />
                         <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" (click)="viewReservation(reservation)" />
                     </td>
                 </tr>
@@ -122,23 +125,23 @@ interface ExportColumn {
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="equipement" class="block font-bold mb-3">Équipement</label>
-                        <input type="text" pInputText id="equipement" [(ngModel)]="reservation.equipement" readonly />
+                        <input type="text" pInputText id="equipement" [(ngModel)]="reservation.equipementName" readonly />
                     </div>
                     <div>
                         <label for="user" class="block font-bold mb-3">Utilisateur</label>
-                        <input type="text" pInputText id="user" [(ngModel)]="reservation.user" readonly />
+                        <input type="text" pInputText id="user" [(ngModel)]="reservation.userName" readonly />
                     </div>
                     <div>
                         <label for="dateDebut" class="block font-bold mb-3">Date Début</label>
-                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.dateDebut" readonly />
+                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.startAt" readonly />
                     </div>
                     <div>
                         <label for="dateFin" class="block font-bold mb-3">Date Fin</label>
-                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.dateFin" readonly />
+                        <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.endAt" readonly />
                     </div>
                     <div>
                         <label for="statut" class="block font-bold mb-3">Statut</label>
-                        <input type="text" pInputText id="statut" [(ngModel)]="reservation.statut" readonly />
+                        <input type="text" pInputText id="statut" [(ngModel)]="reservation.state" readonly />
                     </div>
                 </div>
             </ng-template>
@@ -150,7 +153,7 @@ interface ExportColumn {
 
         <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [MessageService, ReservationService, ConfirmationService],
+    providers: [MessageService, ReservationService, ConfirmationService, Equipementservice, UserService],
 })
 export class ReservationComponent implements OnInit {
     reservationDialog: boolean = false;
@@ -168,7 +171,9 @@ export class ReservationComponent implements OnInit {
     constructor(
         private reservationService: ReservationService,
         private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private equipementService: Equipementservice,
+        private userService: UserService
     ) {}
 
     exportCSV() {
@@ -177,21 +182,25 @@ export class ReservationComponent implements OnInit {
 
     ngOnInit() {
         this.loadDemoData();
+        this.loadReservationsWithDetails();
     }
 
     loadDemoData() {
-        this.reservationService.getReservations().then((data) => {
-            this.reservations.set((data || []));
+        this.reservationService.getReservations().subscribe({
+            next: (data) => {
+                this.reservations.set(data);
+            },
+            error: (err) => console.error('Erreur lors du chargement des réservations', err),
         });
-
+    
         this.cols = [
-            { field: 'equipement', header: 'Équipement' },
-            { field: 'user', header: 'Utilisateur' },
-            { field: 'dateDebut', header: 'Date Début' },
-            { field: 'dateFin', header: 'Date Fin' },
-            { field: 'statut', header: 'Statut' },
+            { field: 'equipementName', header: 'Équipement' },
+            { field: 'userName', header: 'Utilisateur' },
+            { field: 'startAt', header: 'Date Début' },
+            { field: 'endAt', header: 'Date Fin' },
+            { field: 'state', header: 'Statut' },
         ];
-
+    
         this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
@@ -210,7 +219,8 @@ export class ReservationComponent implements OnInit {
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                reservation.statut = 'Validée';
+                reservation.state = 'confirmed';
+                // Envoyer une requête PUT à l'API pour mettre à jour la réservation
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Succès',
@@ -220,14 +230,15 @@ export class ReservationComponent implements OnInit {
             },
         });
     }
-
+    
     cancelReservation(reservation: Reservation) {
         this.confirmationService.confirm({
             message: 'Êtes-vous sûr de vouloir annuler cette réservation ?',
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                reservation.statut = 'Annulée';
+                reservation.state = 'cancelled';
+                // Envoyer une requête PUT à l'API pour mettre à jour la réservation
                 this.messageService.add({
                     severity: 'success',
                     summary: 'Succès',
@@ -240,5 +251,26 @@ export class ReservationComponent implements OnInit {
 
     hideDialog() {
         this.reservationDialog = false;
+    }
+    
+    loadReservationsWithDetails() {
+        this.reservationService
+            .getReservationsWithDetails(this.userService, this.equipementService)
+            .subscribe({
+                next: (reservations) => {
+                    this.reservations.set(reservations);
+                },
+                error: (err) => console.error('Erreur lors du chargement des réservations', err),
+            });
+    
+        this.cols = [
+            { field: 'equipementName', header: 'Équipement' },
+            { field: 'userName', header: 'Utilisateur' },
+            { field: 'startAt', header: 'Date Début' },
+            { field: 'endAt', header: 'Date Fin' },
+            { field: 'state', header: 'Statut' },
+        ];
+    
+        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 }
