@@ -1,15 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { BackendURL } from '../../const';
 
 export interface User {
-    id?: string;
-    name?: string;
-    prenom?: string;
+    _id?: string;
+    firstname?: string; 
+    lastname?: string;
     email?: string;
+    phone?: number;
     password?: string;
-    role: 'admin' | 'chef_lab' | 'reservant'; 
+    scope: 'admin' | 'responsable' | 'reservant'; 
 }
 
 @Injectable({
@@ -18,37 +20,39 @@ export interface User {
 export class UserService {
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
-    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1'; // Remplace par l'URL de ton API
+    private apiUrl = `${BackendURL}account/user`; 
 
     constructor(private http: HttpClient, private router: Router) {}
 
     getUsers(): Observable<User[]> {
-        return this.http.get<User[]>(`${this.apiUrl}/user/all`);
+        return this.http.get<{ content: User[] }>(`${BackendURL}user/all`).pipe(
+            map(response => response.content) 
+        );
     }
 
     getUserById(id: string): Observable<User> {
-        return this.http.get<User>(`${this.apiUrl}/${id}`);
+        return this.http.get<User>(`${BackendURL}user/${id}`);
     }
 
     createUser(user: User): Observable<User> {
-        return this.http.post<User>(this.apiUrl, user);
+        return this.http.post<User>(`${BackendURL}account/create`, user);
     }
 
     updateUser(user: User): Observable<User> {
-        return this.http.put<User>(`${this.apiUrl}/${user.id}`, user);
+        return this.http.put<User>(`${BackendURL}user/${user._id}`, user);
     }
 
     deleteUser(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${id}`);
+        return this.http.delete<void>(`${BackendURL}user/${id}`);
     }
 
     // Connexion
     login(email: string, password: string): Observable<{ token: string; user: User }> {
         return this.http.post<{ token: string; user: User }>(`${this.apiUrl}/account/login`, { email, password }).pipe(
             tap((response) => {
-                localStorage.setItem('token', response.token); // Stocke le token
-                localStorage.setItem('user', JSON.stringify(response.user)); // Stocke les infos de l'utilisateur
-                this.currentUserSubject.next(response.user); // Met à jour l'utilisateur courant
+                localStorage.setItem('token', response.token);
+                localStorage.setItem('user', JSON.stringify(response.user)); 
+                this.currentUserSubject.next(response.user); 
             })
         );
     }
@@ -57,8 +61,8 @@ export class UserService {
     logout(): void {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        this.currentUserSubject.next(null); // Réinitialise l'utilisateur courant
-        this.router.navigate(['/login']); // Redirige vers la page de connexion
+        this.currentUserSubject.next(null); 
+        this.router.navigate(['/login']);
     }
 
     // Vérifie si l'utilisateur est connecté
@@ -75,19 +79,19 @@ export class UserService {
     // Vérifie si l'utilisateur est un administrateur
     isAdmin(): boolean {
         const user = this.getCurrentUser();
-        return user?.role === 'admin';
+        return user?.scope === 'admin';
     }
 
     // Vérifie si l'utilisateur est un chef de laboratoire
     isChefLab(): boolean {
         const user = this.getCurrentUser();
-        return user?.role === 'chef_lab';
+        return user?.scope === 'responsable';
     }
 
     // Vérifie si l'utilisateur est un réservant
     isReservant(): boolean {
         const user = this.getCurrentUser();
-        return user?.role === 'reservant';
+        return user?.scope === 'reservant';
     }
 }
 

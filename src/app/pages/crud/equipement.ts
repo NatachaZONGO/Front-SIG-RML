@@ -142,7 +142,7 @@ interface ExportColumn {
             <ng-template #body let-equipement>
                 <tr>
                     <td style="width: 3rem">
-                        <p-tableCheckbox [value]="equipement" />
+                        <p-tableCheckbox [value]="equipement.id" />
                     </td>
                     <td style="min-width: 16rem">{{ equipement.name }}</td>
                     <td style="min-width: 16rem">{{ equipement.description }}</td>
@@ -154,7 +154,7 @@ interface ExportColumn {
                     <td style="min-width: 16rem">{{ equipement.laboratoire?.name }}</td> 
                     <td style="min-width: 16rem">{{ equipement.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
                     <td style="min-width: 16rem">{{ equipement.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-                    <td style="min-width: 12rem"><img src="http://192.168.11.113:8000/{{ equipement.image }}" alt=""></td> 
+                    <td style="min-width: 12rem"><img src="http://102.211.121.54:8080/{{ equipement.image }}" alt=""></td> 
                     <td>
                         <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editEquipement(equipement)" />
                         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteEquipement(equipement)" />

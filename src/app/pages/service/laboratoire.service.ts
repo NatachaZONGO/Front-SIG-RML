@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { BackendURL } from '../../const';
 
 export interface Laboratoire {
     _id?: string;
@@ -14,12 +15,12 @@ export interface Laboratoire {
     providedIn: 'root'
 })
 export class Laboratoireservice {
-    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1'; 
+    private apiUrl = `${BackendURL}/laboratory`; 
 
     constructor(private http: HttpClient) {}
 
     getLaboratoires(): Observable<Laboratoire[]> {
-            return this.http.get<{ content: Laboratoire[] }>(`${this.apiUrl}/laboratory/all`).pipe(
+            return this.http.get<{ content: Laboratoire[] }>(`${this.apiUrl}/all`).pipe(
                 map(response => response.content) 
             );
         }

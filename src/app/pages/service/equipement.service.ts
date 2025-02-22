@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Laboratoire, Laboratoireservice } from './laboratoire.service';
+import { BackendURL } from '../../const';
 
 export interface Equipement {
     _id?: string; 
@@ -26,14 +27,14 @@ export interface Equipement {
     providedIn: 'root', // Le service est fourni au niveau racine
 })
 export class Equipementservice {
-    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1';
-    private url ='http://192.168.11.113:8000/api/v1/equipment';
+    private apiUrl = `${BackendURL}/equipment`;
+    
 
     constructor(private http: HttpClient, private laboratoireService: Laboratoireservice) {}
 
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
-        return this.http.get<{ content: Equipement[] }>(`${this.url}/all`).pipe(
+        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}/all`).pipe(
             map((response) => response.content), 
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements', err);

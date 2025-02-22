@@ -64,8 +64,8 @@ interface ExportColumn {
 
         <p-toolbar styleClass="mb-6">
             <ng-template #start>
-                <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
-                <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedLaboratoires()" [disabled]="!selectedLaboratoires || !selectedLaboratoires.length" />
+                <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+                <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedLaboratoires()" [disabled]="!selectedLaboratoires || !selectedLaboratoires.length" />
             </ng-template>
 
             <ng-template #end>
@@ -135,18 +135,18 @@ interface ExportColumn {
             </ng-template>
         </p-table>
 
-        <p-dialog [(visible)]="laboratoireDialog" [style]="{ width: '450px' }" header="Laboratoire Details" [modal]="true">
+        <p-dialog [(visible)]="laboratoireDialog" [style]="{ width: '450px' }" header="Ajouter un laboratoire" [modal]="true">
             <ng-template #content>
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="name" class="block font-bold mb-3">Nom</label>
-                        <input type="text" pInputText id="name" [(ngModel)]="laboratoire.name" required autofocus />
+                        <input type="text" pInputText id="name" [(ngModel)]="laboratoire.name" required autofocus [style]="{ 'width': '100%' }" />
                         <small class="text-red-500" *ngIf="submitted && !laboratoire.name">Le nom est obligatoire.</small>
                     </div>
                    
                     <div>
                         <label for="description" class="block font-bold mb-3">Description</label>
-                        <input type="text" pInputText id="description" [(ngModel)]="laboratoire.description" required />
+                        <textarea type="text" pInputText id="description" [(ngModel)]="laboratoire.description" required autofocus [style]="{ 'width': '100%' }"></textarea>
                         <small class="text-red-500" *ngIf="submitted && !laboratoire.description">La description est obligatoire.</small>
                     </div>
                 </div>

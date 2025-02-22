@@ -1,27 +1,22 @@
-import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
-import { UserService } from '../service/user.service';
+import { inject } from "@angular/core";
+import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot } from "@angular/router";
+import { AuthService } from "./auth.service";
 
+export const authGuard: CanActivateFn = (
+    next: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+) => {
+    const authService = inject(AuthService);
+    const router = inject(Router);
 
-@Injectable({
-    providedIn: 'root',
-})
-export class RoleGuard implements CanActivate {
-    constructor(private userService: UserService, private router: Router) {}
+    // Vérifiez à la fois le token dans le service et dans le localStorage
+    const token = authService.accessToken || localStorage.getItem('accessToken');
 
-    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-        // Récupère les rôles autorisés depuis la configuration de la route
-        const allowedRoles = route.data['roles'] as Array<'admin' | 'chef_lab' | 'reservant'>;
-
-        // Récupère l'utilisateur courant
-        const user = this.userService.getCurrentUser();
-
-        // Vérifie si l'utilisateur est connecté et a un rôle autorisé
-        if (user && allowedRoles.includes(user.role)) {
-            return true; // Autorise l'accès
-        } else {
-            this.router.navigate(['/access-denied']); // Redirige vers la page d'accès refusé
-            return false; // Refuse l'accès
-        }
+    if (!token) {
+        console.warn("Accès refusé : aucun token trouvé. Redirection vers la page de connexion.");
+        router.navigateByUrl('/login');
+        return false; 
     }
-}
+
+    return true; 
+};

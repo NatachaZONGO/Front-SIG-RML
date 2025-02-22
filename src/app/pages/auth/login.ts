@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+/*import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -46,7 +46,7 @@ export class Login {
     onLogin(): void {
         this.userService.login(this.email, this.password).subscribe({
             next: () => {
-                this.router.navigate(['/accueil']); // Redirige vers la page d'accueil après connexion
+                this.router.navigate(['/accueil']); 
             },
             error: (err) => {
                 console.error('Erreur de connexion', err);
@@ -54,4 +54,4 @@ export class Login {
             },
         });
     }
-}
+}*/

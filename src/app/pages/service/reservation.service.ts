@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { Equipement, Equipementservice } from './equipement.service';
-import { User } from './product.service';
+import { BackendURL, LocalStorageFields } from '../../const';
 import { UserService } from './user.service';
 
 export interface Reservation {
@@ -11,10 +11,10 @@ export interface Reservation {
         endAt: string; 
         state: string; 
         reservedAt: string;
-        userId: string; // ID de l'utilisateur
-        equipmentId: string; // ID de l'équipement
-        userName?: string; // Nom de l'utilisateur (optionnel)
-        equipementName?: string; // Nom de l'équipement (optionnel)
+        userId: string; 
+        equipmentId: string; 
+        userName?: string; 
+        equipementName?: string; 
         
 }
 
@@ -22,47 +22,75 @@ export interface Reservation {
     providedIn: 'root',
 })
 export class ReservationService {
-    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1'; // Remplace par l'URL de ton API
+    private apiUrl = `${BackendURL}reservation`; 
 
     constructor(private http: HttpClient) {}
 
     getReservations(): Observable<Reservation[]> {
-               return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}/reservation/all`).pipe(
-                   map((response) => response.content), 
-                   catchError((err) => {
-                       console.error('Erreur lors de la récupération des reservations', err);
-                       return of([]); 
-                   })
-               );
-           }
-       
-           // Récupère les réservations avec les noms des utilisateurs et des équipements
-    getReservationsWithDetails(userService: UserService, equipementService: Equipementservice): Observable<Reservation[]> {
-        return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}/reservation/all`).pipe(
-            switchMap((response) => {
-                // Pour chaque réservation, récupérez les détails de l'utilisateur et de l'équipement
-                const requests = response.content.map((reservation) =>
-                    forkJoin({
-                        user: userService.getUserById(reservation.userId),
-                        equipement: equipementService.getEquipementById(reservation.equipmentId),
-                    }).pipe(
-                        map(({ user, equipement }) => ({
-                            ...reservation,
-                            userName: user.name, // Ajoute le nom de l'utilisateur
-                            equipementName: equipement.name, // Ajoute le nom de l'équipement
-                        }))
-                    )
-                );
-
-                // Combinez toutes les requêtes et retournez un Observable<Reservation[]>
-                return forkJoin(requests);
+        const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
+        console.log("Token avant la requête de réservation (getReservations) :", token); // Log du token
+    
+        return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}/all`).pipe(
+            map((response) => {
+                console.log("Réponse de l'API (getReservations) :", response); // Log de la réponse
+                return response.content;
             }),
             catchError((err) => {
-                console.error('Erreur lors de la récupération des réservations', err);
-                return of([]); // Retourne un tableau vide en cas d'erreur
+                console.error('Erreur lors de la récupération des réservations (getReservations) :', err);
+                console.log("Token après l'erreur (getReservations) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après l'erreur
+                return of([]);
             })
         );
     }
+       
+           // Récupère les réservations avec les noms des utilisateurs et des équipements
+           getReservationsWithDetails(userService: UserService, equipementService: Equipementservice): Observable<Reservation[]> {
+            const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
+            console.log("Token avant la requête de réservation (getReservationsWithDetails) :", token); // Log du token
+        
+            return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}/all`).pipe(
+                switchMap((response) => {
+                    console.log("Réponse de l'API (getReservationsWithDetails) :", response); // Log de la réponse
+        
+                    // Pour chaque réservation, récupérez les détails de l'utilisateur et de l'équipement
+                    const requests = response.content.map((reservation) => {
+                        console.log("Token avant la sous-requête pour la réservation :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token avant chaque sous-requête
+        
+                        return forkJoin({
+                            user: userService.getUserById(reservation.userId).pipe(
+                                catchError((err) => {
+                                    console.error('Erreur lors de la récupération de l\'utilisateur :', err);
+                                    return of({ firstname: 'Utilisateur inconnu' }); // Retourne un utilisateur par défaut en cas d'erreur
+                                })
+                            ),
+                            equipement: equipementService.getEquipementById(reservation.equipmentId).pipe(
+                                catchError((err) => {
+                                    console.error('Erreur lors de la récupération de l\'équipement :', err);
+                                    return of({ name: 'Équipement inconnu' }); // Retourne un équipement par défaut en cas d'erreur
+                                })
+                            ),
+                        }).pipe(
+                            map(({ user, equipement }) => {
+                                console.log("Token après la sous-requête pour la réservation :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après chaque sous-requête
+                                return {
+                                    ...reservation,
+                                    userName: user.firstname, // Ajoute le nom de l'utilisateur
+                                    equipementName: equipement.name, // Ajoute le nom de l'équipement
+                                };
+                            })
+                        );
+                    });
+        
+                    // Combinez toutes les requêtes et retournez un Observable<Reservation[]>
+                    return forkJoin(requests);
+                }),
+                catchError((err) => {
+                    console.error('Erreur lors de la récupération des réservations (getReservationsWithDetails) :', err);
+                    console.log("Token après l'erreur (getReservationsWithDetails) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après l'erreur
+                    return of([]);
+                })
+            );
+        }
     }
 
     

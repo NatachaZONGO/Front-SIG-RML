@@ -36,11 +36,6 @@ export class AppMenu {
                         routerLink: ['/pages/user']
                     },
                     {
-                        label: 'Rôles',
-                        icon: 'pi pi-fw pi-id-card',
-                        routerLink: ['/pages/role']
-                    },
-                    {
                         label: 'UFR',
                         icon: 'pi pi-fw pi-book',
                         routerLink: ['/pages/ufr']

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
+import { BackendURL } from '../../const';
 
 /*export interface Ufr {
     id?: string;
@@ -23,12 +24,12 @@ export interface Ufr {
   providedIn: 'root'
 })
 export class Ufrservice {
-    private apiUrl = 'http://102.211.121.54:8080/node_ts/api/V0.1'; // Remplacez par l'URL de votre API
+    private apiUrl = `${BackendURL}/ufr`; // Remplacez par l'URL de votre API
 
     constructor(private http: HttpClient) {}
 
     getUfrs(): Observable<Ufr[]> {
-        return this.http.get<{ content: Ufr[] }>(`${this.apiUrl}/ufr/all`).pipe(
+        return this.http.get<{ content: Ufr[] }>(`${this.apiUrl}/all`).pipe(
             map(response => response.content) // Extrait la propriété `content`
         );
     }

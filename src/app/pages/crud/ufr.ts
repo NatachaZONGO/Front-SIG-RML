@@ -64,8 +64,8 @@ interface ExportColumn {
 
         <p-toolbar styleClass="mb-6">
             <ng-template #start>
-                <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
-                <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedUfrs()" [disabled]="!selectedUfrs || !selectedUfrs.length" />
+                <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+                <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedUfrs()" [disabled]="!selectedUfrs || !selectedUfrs.length" />
             </ng-template>
 
             <ng-template #end>
@@ -79,7 +79,7 @@ interface ExportColumn {
             [rows]="10"
             [columns]="cols"
             [paginator]="true"
-            [globalFilterFields]="['name', 'intitule', 'description']"
+            [globalFilterFields]="['name', 'description']"
             [tableStyle]="{ 'min-width': '75rem' }"
             [(selection)]="selectedUfrs"
             [rowHover]="true"
@@ -105,9 +105,6 @@ interface ExportColumn {
                     <th pSortableColumn="name" style="min-width:16rem">
                         Nom <p-sortIcon field="name" />
                     </th>
-                    <th pSortableColumn="intitule" style="min-width:16rem">
-                        Intitulé <p-sortIcon field="intitule" />
-                    </th>
                     <th pSortableColumn="description" style="min-width:16rem">
                         Description <p-sortIcon field="description" />
                     </th>
@@ -123,10 +120,9 @@ interface ExportColumn {
             <ng-template #body let-ufr>
                 <tr>
                     <td style="width: 3rem">
-                        <p-tableCheckbox [value]="ufr" />
+                        <p-tableCheckbox [value]="ufr.id" />
                     </td>
                     <td style="min-width: 16rem">{{ ufr.name }}</td>
-                    <td style="min-width: 16rem">{{ ufr.intitule }}</td>
                     <td style="min-width: 16rem">{{ ufr.description }}</td>
                     <td style="min-width: 16rem">{{ ufr.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
                     <td style="min-width: 16rem">{{ ufr.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
@@ -139,26 +135,26 @@ interface ExportColumn {
             </ng-template>
         </p-table>
 
-        <p-dialog [(visible)]="ufrDialog" [style]="{ width: '450px' }" header="Ufr Details" [modal]="true">
+        <p-dialog [(visible)]="ufrDialog" [style]="{ width: '450px' }" header="Ajouter un UFR" [modal]="true">
             <ng-template #content>
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="name" class="block font-bold mb-3">Nom</label>
-                        <input type="text" pInputText id="name" [(ngModel)]="ufr.name" required autofocus />
+                        <input type="text" pInputText id="name" [(ngModel)]="ufr.name" required autofocus [style]="{ 'width': '100%' }"/>
                         <small class="text-red-500" *ngIf="submitted && !ufr.name">Le nom est obligatoire.</small>
                     </div>
                    
                     <div>
                         <label for="description" class="block font-bold mb-3">Description</label>
-                        <input type="text" pInputText id="description" [(ngModel)]="ufr.description" required />
+                        <textarea pInputText id="description" [(ngModel)]="ufr.description" required [style]="{ 'width': '100%' }"></textarea>
                         <small class="text-red-500" *ngIf="submitted && !ufr.description">La description est obligatoire.</small>
                     </div>
                 </div>
             </ng-template>
 
             <ng-template #footer>
-                <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
-                <p-button label="Save" icon="pi pi-check" (click)="saveUfr()" />
+                <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+                <p-button label="Enregistrer" icon="pi pi-check" (click)="saveUfr()" />
             </ng-template>
         </p-dialog>
     `,
