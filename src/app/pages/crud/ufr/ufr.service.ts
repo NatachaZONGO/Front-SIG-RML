@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { BackendURL } from '../../const';
+import { BackendURL } from '../../../const';
+
 
 /*export interface Ufr {
     id?: string;

@@ -19,8 +19,8 @@ import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
-import { Ufr, Ufrservice } from '../service/ufr.service';
 import { CalendarIcon } from 'primeng/icons';
+import { Ufr, Ufrservice } from './ufr.service';
 
 interface Column {
     field: string;
@@ -58,106 +58,7 @@ interface ExportColumn {
         DatePickerModule,
    
     ],
-    template: `
-        <p-toast />
-        <p-confirmDialog />
-
-        <p-toolbar styleClass="mb-6">
-            <ng-template #start>
-                <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
-                <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedUfrs()" [disabled]="!selectedUfrs || !selectedUfrs.length" />
-            </ng-template>
-
-            <ng-template #end>
-                <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
-            </ng-template>
-        </p-toolbar>
-
-        <p-table
-            #dt
-            [value]="ufrs()"
-            [rows]="10"
-            [columns]="cols"
-            [paginator]="true"
-            [globalFilterFields]="['name', 'description']"
-            [tableStyle]="{ 'min-width': '75rem' }"
-            [(selection)]="selectedUfrs"
-            [rowHover]="true"
-            dataKey="id"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-            [showCurrentPageReport]="true"
-            [rowsPerPageOptions]="[10, 20, 30]"
-        >
-            <ng-template #caption>
-                <div class="flex items-center justify-between">
-                    <h5 class="m-0">Gestion des UFR</h5>
-                    <p-iconField>
-                        <p-inputIcon styleClass="pi pi-search" />
-                        <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
-                    </p-iconField>
-                </div>
-            </ng-template>
-            <ng-template #header>
-                <tr>
-                    <th style="width: 3rem">
-                        <p-tableHeaderCheckbox />
-                    </th>
-                    <th pSortableColumn="name" style="min-width:16rem">
-                        Nom <p-sortIcon field="name" />
-                    </th>
-                    <th pSortableColumn="description" style="min-width:16rem">
-                        Description <p-sortIcon field="description" />
-                    </th>
-                    <th pSortableColumn="dateAjout" style="min-width:16rem">
-                        Date Ajout <p-sortIcon field="dateAjout" />
-                    </th>
-                    <th pSortableColumn="dateModification" style="min-width:16rem">
-                        Date Modification <p-sortIcon field="dateModification" />
-                    </th>
-                    <th style="min-width: 12rem"></th>
-                </tr>
-            </ng-template>
-            <ng-template #body let-ufr>
-                <tr>
-                    <td style="width: 3rem">
-                        <p-tableCheckbox [value]="ufr.id" />
-                    </td>
-                    <td style="min-width: 16rem">{{ ufr.name }}</td>
-                    <td style="min-width: 16rem">{{ ufr.description }}</td>
-                    <td style="min-width: 16rem">{{ ufr.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-                    <td style="min-width: 16rem">{{ ufr.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-
-                    <td>
-                        <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editUfr(ufr)" />
-                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteUfr(ufr)" />
-                    </td>
-                </tr>
-            </ng-template>
-        </p-table>
-
-        <p-dialog [(visible)]="ufrDialog" [style]="{ width: '450px' }" header="Ajouter un UFR" [modal]="true">
-            <ng-template #content>
-                <div class="flex flex-col gap-6">
-                    <div>
-                        <label for="name" class="block font-bold mb-3">Nom</label>
-                        <input type="text" pInputText id="name" [(ngModel)]="ufr.name" required autofocus [style]="{ 'width': '100%' }"/>
-                        <small class="text-red-500" *ngIf="submitted && !ufr.name">Le nom est obligatoire.</small>
-                    </div>
-                   
-                    <div>
-                        <label for="description" class="block font-bold mb-3">Description</label>
-                        <textarea pInputText id="description" [(ngModel)]="ufr.description" required [style]="{ 'width': '100%' }"></textarea>
-                        <small class="text-red-500" *ngIf="submitted && !ufr.description">La description est obligatoire.</small>
-                    </div>
-                </div>
-            </ng-template>
-
-            <ng-template #footer>
-                <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
-                <p-button label="Enregistrer" icon="pi pi-check" (click)="saveUfr()" />
-            </ng-template>
-        </p-dialog>
-    `,
+    templateUrl: `./ufr.component.html`,
     providers: [MessageService, Ufrservice, ConfirmationService],
 })
 export class Ufrr implements OnInit {

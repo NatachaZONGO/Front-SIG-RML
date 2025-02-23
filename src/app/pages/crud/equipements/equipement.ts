@@ -1,0 +1,258 @@
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Table, TableModule } from 'primeng/table';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
+import { ToastModule } from 'primeng/toast';
+import { ToolbarModule } from 'primeng/toolbar';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { DialogModule } from 'primeng/dialog';
+import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DatePickerModule } from 'primeng/datepicker';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SelectModule } from 'primeng/select';
+import { Equipement, Equipementservice } from './equipement.service';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { DropdownModule } from 'primeng/dropdown';
+import { catchError, forkJoin, map, Observable, of } from 'rxjs';
+import { Laboratoire, Laboratoireservice } from '../laboratoire/laboratoire.service';
+
+interface Column {
+    field: string;
+    header: string;
+    customExportHeader?: string;
+}
+
+interface ExportColumn {
+    title: string;
+    dataKey: string;
+}
+
+@Component({
+    selector: 'app-crud',
+    standalone: true,
+    imports: [
+        CommonModule,
+        TableModule,
+        FormsModule,
+        ButtonModule,
+        RippleModule,
+        ToastModule,
+        ToolbarModule,
+        InputTextModule,
+        TextareaModule,
+        DialogModule,
+        TagModule,
+        ConfirmDialogModule,
+        DatePickerModule,
+        ToggleButtonModule,
+        ToggleSwitchModule,
+        SelectModule,
+        IconFieldModule,
+        InputIconModule,
+        DropdownModule,
+
+    ],
+    templateUrl: './equipement.component.html',
+    providers: [MessageService, Equipementservice, ConfirmationService, Laboratoireservice],
+})
+export class Equipementt implements OnInit {
+    equipementDialog: boolean = false;
+    equipements = signal<Equipement[]>([]);
+    equipement: Equipement = {};
+    selectedEquipements: Equipement[] | null = [];
+    submitted: boolean = false;
+    
+    laboratoires: Laboratoire[] = [];
+   
+
+    @ViewChild('dt') dt!: Table;
+
+    cols!: Column[];
+    exportColumns!: ExportColumn[];
+
+    dropdownValues = [
+        { name: 'Neuf' },
+        { name: 'En maintenance' },
+        { name: 'Hors service' },
+    ];
+
+    constructor(
+        private equipementService: Equipementservice,
+        private messageService: MessageService,
+        private confirmationService: ConfirmationService,
+        private laboratoireService: Laboratoireservice,
+    ) {}
+
+    ngOnInit() {
+        this.loadEquipementsWithLaboratoires();
+        this.loadLaboratoires();
+        this.cols = [
+            { field: 'name', header: 'Nom' },
+            { field: 'description', header: 'Description' },
+            { field: 'estDisponible', header: 'Disponibilité' },
+            { field: 'estMutualisable', header: 'Mutualisation' },
+            { field: 'etat', header: 'État' },
+            { field: 'acquereur', header: 'Acquéreur' },
+            { field: 'typeAcquisition', header: 'Type d\'Acquisition' },
+            { field: 'laboratoire.name', header: 'Laboratoire' }, 
+            { field: 'dateAjout', header: 'Date d\'Ajout' },
+            { field: 'dateModification', header: 'Date de Modification' },
+            { field: 'image', header: 'Images' }, 
+        ];
+        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+
+    }
+
+    loadLaboratoires() {
+        this.laboratoireService.getLaboratoires().subscribe({
+            next: (data) => {
+                this.laboratoires = data; // Stocke les laboratoires
+            },
+            error: (err) => console.error('Erreur lors du chargement des laboratoires', err),
+        });
+    }
+
+    loadEquipements() {
+        this.equipementService.getEquipements().subscribe({
+            next: (data) => {
+                console.log('Données reçues de l\'API :', data); // Log les données
+                this.equipements.set(data);
+            },
+            error: (err) => console.error('Erreur lors du chargement des équipements', err),
+        });
+    }
+
+    openNew() {
+        this.equipement = { createAt: new Date(), updateAt: new Date() };
+        this.submitted = false;
+        this.equipementDialog = true;
+    }
+
+    editEquipement(equipement: Equipement) {
+        this.equipement = { ...equipement, updateAt: new Date() };
+        this.equipementDialog = true;
+    }
+
+    deleteSelectedEquipements() {
+        this.confirmationService.confirm({
+            message: 'Êtes-vous sûr de vouloir supprimer les équipements sélectionnés ?',
+            header: 'Confirmation',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                if (this.selectedEquipements) {
+                    this.selectedEquipements.forEach((equipement) => {
+                        if (equipement._id) {
+                            this.equipementService.deleteEquipement(equipement._id).subscribe({
+                                next: () => {
+                                    this.equipements.set(this.equipements().filter((val) => val._id !== equipement._id));
+                                },
+                                error: (err) => console.error('Erreur lors de la suppression de l\'équipement', err),
+                            });
+                        }
+                    });
+                    this.selectedEquipements = null;
+                    this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipements supprimés', life: 3000 });
+                }
+            },
+        });
+    }
+
+    deleteEquipement(equipement: Equipement) {
+        this.confirmationService.confirm({
+            message: 'Êtes-vous sûr de vouloir supprimer ' + equipement.name + ' ?',
+            header: 'Confirmation',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                if (equipement._id) {
+                    this.equipementService.deleteEquipement(equipement._id).subscribe({
+                        next: () => {
+                            this.equipements.set(this.equipements().filter((val) => val._id !== equipement._id));
+                            this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement supprimé', life: 3000 });
+                        },
+                        error: (err) => console.error('Erreur lors de la suppression de l\'équipement', err),
+                    });
+                }
+            },
+        });
+    }
+
+    saveEquipement() {
+        this.submitted = true;
+        if (this.equipement.name?.trim() && this.equipement.description?.trim() && this.equipement.laboratoryId) {
+            if (this.equipement._id) {
+                // Mise à jour d'un équipement existant
+                this.equipementService.updateEquipement(this.equipement).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis à jour', life: 3000 });
+                        this.loadEquipementsWithLaboratoires();
+                    },
+                    error: (err) => console.error('Erreur lors de la mise à jour de l\'équipement', err),
+                });
+            } else {
+                // Création d'un nouvel équipement
+                this.equipementService.createEquipement(this.equipement).subscribe({
+                    next: () => {
+                        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement créé', life: 3000 });
+                        this.loadEquipementsWithLaboratoires();
+                    },
+                    error: (err) => console.error('Erreur lors de la création de l\'équipement', err),
+                });
+            }
+            this.equipementDialog = false;
+            this.equipement = {};
+        }
+    }
+
+    hideDialog() {
+        this.equipementDialog = false;
+        this.submitted = false;
+    }
+
+    onGlobalFilter(table: Table, event: Event) {
+        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+    }
+
+    exportCSV() {
+        this.dt.exportCSV();
+    }
+
+    getEquipements(): Observable<Equipement[]> {
+        return this.equipementService.getEquipements().pipe(
+            map((response) => response || []),
+            catchError((err) => {
+                console.error("Erreur lors de la récupération des équipements", err);
+                return of([]);
+            })
+        );
+    }
+    
+    loadEquipementsWithLaboratoires() {
+        this.equipementService.getEquipementsWithLaboratoires().subscribe({
+            next: (data) => {
+                console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
+                this.equipements.set(data);
+            },
+            error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
+        });
+    }
+
+    onFileChange(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const imageDataUrl = reader.result as string;
+            const imgElement = document.getElementById('image-preview') as HTMLImageElement;
+            imgElement.src = imageDataUrl;
+          };
+          reader.readAsDataURL(file);
+        }
+      }
+}

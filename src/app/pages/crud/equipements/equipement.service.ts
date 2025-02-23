@@ -2,8 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { Laboratoire, Laboratoireservice } from './laboratoire.service';
-import { BackendURL } from '../../const';
+import { BackendURL } from '../../../const';
+import { Laboratoire, Laboratoireservice } from '../laboratoire/laboratoire.service';
 
 export interface Equipement {
     _id?: string; 
@@ -24,13 +24,13 @@ export interface Equipement {
 }
 
 @Injectable({
-    providedIn: 'root', // Le service est fourni au niveau racine
+    providedIn: 'root',
 })
 export class Equipementservice {
     private apiUrl = `${BackendURL}/equipment`;
     
 
-    constructor(private http: HttpClient, private laboratoireService: Laboratoireservice) {}
+    constructor(private http: HttpClient, private Laboratoireservice: Laboratoireservice) {}
 
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
@@ -99,7 +99,7 @@ export class Equipementservice {
     getEquipementsWithLaboratoires(): Observable<Equipement[]> {
         return forkJoin({
             equipements: this.getEquipements(),
-            laboratoires: this.laboratoireService.getLaboratoires(), // Récupère tous les laboratoires
+            laboratoires: this.Laboratoireservice.getLaboratoires(), // Récupère tous les laboratoires
         }).pipe(
             map(({ equipements, laboratoires }) => {
                 // Associe chaque équipement à son laboratoire

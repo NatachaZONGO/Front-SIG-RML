@@ -1,0 +1,177 @@
+<p-toast />
+<p-confirmDialog />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedEquipements()" [disabled]="!selectedEquipements || !selectedEquipements.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Exporter" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table
+    #dt
+    [value]="equipements()"
+    [rows]="10"
+    [columns]="cols"
+    [paginator]="true"
+    [globalFilterFields]="['name', 'description', 'etat', 'acquereur', 'typeAcquisition']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [(selection)]="selectedEquipements"
+    [rowHover]="true"
+    dataKey="_id"
+    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} entrées"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Gestion des Équipements</h5>
+            <p-iconField>
+                <p-inputIcon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..." />
+            </p-iconField>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="name" style="min-width:16rem">
+                Nom <p-sortIcon field="name" />
+            </th>
+            <th pSortableColumn="description" style="min-width:16rem">
+                Description <p-sortIcon field="description" />
+            </th>
+            <th pSortableColumn="estDisponible" style="min-width:16rem">
+                Disponibilité <p-sortIcon field="estDisponible" />
+            </th>
+            <th pSortableColumn="estMutualisable" style="min-width:16rem">
+                Mutualisation <p-sortIcon field="estMutualisable" />
+            </th>
+            <th pSortableColumn="etat" style="min-width:16rem">
+                État <p-sortIcon field="etat" />
+            </th>
+            <th pSortableColumn="acquereur" style="min-width:16rem">
+                Acquéreur <p-sortIcon field="acquereur" />
+            </th>
+            <th pSortableColumn="typeAcquisition" style="min-width:16rem">
+                Type d'Acquisition <p-sortIcon field="typeAcquisition" />
+            </th>
+            <th pSortableColumn="laboratoire" style="min-width:16rem">
+                Laboratoire <p-sortIcon field="laboratoire" />
+            </th>
+            <th pSortableColumn="dateAjout" style="min-width:16rem">
+                Date d'Ajout <p-sortIcon field="dateAjout" />
+            </th>
+            <th pSortableColumn="dateModification" style="min-width:16rem">
+                Date de Modification <p-sortIcon field="dateModification" />
+            </th>
+            <th pSortableColumn="image" style="min-width:16rem">
+                Image <p-sortIcon field="image" />
+            </th>
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-equipement>
+        <tr>
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="equipement.id" />
+            </td>
+            <td style="min-width: 16rem">{{ equipement.name }}</td>
+            <td style="min-width: 16rem">{{ equipement.description }}</td>
+            <td style="min-width: 16rem">{{ equipement.isAvailable ? 'Oui' : 'Non' }}</td>
+            <td style="min-width: 16rem">{{ equipement.isMutual ? 'Oui' : 'Non' }}</td>
+            <td style="min-width: 16rem">{{ equipement.state }}</td>
+            <td style="min-width: 16rem">{{ equipement.owner }}</td>
+            <td style="min-width: 16rem">{{ equipement.acquisitionType }}</td>
+            <td style="min-width: 16rem">{{ equipement.laboratoire?.name }}</td>
+            <td style="min-width: 16rem">{{ equipement.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td style="min-width: 16rem">{{ equipement.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
+            <td style="min-width: 12rem"><img src="http://102.211.121.54:8080/{{ equipement.image }}" alt=""></td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editEquipement(equipement)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteEquipement(equipement)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="equipementDialog" [style]="{ width: '800px' }" header="Détails de l'Équipement" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="name" class="block font-bold mb-3">Nom</label>
+                <input type="text" pInputText id="name" [(ngModel)]="equipement.name" required autofocus />
+                <small class="text-red-500" *ngIf="submitted && !equipement.name">Le nom est obligatoire.</small>
+            </div>
+            <div>
+                <label for="description" class="block font-bold mb-3">Description</label>
+                <textarea pInputTextarea id="description" [(ngModel)]="equipement.description" required></textarea>
+                <small class="text-red-500" *ngIf="submitted && !equipement.description">La description est obligatoire.</small>
+            </div>
+            <div class="flex justify-between gap-4">
+                <div class="flex items-center gap-2 w-1/2">
+                    <label class="font-semibold text-lg">Disponibilité :</label>
+                    <p-toggleswitch [(ngModel)]="equipement.estDisponible"></p-toggleswitch>
+                    <span class="font-bold" [ngClass]="{'text-green-500': equipement.estDisponible, 'text-red-500': !equipement.estDisponible}">
+                        {{ equipement.estDisponible ? 'Oui' : 'Non' }}
+                    </span>
+                </div>
+                <div class="flex items-center gap-2 w-1/2">
+                    <label class="font-semibold text-lg">Mutualisation :</label>
+                    <p-toggleswitch [(ngModel)]="equipement.estMutualisable"></p-toggleswitch>
+                    <span class="font-bold" [ngClass]="{'text-green-500': equipement.estMutualisable, 'text-red-500': !equipement.estMutualisable}">
+                        {{ equipement.estMutualisable ? 'Oui' : 'Non' }}
+                    </span>
+                </div>
+            </div>
+            <div>
+                <label for="etat" class="block font-bold mb-3">État</label>
+                <p-dropdown [(ngModel)]="equipement.etat" [options]="dropdownValues" optionLabel="name" placeholder="Sélectionner un état"></p-dropdown>
+                <small class="text-red-500" *ngIf="submitted && !equipement.etat">L'état est obligatoire.</small>
+            </div>
+            <div class="flex justify-between gap-4">
+                <div class="w-1/2">
+                    <label for="acquereur" class="block font-bold mb-3">Acquéreur</label>
+                    <input type="text" pInputText id="acquereur" [(ngModel)]="equipement.acquereur" required />
+                </div>
+                <div class="w-1/2">
+                    <label for="typeAcquisition" class="block font-bold mb-3">Type d'Acquisition</label>
+                    <input type="text" pInputText id="typeAcquisition" [(ngModel)]="equipement.typeAcquisition" required />
+                </div>
+            </div>
+            <div>
+                <label for="laboratoire" class="block font-bold mb-3">Laboratoire</label>
+                <p-dropdown [(ngModel)]="equipement.laboratoryId" [options]="laboratoires" optionLabel="name" placeholder="Sélectionner un laboratoire"></p-dropdown>
+                <small class="text-red-500" *ngIf="submitted && !equipement.laboratoryId">Le laboratoire est obligatoire.</small>
+            </div>
+            <div>
+                <label for="image" class="block font-bold mb-3">Image de l'équipement</label>
+                <input type="file" id="image" (change)="onFileChange($event)" accept="image/*" />
+                <small class="text-red-500" *ngIf="submitted && !equipement.image">L'image est obligatoire.</small>
+            </div>
+            <div *ngIf="equipement.image">
+                <img [src]="equipement.image" alt="Image de l'équipement" class="mt-3 w-32 h-32 object-cover rounded" />
+            </div>
+            <div class="flex justify-between gap-4">
+                <div class="w-1/2">
+                    <label class="font-semibold text-lg">Date d'Ajout</label>
+                    <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.createAt"></p-datepicker>
+                </div>
+                <div class="w-1/2">
+                    <label class="font-semibold text-lg">Date de Modification</label>
+                    <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.updateAt"></p-datepicker>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template #footer>
+        <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Enregistrer" icon="pi pi-check" (click)="saveEquipement()" />
+    </ng-template>
+</p-dialog>

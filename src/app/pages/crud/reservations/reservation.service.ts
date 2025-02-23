@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, forkJoin, map, Observable, of, switchMap } from 'rxjs';
-import { Equipement, Equipementservice } from './equipement.service';
-import { BackendURL, LocalStorageFields } from '../../const';
-import { UserService } from './user.service';
+import { catchError, forkJoin, map, Observable, of, switchMap, throwError } from 'rxjs';
+import { BackendURL, LocalStorageFields } from '../../../const';
+import { UserService } from '../user/user.service';
+import { Equipementservice } from '../equipements/equipement.service';
 
 export interface Reservation {
         id?: string;
@@ -91,6 +91,19 @@ export class ReservationService {
                 })
             );
         }
-    }
 
+        createReservation(reservation: Reservation): Observable<Reservation> {
+            const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
+            console.log("Token avant la requête de création de réservation (createReservation) :", token); // Log du token
+        
+            return this.http.post<Reservation>(`${this.apiUrl}`, reservation).pipe(
+                catchError((err) => {
+                    console.error('Erreur lors de la création de la réservation (createReservation) :', err);
+                    console.log("Token после ошибки (createReservation) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token после ошибки
+                    return throwError(() => err);
+                })
+            );
+    } 
+    
+}
     

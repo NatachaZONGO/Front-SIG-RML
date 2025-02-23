@@ -124,11 +124,14 @@ connexion(userConnexion: UserConnexion): Promise<any> {
 
 
 
-    logout() {
-        this.accessToken = undefined;
-        localStorage.removeItem(LocalStorageFields.accessToken);
-        localStorage.removeItem(LocalStorageFields.userRole);
-    }
+logout() {
+    this.accessToken = undefined;
+    localStorage.removeItem(LocalStorageFields.accessToken);
+    localStorage.removeItem(LocalStorageFields.userRole);
+    localStorage.removeItem('utilisateur'); // Supprime les informations de l'utilisateur
+    this.utilisateurConnecteSubject.next(null); // Notifie que l'utilisateur est déconnecté
+}
+
 
    
 
@@ -168,4 +171,18 @@ connexion(userConnexion: UserConnexion): Promise<any> {
         }
         return null;
       }
+
+      getCurrentUser(): any {
+        const userString = localStorage.getItem('utilisateur'); // Récupère les données de l'utilisateur depuis le localStorage
+        if (userString) {
+            return JSON.parse(userString); // Convertit la chaîne JSON en objet
+        }
+        return null; // Retourne null si l'utilisateur n'est pas connecté
+    }
+
+    isLoggedIn(): boolean {
+        const token = localStorage.getItem(LocalStorageFields.accessToken); 
+        return !!token; // Retourne true si le token existe, sinon false
+    }
+    
 }

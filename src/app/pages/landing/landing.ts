@@ -6,12 +6,13 @@ import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { TopbarWidget } from './components/topbarwidget.component';
 import { Accueil } from "./components/accueil";
-import { Materiel } from "./components/materiel";
+import { MaterielComponent } from './materiels/materiel';
+
 
 @Component({
     selector: 'app-landing',
     standalone: true,
-    imports: [RouterModule, TopbarWidget, RippleModule, StyleClassModule, ButtonModule, DividerModule, Accueil, Materiel],
+    imports: [RouterModule, TopbarWidget, RippleModule, StyleClassModule, ButtonModule, DividerModule, Accueil, MaterielComponent],
     template: `
         <div class="bg-surface-0 dark:bg-surface-900">
             <div id="home" class="landing-wrapper overflow-hidden">

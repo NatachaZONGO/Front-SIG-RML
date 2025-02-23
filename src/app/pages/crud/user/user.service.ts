@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
-import { BackendURL } from '../../const';
+import { BackendURL } from '../../../const';
 
 export interface User {
     _id?: string;

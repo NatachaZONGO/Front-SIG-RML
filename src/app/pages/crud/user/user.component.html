@@ -1,0 +1,128 @@
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedUsers()" [disabled]="!selectedUsers || !selectedUsers.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table
+    #dt
+    [value]="users()"
+    [rows]="10"
+    [columns]="cols"
+    [paginator]="true"
+    [globalFilterFields]="['name', 'prenom', 'email']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [(selection)]="selectedUsers"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Gestion des utilisateurs</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+            </p-iconfield>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="name" style="min-width:16rem">
+                Nom <p-sortIcon field="name" />
+            </th>
+            <th pSortableColumn="prenom" style="min-width:16rem">
+                Prenom <p-sortIcon field="prenom" />
+            </th>
+            <th pSortableColumn="role" style="min-width:16rem">
+                Role <p-sortIcon field="role" />
+            </th>
+            <th pSortableColumn="phone" style="min-width:16rem">
+                Telephone <p-sortIcon field="phone" />
+            </th>
+            <th pSortableColumn="email" style="min-width:16rem">
+                Email <p-sortIcon field="email" />
+            </th>
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-user>
+        <tr>
+        <td style="width: 3rem">
+                <p-tableCheckbox [value]="user.id" />
+            </td>
+            <td style="min-width: 16rem">{{ user.firstname }}</td>
+            <td style="min-width: 16rem">{{ user.lastname }}</td>
+            <td style="min-width: 16rem">{{ user.role }}</td>
+            <td style="min-width: 16rem">{{ user.phone }}</td>
+            <td style="min-width: 16rem">{{ user.email }}</td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editUser(user)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteUser(user)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="userDialog" [style]="{ width: '600px' }" header="Ajouter un utilisateur" [modal]="true">
+<ng-template #content>
+<div class="flex flex-col gap-4">
+    <div class="flex gap-4">
+        <div class="flex-1">
+            <label for="name" class="block font-bold mb-2">Nom</label>
+            <input type="text" pInputText id="name" [(ngModel)]="user.firstname" required class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && !user.firstname">Le nom est obligatoire.</small>
+        </div>
+        <div class="flex-1">
+            <label for="prenom" class="block font-bold mb-2">Prénom</label>
+            <input type="text" pInputText id="prenom" [(ngModel)]="user.lastname" required class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && !user.lastname">Le prénom est obligatoire.</small>
+        </div>
+    </div>
+
+    <div>
+        <label for="role" class="block font-bold mb-2">Rôle</label>
+        <p-dropdown id="role" [(ngModel)]="user.scope" [options]="roles" optionLabel="label" optionValue="value" placeholder="Sélectionnez un rôle" required [style]="{ 'width': '100%' }"></p-dropdown>
+        <small class="text-red-500" *ngIf="submitted && !user.scope">Le rôle est obligatoire.</small>
+    </div>
+
+    <div class="flex gap-4">
+        <div class="flex-1">
+            <label for="phone" class="block font-bold mb-2">Téléphone</label>
+            <input type="text" pInputText id="phone" [(ngModel)]="user.phone" required class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && !user.phone">Le téléphone est obligatoire.</small>
+        </div>
+        <div class="flex-1">
+            <label for="email" class="block font-bold mb-2">Email</label>
+            <input type="text" pInputText id="email" [(ngModel)]="user.email" required class="w-full" />
+            <small class="text-red-500" *ngIf="submitted && !user.email">L'email est obligatoire.</small>
+        </div>
+    </div>
+
+    <!-- Mot de passe -->
+    <div>
+        <label for="password" class="block font-bold mb-2">Mot de passe</label>
+        <input type="password" pInputText id="password" [(ngModel)]="user.password" required class="w-full" />
+        <small class="text-red-500" *ngIf="submitted && !user.password">Le mot de passe est obligatoire.</small>
+    </div>
+</div>
+</ng-template>
+
+<ng-template #footer>
+<p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+<p-button label="Enregistrer" icon="pi pi-check" (click)="saveUser()" />
+</ng-template>
+</p-dialog>
+
+
+<p-confirmdialog [style]="{ width: '450px' }" />
