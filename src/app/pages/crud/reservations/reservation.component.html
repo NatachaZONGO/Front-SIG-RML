@@ -56,9 +56,9 @@
         <tr>
             <td style="min-width: 16rem">{{ reservation.equipementName }}</td>
             <td style="min-width: 16rem">{{ reservation.userName }}</td>
-            <td style="min-width: 16rem">{{ reservation.startAt | date:'dd/MM/yyyy' }}</td>
-            <td style="min-width: 16rem">{{ reservation.endAt | date:'dd/MM/yyyy' }}</td>
-            <td style="min-width: 16rem">{{ reservation.state }}</td>
+            <td style="min-width: 16rem">{{ reservation.date_debut | date:'dd/MM/yyyy' }}</td>
+            <td style="min-width: 16rem">{{ reservation.date_fin | date:'dd/MM/yyyy' }}</td>
+            <td style="min-width: 16rem">{{ reservation.status }}</td>
             <td>
                 <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (click)="validateReservation(reservation)" [disabled]="reservation.state !== 'pending'" />
                 <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true" (click)="cancelReservation(reservation)" [disabled]="reservation.state !== 'pending'" />
@@ -68,28 +68,28 @@
     </ng-template>
 </p-table>
 
-<p-dialog [(visible)]="reservationDialog" [style]="{ width: '450px' }" header="Détails de la Réservation" [modal]="true">
+<p-dialog [(visible)]="reservationDialog" [style]="{ width: '600px' }" header="Détails de la Réservation" [modal]="true">
     <ng-template #content>
-        <div class="flex flex-col gap-6">
-            <div>
-                <label for="equipement" class="block font-bold mb-3">Équipement</label>
-                <input type="text" pInputText id="equipement" [(ngModel)]="reservation.equipementName" readonly />
+        <div class="flex flex-col gap-4">
+            <div class="flex justify-between items-center">
+                <span class="font-bold">Équipement :</span>
+                <span>{{ reservation.equipementName }}</span>
             </div>
-            <div>
-                <label for="user" class="block font-bold mb-3">Utilisateur</label>
-                <input type="text" pInputText id="user" [(ngModel)]="reservation.userName" readonly />
+            <div class="flex justify-between items-center">
+                <span class="font-bold">Utilisateur :</span>
+                <span>{{ reservation.user_id }}</span>
             </div>
-            <div>
-                <label for="dateDebut" class="block font-bold mb-3">Date Début</label>
-                <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.date_debut" readonly />
+            <div class="flex justify-between items-center">
+                <span class="font-bold">Date Début :</span>
+                <span>{{ reservation.date_debut | date:'dd/MM/yyyy' }}</span>
             </div>
-            <div>
-                <label for="dateFin" class="block font-bold mb-3">Date Fin</label>
-                <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.date_fin" readonly />
+            <div class="flex justify-between items-center">
+                <span class="font-bold">Date Fin :</span>
+                <span>{{ reservation.date_fin | date:'dd/MM/yyyy' }}</span>
             </div>
-            <div>
-                <label for="statut" class="block font-bold mb-3">Statut</label>
-                <input type="text" pInputText id="statut" [(ngModel)]="reservation.state" readonly />
+            <div class="flex justify-between items-center">
+                <span class="font-bold">Statut :</span>
+                <span>{{ reservation.status }}</span>
             </div>
         </div>
     </ng-template>
@@ -98,6 +98,7 @@
         <p-button label="Fermer" icon="pi pi-times" text (click)="hideDialog()" />
     </ng-template>
 </p-dialog>
+
 
 <p-confirmdialog [style]="{ width: '450px' }" />
 `,

@@ -12,6 +12,7 @@ export interface Reservation {
         prenom: string;
         email: string;    
         contact: string;
+        status?: string;
     
         
         

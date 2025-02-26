@@ -100,10 +100,10 @@ export class ReservationComponent implements OnInit {
 
         this.cols = [
             { field: 'equipementName', header: 'Équipement' },
-            { field: 'userName', header: 'Utilisateur' },
-            { field: 'startAt', header: 'Date Début' },
-            { field: 'endAt', header: 'Date Fin' },
-            { field: 'state', header: 'Statut' },
+            { field: 'user_id', header: 'Utilisateur' },
+            { field: 'date_debut', header: 'Date Début' },
+            { field: 'date_fin', header: 'Date Fin' },
+
         ];
 
         this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
@@ -163,12 +163,23 @@ export class ReservationComponent implements OnInit {
             next: (reservations) => {
                 const reservationsWithDetails = reservations.map((reservation) => {
                     const equipement = this.equipements.find((e) => e.id === reservation.equipement_id);
-                    const user = this.users.find((u) => u.id === reservation.user_id );
+                    let userName = 'Inconnu';
+    
+                    if (reservation.user_id) {
+                        const user = this.users.find((u) => u.id === reservation.user_id);
+                        userName = user ? `${user.firstname} ${user.lastname}` : 'Inconnu';
+                    } else if (reservation.info_utilisateur) {
+                        // Si l'utilisateur n'est pas connecté, extraire les informations de info_utilisateur
+                        const infoUtilisateur = JSON.parse(reservation.info_utilisateur);
+                        const firstName = infoUtilisateur.firstname || '';
+                        const lastName = infoUtilisateur.lastname || '';
+                        userName = firstName && lastName ? `${firstName} ${lastName}` : 'Inconnu';
+                    }
     
                     return {
                         ...reservation,
                         equipementName: equipement ? equipement.nom : 'Inconnu',
-                        userName: user ? `${user.firstname} ${user.lastname}` : 'Inconnu', // Utilisez firstname et lastname
+                        userName: userName,
                     };
                 });
     
@@ -178,4 +189,5 @@ export class ReservationComponent implements OnInit {
             error: (err) => console.error('Erreur lors du chargement des réservations', err),
         });
     }
+    
 }

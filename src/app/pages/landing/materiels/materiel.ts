@@ -57,18 +57,34 @@ export class MaterielComponent implements OnInit {
     // Vérifie si l'utilisateur est connecté
     checkLoginStatus() {
         this.isLoggedIn = this.authService.isLoggedIn();
+        console.log('Statut de connexion:', this.isLoggedIn);
+    
         if (this.isLoggedIn) {
             const user = this.authService.getCurrentUser();
-            this.reservation.user_id = user.id;
-            this.reservation.info_utilisateur = JSON.stringify({
-                firstname: user.nom,
-                lastname: user.prenom,
-                email: user.email,
-                phone: user.contact,
-                address: '',
-            });
+            console.log('Utilisateur récupéré:', user);
+    
+            if (user && user.id) {
+                this.reservation = { // Crée une nouvelle copie de l'objet pour forcer la détection du changement
+                    ...this.reservation,
+                    user_id: user.id,
+                    info_utilisateur: JSON.stringify({
+                        firstname: user.firstname,
+                        lastname: user.lastname,
+                        email: user.email,
+                        phone: user.phone,
+                        address: user.address,
+                    }),
+                };
+    
+                console.log('ID utilisateur stocké:', this.reservation.user_id);
+                console.log('Infos utilisateur stockées:', this.reservation.info_utilisateur);
+            } else {
+                console.warn("Utilisateur invalide ou ID manquant !");
+            }
         }
     }
+    
+    
 
     // Affiche les détails d'un équipement
     voirDetails(equipement: Equipement) {
@@ -85,6 +101,7 @@ export class MaterielComponent implements OnInit {
         if (equipement.estdisponible) {
             this.equipementAReserver = equipement;
             this.reservation.equipement_id = equipement.id || '';
+
             this.reservationDialog = true;
         } else {
             alert("Cet équipement n'est pas disponible pour réservation.");

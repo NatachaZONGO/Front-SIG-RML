@@ -5,6 +5,7 @@ import { BackendURL, LocalStorageFields } from '../../../const';
 import { UserService } from '../user/user.service';
 import { Equipementservice } from '../equipements/equipement.service';
 import { Reservation } from './resrvation.model';
+import { HttpHeaders } from '@angular/common/http';
 
 
 @Injectable({
@@ -86,14 +87,34 @@ export class ReservationService {
             const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
             console.log("Token avant la requête de création de réservation (createReservation) :", token); // Log du token
         
-            return this.http.post<Reservation>(`${this.apiUrl}`, reservation).pipe(
+            let headers = new HttpHeaders({
+                'Content-Type': 'application/json'
+            });
+        
+            let url = `${this.apiUrl}`;  // L'URL de base
+        
+            // Vérifier si l'utilisateur est connecté
+            if (token) {
+                // Si l'utilisateur est connecté, ajouter l'en-tête Authorization
+                headers = headers.set('Authorization', `Bearer ${token}`);
+            } else {
+                // Si l'utilisateur n'est pas connecté, l'info_utilisateur doit être incluse dans la requête
+                if (!reservation.info_utilisateur) {
+                    console.error('Informations utilisateur manquantes pour utilisateur non connecté.');
+                    return throwError(() => new Error('Informations utilisateur manquantes.'));
+                }
+                url = `${this.apiUrl}/guest`;  // URL pour les utilisateurs non connectés
+            }
+        
+            return this.http.post<Reservation>(url, reservation, { headers }).pipe(
                 catchError((err) => {
                     console.error('Erreur lors de la création de la réservation (createReservation) :', err);
-                    console.log("Token после ошибки (createReservation) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token после ошибки
+                    console.log("Token après erreur (createReservation) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après erreur
                     return throwError(() => err);
                 })
             );
-    } 
+        }
+        
     
 }
     

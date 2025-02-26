@@ -155,6 +155,7 @@ export class AuthService {
         if (userString) {
             try {
                 const user = JSON.parse(userString);
+                console.log(user);
                 return user && user.id ? user : null;
             } catch (e) {
                 console.error('Erreur lors du parsing de l\'utilisateur:', e);
