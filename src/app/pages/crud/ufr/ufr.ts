@@ -20,7 +20,9 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { CalendarIcon } from 'primeng/icons';
-import { Ufr, Ufrservice } from './ufr.service';
+import { Ufrservice } from './ufr.service';
+import { Ufr } from './ufr.model';
+
 
 interface Column {
     field: string;
@@ -93,7 +95,9 @@ export class Ufrr implements OnInit {
 
     loadUfrs() {
         this.ufrService.getUfrs().subscribe({
-            next: (data) => this.ufrs.set(data),
+            next: (data) => {
+                this.ufrs.set(data.content); // Extrayez la propriété `content`
+            },
             error: (err) => console.error('Erreur lors du chargement des UFRs', err),
         });
     }
@@ -117,10 +121,10 @@ export class Ufrr implements OnInit {
             accept: () => {
                 if (this.selectedUfrs) {
                     this.selectedUfrs.forEach((ufr) => {
-                        if (ufr._id) {
-                            this.ufrService.deleteUfr(ufr._id).subscribe({
+                        if (ufr.id) {
+                            this.ufrService.deleteUfr(ufr.id).subscribe({
                                 next: () => {
-                                    this.ufrs.set(this.ufrs().filter((val) => val._id !== ufr._id));
+                                    this.ufrs.set(this.ufrs().filter((val) => val.id !== ufr.id));
                                 },
                                 error: (err) => console.error('Erreur lors de la suppression de l\'UFR', err),
                             });
@@ -135,14 +139,14 @@ export class Ufrr implements OnInit {
 
     deleteUfr(ufr: Ufr) {
         this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir supprimer ' + ufr.name + ' ?',
+            message: 'Êtes-vous sûr de vouloir supprimer ' + ufr.intitule + ' ?',
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                if (ufr._id) {
-                    this.ufrService.deleteUfr(ufr._id).subscribe({
+                if (ufr.id) {
+                    this.ufrService.deleteUfr(ufr.id).subscribe({
                         next: () => {
-                            this.ufrs.set(this.ufrs().filter((val) => val._id !== ufr._id));
+                            this.ufrs.set(this.ufrs().filter((val) => val.id !== ufr.id));
                             this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR supprimé', life: 3000 });
                         },
                         error: (err) => console.error('Erreur lors de la suppression de l\'UFR', err),
@@ -154,10 +158,9 @@ export class Ufrr implements OnInit {
 
     saveUfr() {
         this.submitted = true;
-        if (this.ufr.name?.trim() && this.ufr.description?.trim()) {
-            if (this.ufr._id) {
+        if (this.ufr.intitule?.trim() && this.ufr.description?.trim()) {
+            if (this.ufr.id) {
                 // Mise à jour d'un UFR existant
-                this.ufr.updatedAt = new Date(); // Met à jour la date de modification
                 this.ufrService.updateUfr(this.ufr).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR modifié', life: 3000 });
@@ -167,8 +170,6 @@ export class Ufrr implements OnInit {
                 });
             } else {
                 // Création d'un nouvel UFR
-                this.ufr.createdAt = new Date(); // Définit la date de création
-                this.ufr.updatedAt = new Date(); // Définit la date de modification
                 this.ufrService.createUfr(this.ufr).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR ajouté', life: 3000 });

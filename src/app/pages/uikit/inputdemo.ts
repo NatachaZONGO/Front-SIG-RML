@@ -315,13 +315,6 @@ export class InputDemo implements OnInit {
 
     nodeService = inject(NodeService);
 
-    ngOnInit() {
-        this.countryService.getCountries().then((countries) => {
-            this.autoValue = countries;
-        });
-
-        this.nodeService.getFiles().then((data) => (this.treeSelectNodes = data));
-    }
 
     filterCountry(event: AutoCompleteCompleteEvent) {
         const filtered: any[] = [];

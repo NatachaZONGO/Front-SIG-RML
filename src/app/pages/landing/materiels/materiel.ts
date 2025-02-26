@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Equipement, Equipementservice } from '../../crud/equipements/equipement.service';
 import { ReservationService } from '../../crud/reservations/reservation.service';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../auth/auth.service'; // Service d'authentification
+import { AuthService } from '../../auth/auth.service';
+import { Equipementservice } from '../../crud/equipements/equipement.service';
+import { Equipement } from '../../crud/equipements/equipement.model';
 
 @Component({
     selector: 'materiel',
@@ -18,115 +19,134 @@ export class MaterielComponent implements OnInit {
     reservationDialog: boolean = false;
     equipementAReserver: Equipement | null = null;
 
-    // Données du formulaire de réservation
+    // Données du formulaire de réservation
     reservation = {
-        startAt: '',
-        endAt: '',
-        state: 'En cours', // État par défaut
-        reservedAt: new Date().toISOString().split('T')[0], // Date actuelle
-        userId: '', // ID de l'utilisateur (vide si non connecté)
-        equipmentId: '', // ID de l'équipement à réserver
-        nom: '', // Nom de l'utilisateur non connecté
-        prenom: '', // Prénom de l'utilisateur non connecté
-        email: '', // Email de l'utilisateur non connecté
-        contact: '', // Contact de l'utilisateur non connecté
+        date_debut: '',
+        date_fin: '',
+        user_id: '',
+        equipement_id: '',
+        info_utilisateur: '',
+        motif: '',
+        commentaire: '',
+        nom: '',
+        prenom: '',
+        email: '',
+        contact: '',
     };
 
-    isLoggedIn: boolean = false; // Vérifie si l'utilisateur est connecté
+    isLoggedIn: boolean = false;
 
     constructor(
         private equipementService: Equipementservice,
         private reservationService: ReservationService,
-        private authService: AuthService // Service d'authentification
+        private authService: AuthService
     ) {}
 
     ngOnInit(): void {
         this.loadEquipements();
-        this.checkLoginStatus(); // Vérifie si l'utilisateur est connecté
+        this.checkLoginStatus();
     }
 
-    // Charge les équipements disponibles
+    // Charge les équipements disponibles
     loadEquipements() {
         this.equipementService.getEquipements().subscribe((data) => {
             this.equipements = data;
         });
     }
 
-    // Vérifie si l'utilisateur est connecté
+    // Vérifie si l'utilisateur est connecté
     checkLoginStatus() {
-        this.isLoggedIn = this.authService.isLoggedIn(); // Méthode à implémenter dans AuthService
+        this.isLoggedIn = this.authService.isLoggedIn();
         if (this.isLoggedIn) {
-            const user = this.authService.getCurrentUser(); // Récupère l'utilisateur connecté
-            this.reservation.userId = user._id; // Définit l'ID de l'utilisateur
-            this.reservation.nom = user.nom; // Remplit automatiquement le nom
-            this.reservation.prenom = user.prenom; // Remplit automatiquement le prénom
-            this.reservation.email = user.email; // Remplit automatiquement l'email
-            this.reservation.contact = user.contact; // Remplit automatiquement le contact
+            const user = this.authService.getCurrentUser();
+            this.reservation.user_id = user.id;
+            this.reservation.info_utilisateur = JSON.stringify({
+                firstname: user.nom,
+                lastname: user.prenom,
+                email: user.email,
+                phone: user.contact,
+                address: '',
+            });
         }
     }
 
-    // Affiche les détails d'un équipement
+    // Affiche les détails d'un équipement
     voirDetails(equipement: Equipement) {
         this.equipementSelectionne = equipement;
     }
 
-    // Ferme le modal des détails
+    // Ferme le modal des détails
     fermerDetails() {
         this.equipementSelectionne = null;
     }
 
-    // Ouvre le formulaire de réservation pour un équipement
+    // Ouvre le formulaire de réservation pour un équipement
     reserverEquipement(equipement: Equipement) {
-        if (equipement.estDisponible) {
+        if (equipement.estdisponible) {
             this.equipementAReserver = equipement;
-            this.reservation.equipmentId = equipement._id || ''; // Définit l'ID de l'équipement
-            this.reservationDialog = true; // Affiche le formulaire de réservation
+            this.reservation.equipement_id = equipement.id || '';
+            this.reservationDialog = true;
         } else {
-            alert('Cet équipement n\'est pas disponible pour réservation.');
+            alert("Cet équipement n'est pas disponible pour réservation.");
         }
     }
 
-    // Soumet le formulaire de réservation
+    // Soumet le formulaire de réservation
     soumettreReservation() {
-        if (this.reservation.startAt && this.reservation.endAt && this.reservation.equipmentId) {
-            if (!this.isLoggedIn && (!this.reservation.nom || !this.reservation.prenom || !this.reservation.email || !this.reservation.contact)) {
-                alert('Veuillez remplir tous les champs pour les utilisateurs non connectés.');
-                return;
+        if (
+            this.reservation.date_debut &&
+            this.reservation.date_fin &&
+            this.reservation.equipement_id
+        ) {
+            if (!this.isLoggedIn) {
+                if (!this.reservation.nom || !this.reservation.prenom || !this.reservation.email || !this.reservation.contact) {
+                    alert("Veuillez remplir toutes les informations utilisateur.");
+                    return;
+                }
+                // Transformer les informations utilisateur en JSON
+                this.reservation.info_utilisateur = JSON.stringify({
+                    firstname: this.reservation.nom,
+                    lastname: this.reservation.prenom,
+                    email: this.reservation.email,
+                    phone: this.reservation.contact,
+                    address: '',
+                });
             }
-
+    
             this.reservationService.createReservation(this.reservation).subscribe({
                 next: (response) => {
-                    alert('Réservation réussie !');
-                    this.reservationDialog = false; // Ferme le formulaire
-                    this.reinitialiserFormulaire(); // Réinitialise le formulaire
+                    alert("Réservation réussie !");
+                    this.reservationDialog = false;
+                    this.reinitialiserFormulaire();
                 },
                 error: (err) => {
-                    console.error('Erreur lors de la réservation', err);
-                    alert('Erreur lors de la réservation. Veuillez réessayer.');
+                    console.error("Erreur lors de la réservation", err);
+                    alert("Erreur lors de la réservation. Veuillez réessayer.");
                 },
             });
         } else {
-            alert('Veuillez remplir tous les champs du formulaire.');
+            alert("Veuillez remplir tous les champs du formulaire.");
         }
     }
 
-    // Réinitialise le formulaire de réservation
+    // Réinitialise le formulaire de réservation
     reinitialiserFormulaire() {
         this.reservation = {
-            startAt: '',
-            endAt: '',
-            state: 'En cours',
-            reservedAt: new Date().toISOString().split('T')[0],
-            userId: '',
-            equipmentId: '',
+            date_debut: '',
+            date_fin: '',
+            user_id: '',
+            equipement_id: '',
+            info_utilisateur: '',
+            motif: '',
+            commentaire: '',
             nom: '',
             prenom: '',
             email: '',
-            contact: '',
+            contact: '',
         };
     }
 
-    // Ferme le formulaire de réservation
+    // Ferme le formulaire de réservation
     fermerReservation() {
         this.reservationDialog = false;
         this.reinitialiserFormulaire();

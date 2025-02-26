@@ -3,16 +3,8 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 import { BackendURL } from '../../../const';
+import { User } from './user.model';
 
-export interface User {
-    _id?: string;
-    firstname?: string; 
-    lastname?: string;
-    email?: string;
-    phone?: number;
-    password?: string;
-    scope: 'admin' | 'responsable' | 'reservant'; 
-}
 
 @Injectable({
     providedIn: 'root',
@@ -20,12 +12,12 @@ export interface User {
 export class UserService {
     private currentUserSubject = new BehaviorSubject<User | null>(null);
     public currentUser$ = this.currentUserSubject.asObservable();
-    private apiUrl = `${BackendURL}account/user`; 
+    private apiUrl = `${BackendURL}account/users`; 
 
     constructor(private http: HttpClient, private router: Router) {}
 
     getUsers(): Observable<User[]> {
-        return this.http.get<{ content: User[] }>(`${BackendURL}user/all`).pipe(
+        return this.http.get<{ content: User[] }>(`${BackendURL}users`).pipe(
             map(response => response.content) 
         );
     }
@@ -34,12 +26,16 @@ export class UserService {
         return this.http.get<User>(`${BackendURL}user/${id}`);
     }
 
+    getUsersByRole(role: string): Observable<User[]> {
+        return this.http.get<User[]>(`${BackendURL}users/role/${role}`);
+    }
+
     createUser(user: User): Observable<User> {
         return this.http.post<User>(`${BackendURL}account/create`, user);
     }
 
     updateUser(user: User): Observable<User> {
-        return this.http.put<User>(`${BackendURL}user/${user._id}`, user);
+        return this.http.put<User>(`${BackendURL}user/${user.id}`, user);
     }
 
     deleteUser(id: string): Observable<void> {

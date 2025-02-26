@@ -19,7 +19,15 @@ import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
-import { Laboratoire, Laboratoireservice } from './laboratoire.service';
+import { Laboratoireservice } from './laboratoire.service';
+import { Laboratoire } from './laboratoire.model';
+import { Ufr } from '../ufr/ufr.model';
+import { User } from '../user/user.model';
+import { Ufrservice } from '../ufr/ufr.service';
+import { UserService } from '../user/user.service';
+import { DropdownModule } from 'primeng/dropdown';
+import { forkJoin } from 'rxjs';
+
 
 interface Column {
     field: string;
@@ -55,6 +63,7 @@ interface ExportColumn {
         IconFieldModule,
         ConfirmDialogModule,
         DatePickerModule,
+        DropdownModule
    
     ],
     templateUrl: `./laboratoire.component.html`,
@@ -62,10 +71,13 @@ interface ExportColumn {
 })
 export class Laboratoiree implements OnInit {
     laboratoireDialog: boolean = false;
-    laboratoires = signal<Laboratoire[]>([]);
+   
+    laboratoires: any[] = []; 
     laboratoire: Laboratoire = {};
     selectedLaboratoires: Laboratoire[] = []; 
     submitted: boolean = false;
+    ufrs: Ufr[] = []; // Liste des UFR
+    responsables: User[] = []; // Liste des responsables
 
     @ViewChild('dt') dt!: Table;
 
@@ -76,23 +88,73 @@ export class Laboratoiree implements OnInit {
     constructor(
         private laboratoireService: Laboratoireservice,
         private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private ufrService: Ufrservice,
+        private userService: UserService
     ) {}
 
-    ngOnInit() {
-        this.loadLaboratoires();
-        this.cols = [
-            { field: 'name', header: 'Nom' },
-            { field: 'description', header: 'Description' },
-            { field: 'createdAt', header: 'Date Ajout' },
-            { field: 'updatedAt', header: 'Date Modification' },
-        ];
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+    ngOnInit(): void {
+        // Chargez les UFRs, les responsables et les laboratoires en parallèle
+        forkJoin({
+            ufrs: this.ufrService.getUfrs(),
+            responsables: this.userService.getUsersByRole('responsable'),
+            laboratoires: this.laboratoireService.getLaboratoires()
+        }).subscribe({
+            next: (response) => {
+                // Chargez les UFRs
+                this.ufrs = response.ufrs.content; // Assurez-vous que la structure correspond à votre API
+                console.log('UFRs loaded:', this.ufrs);
+    
+                // Chargez les responsables
+                this.responsables = response.responsables.map((responsable) => ({
+                    ...responsable,
+                    fullName: `${responsable.firstname} ${responsable.lastname}` // Créez une propriété `fullName`
+                }));
+                console.log('Responsables loaded:', this.responsables);
+    
+                // Extrayez la propriété `content` des laboratoires
+                const laboratoires = response.laboratoires.content;
+    
+                // Mappez les laboratoires
+                const laboratoiresMappes = laboratoires.map((laboratoire) => {
+                    const ufr = this.ufrs.find((u) => u.id === laboratoire.ufr_id);
+                    const responsable = this.responsables.find((r) => r.id === laboratoire.responsable_id);
+                    return {
+                        ...laboratoire,
+                        ufr: ufr,
+                        responsable: responsable
+                    };
+                });
+    
+                // Mettez à jour la liste des laboratoires
+                this.laboratoires = laboratoiresMappes;
+                console.log('Laboratoires chargés:', laboratoiresMappes);
+            },
+            error: (err) => console.error('Erreur lors du chargement des données', err)
+        });
     }
 
     loadLaboratoires() {
         this.laboratoireService.getLaboratoires().subscribe({
-            next: (data) => this.laboratoires.set(data),
+            next: (response: { content: Laboratoire[] }) => {
+                const laboratoires = response.content;
+                // Mappez les laboratoires pour inclure les objets `ufr` et `responsable`
+                const laboratoiresMappes = laboratoires.map((laboratoire) => {
+                    // Trouvez l'UFR correspondante
+                    const ufr = this.ufrs.find((u) => u.id === laboratoire.ufr_id);
+                // Trouvez le responsable correspondant
+                const responsable = this.responsables.find((r) => r.id === laboratoire.responsable_id);
+                    // Retournez un nouvel objet avec les données complètes
+                    return {
+                        ...laboratoire,
+                        ufr: ufr, // Ajoutez l'objet UFR
+                        responsable: responsable // Ajoutez l'objet Responsable
+                    };
+                });
+    
+                this.laboratoires = laboratoiresMappes;
+                console.log('Laboratoires chargés:', laboratoiresMappes); // Vérifiez les données dans la console
+            },
             error: (err) => console.error('Erreur lors du chargement des laboratoires', err),
         });
     }
@@ -116,10 +178,11 @@ export class Laboratoiree implements OnInit {
             accept: () => {
                 if (this.selectedLaboratoires) {
                     this.selectedLaboratoires.forEach((laboratoire) => {
-                        if (laboratoire._id) {
-                            this.laboratoireService.deleteLaboratoire(laboratoire._id).subscribe({
+                        if (laboratoire.id) {
+                            this.laboratoireService.deleteLaboratoire(laboratoire.id).subscribe({
                                 next: () => {
-                                    this.laboratoires.set(this.laboratoires().filter((val) => val._id !== laboratoire._id));
+                                    this.laboratoires = this.laboratoires.filter((val) => val.id !== laboratoire.id);
+
                                 },
                                 error: (err) => console.error('Erreur lors de la suppression du laboratoire', err),
                             });
@@ -134,14 +197,14 @@ export class Laboratoiree implements OnInit {
 
     deleteLaboratoire(laboratoire: Laboratoire) {
         this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir supprimer ' + laboratoire.name + ' ?',
+            message: 'Êtes-vous sûr de vouloir supprimer ' + laboratoire.nom + ' ?',
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                if (laboratoire._id) {
-                    this.laboratoireService.deleteLaboratoire(laboratoire._id).subscribe({
+                if (laboratoire.id) {
+                    this.laboratoireService.deleteLaboratoire(laboratoire.id).subscribe({
                         next: () => {
-                            this.laboratoires.set(this.laboratoires().filter((val) => val._id !== laboratoire._id));
+                            this.laboratoires = this.laboratoires.filter((val) => val.id !== laboratoire.id);
                             this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'Laboratoire supprimé', life: 3000 });
                         },
                         error: (err) => console.error('Erreur lors de la suppression du laboratoire', err),
@@ -150,25 +213,31 @@ export class Laboratoiree implements OnInit {
             },
         });
     }
-
     saveLaboratoire() {
         this.submitted = true;
-        if (this.laboratoire.name?.trim() && this.laboratoire.description?.trim()) {
-            if (this.laboratoire._id) {
-                // Mise à jour d'un UFR existant
-                this.laboratoire.updatedAt = new Date(); // Met à jour la date de modification
-                this.laboratoireService.updateLaboratoire(this.laboratoire).subscribe({
+    
+        // Vérifiez que les champs obligatoires sont remplis
+        if (this.laboratoire.nom?.trim() && this.laboratoire.description?.trim()) {
+            // Créez un nouvel objet avec les champs attendus par le serveur
+            const laboratoireData = {
+                nom: this.laboratoire.nom,
+                description: this.laboratoire.description,
+                ufr_id: this.laboratoire.ufr?.id, // Extrayez l'ID de l'UFR
+                responsable_id: this.laboratoire.responsable?.id // Extrayez l'ID du responsable
+            };
+    
+            if (this.laboratoire.id) {
+                // Mise à jour d'un laboratoire existant
+                this.laboratoireService.updateLaboratoire({ ...laboratoireData, id: this.laboratoire.id }).subscribe({
                     next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'UFR modifié', life: 3000 });
+                        this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'Laboratoire modifié', life: 3000 });
                         this.loadLaboratoires();
                     },
                     error: (err) => console.error('Erreur lors de la mise à jour du laboratoire', err),
                 });
             } else {
-                // Création d'un nouvel UFR
-                this.laboratoire.createdAt = new Date(); // Définit la date de création
-                this.laboratoire.updatedAt = new Date(); // Définit la date de modification
-                this.laboratoireService.createLaboratoire(this.laboratoire).subscribe({
+                // Création d'un nouveau laboratoire
+                this.laboratoireService.createLaboratoire(laboratoireData).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'Laboratoire ajouté', life: 3000 });
                         this.loadLaboratoires();
@@ -176,6 +245,7 @@ export class Laboratoiree implements OnInit {
                     error: (err) => console.error('Erreur lors de la création du laboratoire', err),
                 });
             }
+    
             this.laboratoireDialog = false;
             this.laboratoire = {};
         }

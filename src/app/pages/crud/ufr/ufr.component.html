@@ -18,7 +18,7 @@
             [rows]="10"
             [columns]="cols"
             [paginator]="true"
-            [globalFilterFields]="['name', 'description']"
+            [globalFilterFields]="['name', 'description','createdAt','updatedAt']"
             [tableStyle]="{ 'min-width': '75rem' }"
             [(selection)]="selectedUfrs"
             [rowHover]="true"
@@ -47,12 +47,6 @@
                     <th pSortableColumn="description" style="min-width:16rem">
                         Description <p-sortIcon field="description" />
                     </th>
-                    <th pSortableColumn="dateAjout" style="min-width:16rem">
-                        Date Ajout <p-sortIcon field="dateAjout" />
-                    </th>
-                    <th pSortableColumn="dateModification" style="min-width:16rem">
-                        Date Modification <p-sortIcon field="dateModification" />
-                    </th>
                     <th style="min-width: 12rem"></th>
                 </tr>
             </ng-template>
@@ -61,11 +55,8 @@
                     <td style="width: 3rem">
                         <p-tableCheckbox [value]="ufr.id" />
                     </td>
-                    <td style="min-width: 16rem">{{ ufr.name }}</td>
+                    <td style="min-width: 16rem">{{ ufr.intitule }}</td>
                     <td style="min-width: 16rem">{{ ufr.description }}</td>
-                    <td style="min-width: 16rem">{{ ufr.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-                    <td style="min-width: 16rem">{{ ufr.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-
                     <td>
                         <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editUfr(ufr)" />
                         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteUfr(ufr)" />
@@ -79,8 +70,8 @@
                 <div class="flex flex-col gap-6">
                     <div>
                         <label for="name" class="block font-bold mb-3">Nom</label>
-                        <input type="text" pInputText id="name" [(ngModel)]="ufr.name" required autofocus [style]="{ 'width': '100%' }"/>
-                        <small class="text-red-500" *ngIf="submitted && !ufr.name">Le nom est obligatoire.</small>
+                        <input type="text" pInputText id="name" [(ngModel)]="ufr.intitule" required autofocus [style]="{ 'width': '100%' }"/>
+                        <small class="text-red-500" *ngIf="submitted && !ufr.intitule">Le nom est obligatoire.</small>
                     </div>
                    
                     <div>
@@ -96,4 +87,4 @@
                 <p-button label="Enregistrer" icon="pi pi-check" (click)="saveUfr()" />
             </ng-template>
         </p-dialog>
-    `
+    

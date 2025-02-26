@@ -3,7 +3,6 @@ import { ButtonDemo } from './buttondemo';
 import { ChartDemo } from './chartdemo';
 import { FileDemo } from './filedemo';
 import { FormLayoutDemo } from './formlayoutdemo';
-import { InputDemo } from './inputdemo';
 import { ListDemo } from './listdemo';
 import { MediaDemo } from './mediademo';
 import { MessagesDemo } from './messagesdemo';
@@ -19,7 +18,6 @@ export default [
     { path: 'charts', data: { breadcrumb: 'Charts' }, component: ChartDemo },
     { path: 'file', data: { breadcrumb: 'File' }, component: FileDemo },
     { path: 'formlayout', data: { breadcrumb: 'Form Layout' }, component: FormLayoutDemo },
-    { path: 'input', data: { breadcrumb: 'Input' }, component: InputDemo },
     { path: 'list', data: { breadcrumb: 'List' }, component: ListDemo },
     { path: 'media', data: { breadcrumb: 'Media' }, component: MediaDemo },
     { path: 'message', data: { breadcrumb: 'Message' }, component: MessagesDemo },

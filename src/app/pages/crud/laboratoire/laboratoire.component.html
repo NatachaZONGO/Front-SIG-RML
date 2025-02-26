@@ -1,4 +1,3 @@
-
 <p-toast />
 <p-confirmDialog />
 
@@ -9,17 +8,17 @@
     </ng-template>
 
     <ng-template #end>
-        <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+        <p-button label="Export" icon="pi pi-upload" severity="secondary" (click)="exportCSV()" />
     </ng-template>
 </p-toolbar>
 
 <p-table
     #dt
-    [value]="laboratoires()"
+    [value]="laboratoires"
     [rows]="10"
     [columns]="cols"
     [paginator]="true"
-    [globalFilterFields]="['name', 'intitule', 'description']"
+    [globalFilterFields]="['nom', 'description', 'ufr', 'responsable']"
     [tableStyle]="{ 'min-width': '75rem' }"
     [(selection)]="selectedLaboratoires"
     [rowHover]="true"
@@ -30,10 +29,10 @@
 >
     <ng-template #caption>
         <div class="flex items-center justify-between">
-            <h5 class="m-0">Gestion des Laboratoire</h5>
+            <h5 class="m-0">Gestion des Laboratoires</h5>
             <p-iconField>
                 <p-inputIcon styleClass="pi pi-search" />
-                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..." />
             </p-iconField>
         </div>
     </ng-template>
@@ -42,17 +41,17 @@
             <th style="width: 3rem">
                 <p-tableHeaderCheckbox />
             </th>
-            <th pSortableColumn="name" style="min-width:16rem">
-                Nom <p-sortIcon field="name" />
+            <th pSortableColumn="nom" style="min-width:16rem">
+                Nom <p-sortIcon field="nom" />
             </th>
             <th pSortableColumn="description" style="min-width:16rem">
                 Description <p-sortIcon field="description" />
             </th>
-            <th pSortableColumn="dateAjout" style="min-width:16rem">
-                Date Ajout <p-sortIcon field="createdAt" />
+            <th pSortableColumn="ufr" style="min-width:16rem">
+                UFR <p-sortIcon field="ufr" />
             </th>
-            <th pSortableColumn="dateModification" style="min-width:16rem">
-                Date Modification <p-sortIcon field="updatedAt" />
+            <th pSortableColumn="responsable" style="min-width:16rem">
+                Responsable <p-sortIcon field="responsable" />
             </th>
             <th style="min-width: 12rem"></th>
         </tr>
@@ -62,11 +61,10 @@
             <td style="width: 3rem">
                 <p-tableCheckbox [value]="laboratoire" />
             </td>
-            <td style="min-width: 16rem">{{ laboratoire.name }}</td>
+            <td style="min-width: 16rem">{{ laboratoire.nom }}</td>
             <td style="min-width: 16rem">{{ laboratoire.description }}</td>
-            <td style="min-width: 16rem">{{ laboratoire.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-            <td style="min-width: 16rem">{{ laboratoire.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-
+            <td style="min-width: 16rem">{{ laboratoire.ufr?.intitule }}</td>
+            <td style="min-width: 16rem">{{ laboratoire.responsable?.firstname }} {{ laboratoire.responsable?.lastname }}</td>
             <td>
                 <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editLaboratoire(laboratoire)" />
                 <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteLaboratoire(laboratoire)" />
@@ -79,15 +77,43 @@
     <ng-template #content>
         <div class="flex flex-col gap-6">
             <div>
-                <label for="name" class="block font-bold mb-3">Nom</label>
-                <input type="text" pInputText id="name" [(ngModel)]="laboratoire.name" required autofocus [style]="{ 'width': '100%' }" />
-                <small class="text-red-500" *ngIf="submitted && !laboratoire.name">Le nom est obligatoire.</small>
+                <label for="nom" class="block font-bold mb-3">Nom</label>
+                <input type="text" pInputText id="nom" [(ngModel)]="laboratoire.nom" required autofocus [style]="{ 'width': '100%' }" />
+                <small class="text-red-500" *ngIf="submitted && !laboratoire.nom">Le nom est obligatoire.</small>
             </div>
            
             <div>
                 <label for="description" class="block font-bold mb-3">Description</label>
                 <textarea type="text" pInputText id="description" [(ngModel)]="laboratoire.description" required autofocus [style]="{ 'width': '100%' }"></textarea>
                 <small class="text-red-500" *ngIf="submitted && !laboratoire.description">La description est obligatoire.</small>
+            </div>
+
+            <!-- Dropdown pour sélectionner l'UFR -->
+            <div>
+                <label for="ufr" class="block font-bold mb-3">UFR</label>
+                <p-dropdown
+                    id="ufr"
+                    [options]="ufrs"
+                    [(ngModel)]="laboratoire.ufr"
+                    optionLabel="intitule"
+                    placeholder="Sélectionner une UFR"
+                    [style]="{ 'width': '100%' }"
+                ></p-dropdown>
+                <small class="text-red-500" *ngIf="submitted && !laboratoire.ufr">L'UFR est obligatoire.</small>
+            </div>
+
+            <!-- Dropdown pour sélectionner le responsable -->
+            <div>
+                <label for="responsable" class="block font-bold mb-3">Responsable</label>
+                <p-dropdown
+                    id="responsable"
+                    [options]="responsables"
+                    [(ngModel)]="laboratoire.responsable"
+                    optionLabel="fullName"
+                    placeholder="Sélectionner un responsable"
+                    [style]="{ 'width': '100%' }"
+                ></p-dropdown>
+                <small class="text-red-500" *ngIf="submitted && !laboratoire.responsable">Le responsable est obligatoire.</small>
             </div>
         </div>
     </ng-template>

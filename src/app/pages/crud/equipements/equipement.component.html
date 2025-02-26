@@ -65,12 +65,6 @@
             <th pSortableColumn="laboratoire" style="min-width:16rem">
                 Laboratoire <p-sortIcon field="laboratoire" />
             </th>
-            <th pSortableColumn="dateAjout" style="min-width:16rem">
-                Date d'Ajout <p-sortIcon field="dateAjout" />
-            </th>
-            <th pSortableColumn="dateModification" style="min-width:16rem">
-                Date de Modification <p-sortIcon field="dateModification" />
-            </th>
             <th pSortableColumn="image" style="min-width:16rem">
                 Image <p-sortIcon field="image" />
             </th>
@@ -82,17 +76,22 @@
             <td style="width: 3rem">
                 <p-tableCheckbox [value]="equipement.id" />
             </td>
-            <td style="min-width: 16rem">{{ equipement.name }}</td>
+            <td style="min-width: 16rem">{{ equipement.nom }}</td>
             <td style="min-width: 16rem">{{ equipement.description }}</td>
-            <td style="min-width: 16rem">{{ equipement.isAvailable ? 'Oui' : 'Non' }}</td>
-            <td style="min-width: 16rem">{{ equipement.isMutual ? 'Oui' : 'Non' }}</td>
-            <td style="min-width: 16rem">{{ equipement.state }}</td>
-            <td style="min-width: 16rem">{{ equipement.owner }}</td>
-            <td style="min-width: 16rem">{{ equipement.acquisitionType }}</td>
-            <td style="min-width: 16rem">{{ equipement.laboratoire?.name }}</td>
-            <td style="min-width: 16rem">{{ equipement.createdAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-            <td style="min-width: 16rem">{{ equipement.updatedAt | date:'dd/MM/yyyy HH:mm:ss' }}</td>
-            <td style="min-width: 12rem"><img src="http://102.211.121.54:8080/{{ equipement.image }}" alt=""></td>
+            <td style="min-width: 16rem">{{ equipement.isdisponible ? 'Oui' : 'Non' }}</td>
+            <td style="min-width: 16rem">{{ equipement.estmutualisable ? 'Oui' : 'Non' }}</td>
+            <td style="min-width: 16rem">{{ equipement.etat }}</td>
+            <td style="min-width: 16rem">{{ equipement.acquereur }}</td>
+            <td style="min-width: 16rem">{{ equipement.typeacquisition }}</td>
+            <td style="min-width: 16rem">{{ equipement.laboratoire?.nom }}</td>
+            <td style="min-width: 12rem">
+                @if (equipement.image) {<img [src]="getImageUrl(equipement.image)" alt=""[ngStyle] ="{ width: '50px', height: '50px' }">
+                    }
+                    @else {
+                        <span class="text-muted
+                        ">Pas d'image</span>
+                       }
+            </td>
             <td>
                 <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editEquipement(equipement)" />
                 <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteEquipement(equipement)" />
@@ -106,8 +105,8 @@
         <div class="flex flex-col gap-6">
             <div>
                 <label for="name" class="block font-bold mb-3">Nom</label>
-                <input type="text" pInputText id="name" [(ngModel)]="equipement.name" required autofocus />
-                <small class="text-red-500" *ngIf="submitted && !equipement.name">Le nom est obligatoire.</small>
+                <input type="text" pInputText id="name" [(ngModel)]="equipement.nom" required autofocus />
+                <small class="text-red-500" *ngIf="submitted && !equipement.nom">Le nom est obligatoire.</small>
             </div>
             <div>
                 <label for="description" class="block font-bold mb-3">Description</label>
@@ -117,16 +116,16 @@
             <div class="flex justify-between gap-4">
                 <div class="flex items-center gap-2 w-1/2">
                     <label class="font-semibold text-lg">Disponibilité :</label>
-                    <p-toggleswitch [(ngModel)]="equipement.estDisponible"></p-toggleswitch>
-                    <span class="font-bold" [ngClass]="{'text-green-500': equipement.estDisponible, 'text-red-500': !equipement.estDisponible}">
-                        {{ equipement.estDisponible ? 'Oui' : 'Non' }}
+                    <p-toggleswitch [(ngModel)]="equipement.estdisponible"></p-toggleswitch>
+                    <span class="font-bold" [ngClass]="{'text-green-500': equipement.estdisponible, 'text-red-500': !equipement.estdisponible}">
+                        {{ equipement.estdisponible ? 'Oui' : 'Non' }}
                     </span>
                 </div>
                 <div class="flex items-center gap-2 w-1/2">
                     <label class="font-semibold text-lg">Mutualisation :</label>
-                    <p-toggleswitch [(ngModel)]="equipement.estMutualisable"></p-toggleswitch>
-                    <span class="font-bold" [ngClass]="{'text-green-500': equipement.estMutualisable, 'text-red-500': !equipement.estMutualisable}">
-                        {{ equipement.estMutualisable ? 'Oui' : 'Non' }}
+                    <p-toggleswitch [(ngModel)]="equipement.estmutualisable"></p-toggleswitch>
+                    <span class="font-bold" [ngClass]="{'text-green-500': equipement.estmutualisable, 'text-red-500': !equipement.estmutualisable}">
+                        {{ equipement.estmutualisable ? 'Oui' : 'Non' }}
                     </span>
                 </div>
             </div>
@@ -142,13 +141,13 @@
                 </div>
                 <div class="w-1/2">
                     <label for="typeAcquisition" class="block font-bold mb-3">Type d'Acquisition</label>
-                    <input type="text" pInputText id="typeAcquisition" [(ngModel)]="equipement.typeAcquisition" required />
+                    <input type="text" pInputText id="typeAcquisition" [(ngModel)]="equipement.typeacquisition" required />
                 </div>
             </div>
             <div>
                 <label for="laboratoire" class="block font-bold mb-3">Laboratoire</label>
-                <p-dropdown [(ngModel)]="equipement.laboratoryId" [options]="laboratoires" optionLabel="name" placeholder="Sélectionner un laboratoire"></p-dropdown>
-                <small class="text-red-500" *ngIf="submitted && !equipement.laboratoryId">Le laboratoire est obligatoire.</small>
+                <p-dropdown [(ngModel)]="equipement.laboratoire_id" [options]="laboratoires" optionLabel="name" placeholder="Sélectionner un laboratoire"></p-dropdown>
+                <small class="text-red-500" *ngIf="submitted && !equipement.laboratoire_id">Le laboratoire est obligatoire.</small>
             </div>
             <div>
                 <label for="image" class="block font-bold mb-3">Image de l'équipement</label>
@@ -158,16 +157,7 @@
             <div *ngIf="equipement.image">
                 <img [src]="equipement.image" alt="Image de l'équipement" class="mt-3 w-32 h-32 object-cover rounded" />
             </div>
-            <div class="flex justify-between gap-4">
-                <div class="w-1/2">
-                    <label class="font-semibold text-lg">Date d'Ajout</label>
-                    <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.createAt"></p-datepicker>
-                </div>
-                <div class="w-1/2">
-                    <label class="font-semibold text-lg">Date de Modification</label>
-                    <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="equipement.updateAt"></p-datepicker>
-                </div>
-            </div>
+            
         </div>
     </ng-template>
     <ng-template #footer>

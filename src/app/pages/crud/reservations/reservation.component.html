@@ -10,7 +10,7 @@
     [rows]="10"
     [columns]="cols"
     [paginator]="true"
-    [globalFilterFields]="['equipement', 'user', 'dateDebut', 'dateFin', 'statut']"
+    [globalFilterFields]="['equipement', 'user', 'createdAt', 'updatedAt', 'statut','endAt','startAt']"
     [tableStyle]="{ 'min-width': '75rem' }"
     [rowHover]="true"
     dataKey="id"
@@ -81,11 +81,11 @@
             </div>
             <div>
                 <label for="dateDebut" class="block font-bold mb-3">Date Début</label>
-                <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.startAt" readonly />
+                <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.date_debut" readonly />
             </div>
             <div>
                 <label for="dateFin" class="block font-bold mb-3">Date Fin</label>
-                <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.endAt" readonly />
+                <p-datepicker [showIcon]="true" [showButtonBar]="true" [(ngModel)]="reservation.date_fin" readonly />
             </div>
             <div>
                 <label for="statut" class="block font-bold mb-3">Statut</label>

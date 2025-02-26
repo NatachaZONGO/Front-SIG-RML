@@ -3,38 +3,24 @@ import { Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { BackendURL } from '../../../const';
-import { Laboratoire, Laboratoireservice } from '../laboratoire/laboratoire.service';
+import { Laboratoireservice } from '../laboratoire/laboratoire.service';
+import { Equipement } from './equipement.model';
 
-export interface Equipement {
-    _id?: string; 
-    name?: string;
-    description?: string;
-    estDisponible?: boolean;
-    estMutualisable?: boolean;
-    etat?: string;
-    acquereur?: string;
-    typeAcquisition?: string;
-    createAt?: Date;
-    updateAt?: Date;
-    photo?: string;
-    laboratoryId?: string;
-    laboratoire?: Laboratoire;
-    contacts?: string[];
-    image?: string;
-}
+
+
 
 @Injectable({
     providedIn: 'root',
 })
 export class Equipementservice {
-    private apiUrl = `${BackendURL}/equipment`;
+    private apiUrl = `${BackendURL}equipements`;
     
 
     constructor(private http: HttpClient, private Laboratoireservice: Laboratoireservice) {}
 
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
-        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}/all`).pipe(
+        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}`).pipe(
             map((response) => response.content), 
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements', err);
@@ -65,7 +51,7 @@ export class Equipementservice {
 
     // Mettre à jour un équipement existant
     updateEquipement(equipement: Equipement): Observable<Equipement> {
-        return this.http.put<Equipement>(`${this.apiUrl}/${equipement._id}`, equipement).pipe(
+        return this.http.put<Equipement>(`${this.apiUrl}/${equipement.id}`, equipement).pipe(
             catchError((err) => {
                 console.error('Erreur lors de la mise à jour de l\'équipement', err);
                 throw err; // Relance l'erreur pour la gérer dans le composant
@@ -104,7 +90,7 @@ export class Equipementservice {
             map(({ equipements, laboratoires }) => {
                 // Associe chaque équipement à son laboratoire
                 return equipements.map((equipement) => {
-                    const labo = laboratoires.find((l) => l._id === equipement.laboratoryId); // Utilisez laboratoryId
+                    const labo = laboratoires.content.find((l) => l.id === equipement.laboratoire_id); // Utilisez laboratoryId
                     return { ...equipement, laboratoire: labo }; // Ajoute le laboratoire à l'équipement
                 });
             }),

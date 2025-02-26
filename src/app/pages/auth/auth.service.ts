@@ -1,33 +1,34 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable, Signal, signal } from '@angular/core';
-import { BehaviorSubject, catchError, firstValueFrom, Observable, switchMap, tap, throwError } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, catchError, firstValueFrom, Observable, tap, throwError } from 'rxjs';
 import { UserConnexion } from './connexion/userconnexion.model';
 import { BackendURL, LocalStorageFields } from '../../const';
 import { RegisterUser } from './register/user.model';
-import { User } from '../service/product.service';
-
-
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
     accessToken?: string;
-    private _rolesNames = signal<string[]>([]);
+    role?: string; // Déclaration explicite du rôle comme étant une chaîne de caractères ou undefined
 
-    get rolesNames(): Signal<string[]>{
-        return this._rolesNames;
-    }
-
-    // Utilisation d'un BehaviorSubject pour émettre l'état de l'utilisateur connecté
     private utilisateurConnecteSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
     utilisateurConnecte$: Observable<any> = this.utilisateurConnecteSubject.asObservable();
 
     constructor(private http: HttpClient) {
+        // Récupérer le token d'accès depuis le localStorage
         this.accessToken = localStorage.getItem(LocalStorageFields.accessToken) ?? undefined;
-        const json_roles = localStorage.getItem(LocalStorageFields.userRole) ?? '[]';
-        this._rolesNames.set(JSON.parse(json_roles) as string[]);
-    
+
+        // Récupérer le rôle unique de l'utilisateur
+        const role = localStorage.getItem(LocalStorageFields.userRole);
+        if (role) {
+            this.role = role; // Assigner directement le rôle unique
+        } else {
+            console.warn('Aucun rôle trouvé dans le localStorage');
+            this.role = undefined; // Aucun rôle trouvé
+        }
+
+        // Récupérer les informations de l'utilisateur
         const utilisateur = localStorage.getItem('utilisateur');
         if (utilisateur) {
             try {
@@ -36,153 +37,141 @@ export class AuthService {
                 console.log('Utilisateur récupéré du localStorage:', user);
             } catch (e) {
                 console.error('Erreur lors du parsing de l\'utilisateur:', e);
+                this.utilisateurConnecteSubject.next(null);
             }
         } else {
             console.warn('Aucun utilisateur trouvé dans le localStorage');
-            this.utilisateurConnecteSubject.next(null); // Émettre null si aucun utilisateur
+            this.utilisateurConnecteSubject.next(null);
         }
-        
     }
-       
 
     //-----------------------------Inscription-------------------------------------------
-    register( registerData: RegisterUser): Promise<any> {
-        let body = new HttpParams();    
-        body.set ('nom',registerData.firstname); 
-        body.set ('prenom', registerData.lastname);   
-        body.set ('email', registerData.email);    
-        body.set ('password', registerData.password);    
-        body.set('scope', registerData.scope);
-        body.set('phone', registerData.phone);
+    register(registerData: RegisterUser): Promise<any> {
         const formData = {
-            'nom': registerData.firstname,
-            'prenom': registerData.lastname,
-            'email':  registerData.email,
-            'password':  registerData.password,
-            'scope':  registerData.scope,
-            'phone':  registerData.phone,
+            nom: registerData.firstname,
+            prenom: registerData.lastname,
+            email: registerData.email,
+            password: registerData.password,
+            scope: registerData.scope,
+            phone: registerData.phone,
         };
-        const headers = new HttpHeaders().set('Content-Type', 'application/x-www-form-urlencoded');
+
         return firstValueFrom(
-            //this.http.post(this.registerURL, body.toString(), {headers})
-            this.http.post(BackendURL+"/register", {'nom': registerData.firstname,
-                'prenom': registerData.lastname,
-                'email':  registerData.email,
-                'password':  registerData.password,
-                'scope':  registerData.scope,
-                'phone':  registerData.phone,}, {
-            })
-        );  
+            this.http.post(BackendURL + "/register", formData).pipe(
+                catchError(error => {
+                    console.error("Erreur lors de l'inscription:", error);
+                    return throwError(() => new Error("Erreur lors de l'inscription"));
+                })
+            )
+        );
     }
 
-
-//-----------------------------Connexion-------------------------------------------
-connexion(userConnexion: UserConnexion): Promise<any> {
-    // Token par défaut pour autoriser la requête de connexion
-    const defaultToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEyMywiZW1haWwiOiJ1c2VyQGV4YW1wbGUuY29tIiwiaWF0IjoxNzM4ODYyMTQ4LCJleHAiOjE3Mzg4NjU3NDh9.E6dWE8N03HobkXtlKwrz5FgbBs6U7TycL5kt_GV8G1A'; // Remplacez par le token par défaut fourni par le backend
-
-    return firstValueFrom(
-        this.http.post<{ status: number, title: string, content: { token: string, user: any } }>(
-            BackendURL + "account/login",
-            userConnexion, // Corps de la requête
-            {
-                headers: new HttpHeaders({
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${defaultToken}`, // Token par défaut pour autoriser la requête
-                }),
-            }
-        ).pipe(
-            tap((result) => {
-                console.log("Réponse API:", result);
-
-                if (result.content.token) {
-                    // Stocke le nouveau token généré après la connexion
-                    this.accessToken = result.content.token;
-                    localStorage.setItem(LocalStorageFields.accessToken, this.accessToken);
-
-                    // Stocke les informations de l'utilisateur
-                    localStorage.setItem('utilisateur', JSON.stringify(result.content.user));
-                    console.log("Utilisateur connecté :", result.content.user);
-
-                    // Met à jour l'utilisateur connecté dans le BehaviorSubject
-                    this.utilisateurConnecteSubject.next(result.content.user);
-
-                    // Stocke le rôle de l'utilisateur
-                    localStorage.setItem(LocalStorageFields.userRole, JSON.stringify(result.content.user.type));
-                    console.log("Rôle utilisateur :", result.content.user.type);
-                } else {
-                    console.error("Token d'accès manquant dans la réponse de connexion");
+    //-----------------------------Connexion-------------------------------------------
+    connexion(userConnexion: UserConnexion): Promise<any> {
+        return firstValueFrom(
+            this.http.post<{ message: string, user: any, token: string }>(
+                BackendURL + "login",
+                userConnexion,
+                {
+                    headers: new HttpHeaders({
+                        'Content-Type': 'application/json',
+                    }),
                 }
-            }),
-            catchError((error) => {
-                console.error("Erreur lors de la connexion :", error);
-                throw error; // Propager l'erreur pour la gérer dans le composant
-            })
-        )
-    );
-}
+            ).pipe(
+                tap((result) => {
+                    console.log("Réponse API:", result);
 
+                    if (result.token) {
+                        this.accessToken = result.token;
+                        localStorage.setItem(LocalStorageFields.accessToken, this.accessToken);
+                        localStorage.setItem('utilisateur', JSON.stringify(result.user));
+                        this.utilisateurConnecteSubject.next(result.user);
 
+                        // Stocker le rôle sous forme de chaîne dans le localStorage
+                        localStorage.setItem(LocalStorageFields.userRole, result.user.role);
+                        this.role = result.user.role; // Mise à jour du rôle dans l'attribut 'role'
+                        console.log("Rôle utilisateur:", this.role);
+                    } else {
+                        console.error("Token d'accès manquant dans la réponse de connexion");
+                    }
+                }),
+                catchError((error) => {
+                    console.error("Erreur lors de la connexion :", error);
+                    return throwError(() => new Error("Erreur lors de la connexion"));
+                })
+            )
+        );
+    }
 
-logout() {
-    this.accessToken = undefined;
-    localStorage.removeItem(LocalStorageFields.accessToken);
-    localStorage.removeItem(LocalStorageFields.userRole);
-    localStorage.removeItem('utilisateur'); // Supprime les informations de l'utilisateur
-    this.utilisateurConnecteSubject.next(null); // Notifie que l'utilisateur est déconnecté
-}
+    //-----------------------------Déconnexion-------------------------------------------
+    logout(): void {
+        this.accessToken = undefined;
+        this.role = undefined; // Réinitialiser le rôle lors de la déconnexion
+        localStorage.removeItem(LocalStorageFields.accessToken);
+        localStorage.removeItem(LocalStorageFields.userRole);
+        localStorage.removeItem('utilisateur');
+        this.utilisateurConnecteSubject.next(null);
+    }
 
-
-   
-
-
+    //-----------------------------Récupération des informations de l'utilisateur-------------------------------------------
     getCurrentUserInfos(): Observable<any> {
         const token = localStorage.getItem(LocalStorageFields.accessToken);
         if (!token) {
             console.error("Aucun token trouvé. L'utilisateur doit se reconnecter.");
-            return throwError(() => new Error("Aucun token trouvé")); // Retourne une erreur claire
+            return throwError(() => new Error("Aucun token trouvé"));
         }
-    
-        const headers = new HttpHeaders({
-            'Authorization': `Bearer ${token}`,  // ✅ Envoi du token correctement
-            'Content-Type': 'application/json'
-        });
-    
-        console.log("Token envoyé dans les headers:", token); // Debugging
-        
 
-    
+        const headers = new HttpHeaders({
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        });
+
         return this.http.get(`${BackendURL}/account/user`, { headers }).pipe(
             catchError(error => {
                 console.error("Erreur lors de la récupération de l'utilisateur:", error);
                 return throwError(() => new Error("Erreur API"));
             })
         );
-        
     }
-    
-    
-    
+
+    //-----------------------------Récupération de l'ID de l'utilisateur-------------------------------------------
     getCurrentUserId(): number | null {
         const user = localStorage.getItem('utilisateur');
         if (user) {
-          const parsedUser = JSON.parse(user);
-          return parsedUser.id; // Assurez-vous que l'objet utilisateur a bien la propriété id
+            try {
+                const parsedUser = JSON.parse(user);
+                return parsedUser?.id ?? null;
+            } catch (e) {
+                console.error('Erreur lors du parsing de l\'utilisateur:', e);
+                return null;
+            }
         }
         return null;
-      }
+    }
 
-      getCurrentUser(): any {
-        const userString = localStorage.getItem('utilisateur'); // Récupère les données de l'utilisateur depuis le localStorage
+    //-----------------------------Récupération de l'utilisateur-------------------------------------------
+    getCurrentUser(): any {
+        const userString = localStorage.getItem('utilisateur');
         if (userString) {
-            return JSON.parse(userString); // Convertit la chaîne JSON en objet
+            try {
+                const user = JSON.parse(userString);
+                return user && user.id ? user : null;
+            } catch (e) {
+                console.error('Erreur lors du parsing de l\'utilisateur:', e);
+                return null;
+            }
         }
-        return null; // Retourne null si l'utilisateur n'est pas connecté
+        return null;
     }
 
+    //-----------------------------Vérification de la connexion-------------------------------------------
     isLoggedIn(): boolean {
-        const token = localStorage.getItem(LocalStorageFields.accessToken); 
-        return !!token; // Retourne true si le token existe, sinon false
+        const token = localStorage.getItem(LocalStorageFields.accessToken);
+        return !!token;
     }
-    
+
+    //-----------------------------Récupération du rôle de l'utilisateur-------------------------------------------
+    getUserRole(): string | undefined {
+        return this.role;
+    }
 }

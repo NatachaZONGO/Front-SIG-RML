@@ -1,4 +1,5 @@
-export const BackendURL = "http://102.211.121.54:8080/node_ts/api/V0.1/";
+export const BackendURL = "http://192.168.1.67:8000/api/v1/";
+export const imageUrl= 'http://192.168.1.67:8000/storage/';
 
 export const enum LocalStorageFields {
     accessToken = "accessToken", 

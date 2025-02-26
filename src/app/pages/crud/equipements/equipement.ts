@@ -16,12 +16,16 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { SelectModule } from 'primeng/select';
-import { Equipement, Equipementservice } from './equipement.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DropdownModule } from 'primeng/dropdown';
 import { catchError, forkJoin, map, Observable, of } from 'rxjs';
-import { Laboratoire, Laboratoireservice } from '../laboratoire/laboratoire.service';
+import { imageUrl } from '../../../const';
+import { Equipementservice } from './equipement.service';
+import { Equipement } from './equipement.model';
+import { Laboratoireservice } from '../laboratoire/laboratoire.service';
+import { Laboratoire } from '../laboratoire/laboratoire.model';
+
 
 interface Column {
     field: string;
@@ -113,7 +117,7 @@ export class Equipementt implements OnInit {
     loadLaboratoires() {
         this.laboratoireService.getLaboratoires().subscribe({
             next: (data) => {
-                this.laboratoires = data; // Stocke les laboratoires
+                this.laboratoires = data.content;
             },
             error: (err) => console.error('Erreur lors du chargement des laboratoires', err),
         });
@@ -130,13 +134,11 @@ export class Equipementt implements OnInit {
     }
 
     openNew() {
-        this.equipement = { createAt: new Date(), updateAt: new Date() };
         this.submitted = false;
         this.equipementDialog = true;
     }
 
     editEquipement(equipement: Equipement) {
-        this.equipement = { ...equipement, updateAt: new Date() };
         this.equipementDialog = true;
     }
 
@@ -148,10 +150,10 @@ export class Equipementt implements OnInit {
             accept: () => {
                 if (this.selectedEquipements) {
                     this.selectedEquipements.forEach((equipement) => {
-                        if (equipement._id) {
-                            this.equipementService.deleteEquipement(equipement._id).subscribe({
+                        if (equipement.id) {
+                            this.equipementService.deleteEquipement(equipement.id).subscribe({
                                 next: () => {
-                                    this.equipements.set(this.equipements().filter((val) => val._id !== equipement._id));
+                                    this.equipements.set(this.equipements().filter((val) => val.id !== equipement.id));
                                 },
                                 error: (err) => console.error('Erreur lors de la suppression de l\'équipement', err),
                             });
@@ -166,14 +168,14 @@ export class Equipementt implements OnInit {
 
     deleteEquipement(equipement: Equipement) {
         this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir supprimer ' + equipement.name + ' ?',
+            message: 'Êtes-vous sûr de vouloir supprimer ' + equipement.nom + ' ?',
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                if (equipement._id) {
-                    this.equipementService.deleteEquipement(equipement._id).subscribe({
+                if (equipement.id) {
+                    this.equipementService.deleteEquipement(equipement.id).subscribe({
                         next: () => {
-                            this.equipements.set(this.equipements().filter((val) => val._id !== equipement._id));
+                            this.equipements.set(this.equipements().filter((val) => val.id !== equipement.id));
                             this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement supprimé', life: 3000 });
                         },
                         error: (err) => console.error('Erreur lors de la suppression de l\'équipement', err),
@@ -185,8 +187,8 @@ export class Equipementt implements OnInit {
 
     saveEquipement() {
         this.submitted = true;
-        if (this.equipement.name?.trim() && this.equipement.description?.trim() && this.equipement.laboratoryId) {
-            if (this.equipement._id) {
+        if (this.equipement.nom?.trim() && this.equipement.description?.trim() && this.equipement.laboratoire_id) {
+            if (this.equipement.id) {
                 // Mise à jour d'un équipement existant
                 this.equipementService.updateEquipement(this.equipement).subscribe({
                     next: () => {
@@ -255,4 +257,8 @@ export class Equipementt implements OnInit {
           reader.readAsDataURL(file);
         }
       }
+
+      getImageUrl(imagePath: string): string {
+        return `${imageUrl}/${imagePath}`;
+    }
 }

@@ -15,7 +15,7 @@
     [rows]="10"
     [columns]="cols"
     [paginator]="true"
-    [globalFilterFields]="['name', 'prenom', 'email']"
+    [globalFilterFields]="['firstname', 'lastname', 'role', 'phone', 'email']"
     [tableStyle]="{ 'min-width': '75rem' }"
     [(selection)]="selectedUsers"
     [rowHover]="true"
@@ -27,10 +27,10 @@
     <ng-template #caption>
         <div class="flex items-center justify-between">
             <h5 class="m-0">Gestion des utilisateurs</h5>
-            <p-iconfield>
-                <p-inputicon styleClass="pi pi-search" />
+            <p-iconField>
+                <p-inputIcon styleClass="pi pi-search" />
                 <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
-            </p-iconfield>
+            </p-iconField>
         </div>
     </ng-template>
     <ng-template #header>

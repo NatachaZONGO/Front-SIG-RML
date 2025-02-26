@@ -4,25 +4,15 @@ import { catchError, forkJoin, map, Observable, of, switchMap, throwError } from
 import { BackendURL, LocalStorageFields } from '../../../const';
 import { UserService } from '../user/user.service';
 import { Equipementservice } from '../equipements/equipement.service';
+import { Reservation } from './resrvation.model';
 
-export interface Reservation {
-        id?: string;
-        startAt: string; 
-        endAt: string; 
-        state: string; 
-        reservedAt: string;
-        userId: string; 
-        equipmentId: string; 
-        userName?: string; 
-        equipementName?: string; 
-        
-}
 
 @Injectable({
     providedIn: 'root',
 })
 export class ReservationService {
-    private apiUrl = `${BackendURL}reservation`; 
+    private apiUrl = `${BackendURL}reservations`; 
+    
 
     constructor(private http: HttpClient) {}
 
@@ -30,7 +20,7 @@ export class ReservationService {
         const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
         console.log("Token avant la requête de réservation (getReservations) :", token); // Log du token
     
-        return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}/all`).pipe(
+        return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}`).pipe(
             map((response) => {
                 console.log("Réponse de l'API (getReservations) :", response); // Log de la réponse
                 return response.content;
@@ -57,16 +47,16 @@ export class ReservationService {
                         console.log("Token avant la sous-requête pour la réservation :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token avant chaque sous-requête
         
                         return forkJoin({
-                            user: userService.getUserById(reservation.userId).pipe(
+                            user: userService.getUserById(reservation.user_id).pipe(
                                 catchError((err) => {
                                     console.error('Erreur lors de la récupération de l\'utilisateur :', err);
                                     return of({ firstname: 'Utilisateur inconnu' }); // Retourne un utilisateur par défaut en cas d'erreur
                                 })
                             ),
-                            equipement: equipementService.getEquipementById(reservation.equipmentId).pipe(
+                            equipement: equipementService.getEquipementById(reservation.equipement_id).pipe(
                                 catchError((err) => {
                                     console.error('Erreur lors de la récupération de l\'équipement :', err);
-                                    return of({ name: 'Équipement inconnu' }); // Retourne un équipement par défaut en cas d'erreur
+                                    return of({ nom: 'Équipement inconnu' }); // Retourne un équipement par défaut en cas d'erreur
                                 })
                             ),
                         }).pipe(
@@ -75,7 +65,7 @@ export class ReservationService {
                                 return {
                                     ...reservation,
                                     userName: user.firstname, // Ajoute le nom de l'utilisateur
-                                    equipementName: equipement.name, // Ajoute le nom de l'équipement
+                                    equipementName: equipement.nom, // Ajoute le nom de l'équipement
                                 };
                             })
                         );

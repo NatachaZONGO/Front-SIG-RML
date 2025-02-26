@@ -15,9 +15,13 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { forkJoin, map } from 'rxjs';
-import { Equipement, Equipementservice } from '../equipements/equipement.service';
-import { User, UserService } from '../user/user.service';
-import { Reservation, ReservationService } from './reservation.service';
+import { ReservationService } from './reservation.service';
+import { Equipementservice } from '../equipements/equipement.service';
+import { UserService } from '../user/user.service';
+import { Reservation } from './resrvation.model';
+import { Equipement } from '../equipements/equipement.model';
+import { User } from '../user/user.model';
+
 
 interface Column {
     field: string;
@@ -120,7 +124,7 @@ export class ReservationComponent implements OnInit {
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                reservation.state = 'confirmed';
+                //reservation.etat = 'confirmed';
                 // Envoyer une requête PUT à l'API pour mettre à jour la réservation
                 this.messageService.add({
                     severity: 'success',
@@ -138,7 +142,7 @@ export class ReservationComponent implements OnInit {
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                reservation.state = 'cancelled';
+                //reservation.etat = 'cancelled';
                 // Envoyer une requête PUT à l'API pour mettre à jour la réservation
                 this.messageService.add({
                     severity: 'success',
@@ -158,12 +162,12 @@ export class ReservationComponent implements OnInit {
         this.reservationService.getReservations().subscribe({
             next: (reservations) => {
                 const reservationsWithDetails = reservations.map((reservation) => {
-                    const equipement = this.equipements.find((e) => e._id === reservation.equipmentId);
-                    const user = this.users.find((u) => u._id === reservation.userId);
+                    const equipement = this.equipements.find((e) => e.id === reservation.equipement_id);
+                    const user = this.users.find((u) => u.id === reservation.user_id );
     
                     return {
                         ...reservation,
-                        equipementName: equipement ? equipement.name : 'Inconnu',
+                        equipementName: equipement ? equipement.nom : 'Inconnu',
                         userName: user ? `${user.firstname} ${user.lastname}` : 'Inconnu', // Utilisez firstname et lastname
                     };
                 });

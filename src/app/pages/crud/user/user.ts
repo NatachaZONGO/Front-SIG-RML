@@ -12,10 +12,11 @@ import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { User, UserService } from './user.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DropdownModule } from 'primeng/dropdown';
+import { UserService } from './user.service';
+import { User } from './user.model';
 
 interface Column {
     field: string;
@@ -105,10 +106,10 @@ export class Userr implements OnInit {
             accept: () => {
                 if (this.selectedUsers) {
                     this.selectedUsers.forEach((user) => {
-                        if (user._id) {
-                            this.userService.deleteUser(user._id).subscribe({
+                        if (user.id) {
+                            this.userService.deleteUser(user.id).subscribe({
                                 next: () => {
-                                    this.users.set(this.users().filter((val) => val._id !== user._id));
+                                    this.users.set(this.users().filter((val) => val.id !== user.id));
                                 },
                                 error: (err) => console.error('Erreur lors de la suppression de l\'utilisateur', err),
                             });
@@ -127,10 +128,10 @@ export class Userr implements OnInit {
             header: 'Confirmation',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                if (user._id) {
-                    this.userService.deleteUser(user._id).subscribe({
+                if (user.id) {
+                    this.userService.deleteUser(user.id).subscribe({
                         next: () => {
-                            this.users.set(this.users().filter((val) => val._id !== user._id));
+                            this.users.set(this.users().filter((val) => val.id !== user.id));
                             this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur supprimé', life: 3000 });
                         },
                         error: (err) => console.error('Erreur lors de la suppression de l\'utilisateur', err),
@@ -143,7 +144,7 @@ export class Userr implements OnInit {
     saveUser() {
         this.submitted = true;
         if (this.user.firstname?.trim() && this.user.lastname?.trim() && this.user.email?.trim() && this.user.password?.trim()) {
-            if (this.user._id) {
+            if (this.user.id) {
                 this.userService.updateUser(this.user).subscribe({
                     next: () => {
                         this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur mis à jour', life: 3000 });
