@@ -87,26 +87,12 @@ export class ReservationService {
             const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
             console.log("Token avant la requête de création de réservation (createReservation) :", token); // Log du token
         
-            let headers = new HttpHeaders({
+            const headers = new HttpHeaders({
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             });
         
-            let url = `${this.apiUrl}`;  // L'URL de base
-        
-            // Vérifier si l'utilisateur est connecté
-            if (token) {
-                // Si l'utilisateur est connecté, ajouter l'en-tête Authorization
-                headers = headers.set('Authorization', `Bearer ${token}`);
-            } else {
-                // Si l'utilisateur n'est pas connecté, l'info_utilisateur doit être incluse dans la requête
-                if (!reservation.info_utilisateur) {
-                    console.error('Informations utilisateur manquantes pour utilisateur non connecté.');
-                    return throwError(() => new Error('Informations utilisateur manquantes.'));
-                }
-                url = `${this.apiUrl}/guest`;  // URL pour les utilisateurs non connectés
-            }
-        
-            return this.http.post<Reservation>(url, reservation, { headers }).pipe(
+            return this.http.post<Reservation>(`${this.apiUrl}`, reservation, { headers }).pipe(
                 catchError((err) => {
                     console.error('Erreur lors de la création de la réservation (createReservation) :', err);
                     console.log("Token après erreur (createReservation) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après erreur
@@ -114,7 +100,40 @@ export class ReservationService {
                 })
             );
         }
-        
     
+        changerStatutReservation(id: string): Observable<Reservation> {
+            const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
+            console.log("Token avant la requête de changement de statut de réservation :", token); // Log du token
+        
+            const headers = new HttpHeaders({
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            });
+        
+            return this.http.post<Reservation>(`${this.apiUrl}/valider/${id}`, {}, { headers }).pipe(
+                catchError((err) => {
+                    console.error('Erreur lors du changement de statut de la réservation :', err);
+                    return throwError(() => err);
+                })
+            );
+        }
+
+        cancelReservation(id: string): Observable<Reservation> {
+            const token = localStorage.getItem(LocalStorageFields.accessToken);
+            const headers = new HttpHeaders({
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            });
+        
+            return this.http.post<Reservation>(`${this.apiUrl}/rejeter/${id}`, {}, { headers }).pipe(
+                catchError((err) => {
+                    console.error("Erreur lors de l'annulation de la réservation :", err);
+                    return throwError(() => err);
+                })
+            );
+        }
+        getReservationDetails(code: string): Observable<any> {
+            return this.http.get<any>(`${this.apiUrl}/code/${code}`);
+          }
 }
     

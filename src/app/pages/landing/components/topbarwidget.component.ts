@@ -1,12 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { StyleClassModule } from 'primeng/styleclass';
 import { Router, RouterModule } from '@angular/router';
 import { RippleModule } from 'primeng/ripple';
 import { ButtonModule } from 'primeng/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'topbar-widget',
-    imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule],
+    imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule, CommonModule],
     template: `<a class="flex items-center" href="#">
             <img src="assets/images/UJKZ.png" alt="UJKZ" class="h-12 mr-2" />
             <span><span class="text-red-500">SIG</span><span class="text-green-500">-RML</span></span>
@@ -29,8 +30,8 @@ import { ButtonModule } from 'primeng/button';
                     </a>
                 </li>
                 
-                <li>
-                    <a (click)="router.navigate(['/landing'], { fragment: 'pricing' })" pRipple class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
+                <li (click)="afficherSection('suivre-reservation')">
+                    <a (click)="router.navigate(['/landing'], { fragment: 'suivre.reservation' })" pRipple class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
                         <span>Suivre Reservation</span>
                     </a>
                 </li>
@@ -42,5 +43,11 @@ import { ButtonModule } from 'primeng/button';
         </div> `
 })
 export class TopbarWidget {
+    @Output() sectionChange = new EventEmitter<string>();
+
+    afficherSection(section: string) {
+        this.sectionChange.emit(section);
+    }
+
     constructor(public router: Router) {}
 }

@@ -5,5 +5,5 @@ export interface User {
     email?: string;
     phone?: number;
     password?: string;
-    scope: 'admin' | 'responsable' | 'reservant'; 
+    role: 'admin' | 'responsable' | 'reservant'; 
 }

@@ -31,15 +31,15 @@ export class UserService {
     }
 
     createUser(user: User): Observable<User> {
-        return this.http.post<User>(`${BackendURL}account/create`, user);
+        return this.http.post<User>(`${BackendURL}users`, user);
     }
 
     updateUser(user: User): Observable<User> {
-        return this.http.put<User>(`${BackendURL}user/${user.id}`, user);
+        return this.http.put<User>(`${BackendURL}users/${user.id}`, user);
     }
 
     deleteUser(id: string): Observable<void> {
-        return this.http.delete<void>(`${BackendURL}user/${id}`);
+        return this.http.delete<void>(`${BackendURL}users/${id}`);
     }
 
     // Connexion
@@ -75,19 +75,19 @@ export class UserService {
     // Vérifie si l'utilisateur est un administrateur
     isAdmin(): boolean {
         const user = this.getCurrentUser();
-        return user?.scope === 'admin';
+        return user?.role === 'admin';
     }
 
     // Vérifie si l'utilisateur est un chef de laboratoire
     isChefLab(): boolean {
         const user = this.getCurrentUser();
-        return user?.scope === 'responsable';
+        return user?.role === 'responsable';
     }
 
     // Vérifie si l'utilisateur est un réservant
     isReservant(): boolean {
         const user = this.getCurrentUser();
-        return user?.scope === 'reservant';
+        return user?.role === 'reservant';
     }
 }
 

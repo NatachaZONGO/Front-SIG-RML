@@ -40,24 +40,25 @@ export class Equipementservice {
     }
 
     // Créer un nouvel équipement
-    createEquipement(equipement: Equipement): Observable<Equipement> {
-        return this.http.post<Equipement>(this.apiUrl, equipement).pipe(
+    createEquipement(formData: FormData): Observable<Equipement> {
+        return this.http.post<Equipement>(this.apiUrl, formData, { headers: {} }).pipe(
             catchError((err) => {
-                console.error('Erreur lors de la création de l\'équipement', err);
-                throw err; // Relance l'erreur pour la gérer dans le composant
+                console.error('Erreur lors de la création de l\'équipement', err);
+                throw err;
             })
         );
     }
-
-    // Mettre à jour un équipement existant
-    updateEquipement(equipement: Equipement): Observable<Equipement> {
-        return this.http.put<Equipement>(`${this.apiUrl}/${equipement.id}`, equipement).pipe(
+    
+    updateEquipement(id: string, formData: FormData): Observable<Equipement> {
+        return this.http.post<Equipement>(this.apiUrl + '/' + id, formData, { headers: {} }).pipe(
             catchError((err) => {
-                console.error('Erreur lors de la mise à jour de l\'équipement', err);
-                throw err; // Relance l'erreur pour la gérer dans le composant
-            })
-        );
+                console.error('Erreur lors de la mise à jour de l\'équipement', err);
+                throw err;
+            })
+        );
     }
+    
+    
 
     // Supprimer un équipement
     deleteEquipement(id: string): Observable<void> {

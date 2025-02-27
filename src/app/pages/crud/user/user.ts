@@ -54,7 +54,7 @@ interface ExportColumn {
 export class Userr implements OnInit {
     userDialog: boolean = false;
     users = signal<User[]>([]);
-    user: User = {scope: 'admin'};
+    user: User = {role: 'admin'};
     selectedUsers: User[] = [];
     submitted: boolean = false;
 
@@ -71,9 +71,9 @@ export class Userr implements OnInit {
     ngOnInit() {
         this.loadUsers();
         this.cols = [
-            { field: 'name', header: 'Nom' },
-            { field: 'prenom', header: 'Prenom' },
-            { field: 'scope', header: 'Role' },
+            { field: 'lastname', header: 'Nom' },
+            { field: 'firstname', header: 'Prenom' },
+            { field: 'role', header: 'Role' },
             { field: 'phone', header: 'Telephone' },
             { field: 'email', header: 'Email' },
         ];
@@ -88,7 +88,7 @@ export class Userr implements OnInit {
     }
 
     openNew() {
-        this.user = {scope: 'admin'}; 
+        this.user = {role: 'admin'}; 
         this.submitted = false;
         this.userDialog = true;
     }
@@ -162,7 +162,7 @@ export class Userr implements OnInit {
                 });
             }
             this.userDialog = false;
-            this.user = {scope: 'admin'};
+            this.user = {role: 'admin'};
         }
     }
 

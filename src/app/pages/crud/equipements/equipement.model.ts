@@ -4,8 +4,8 @@ export interface Equipement {
     id?: string; 
     nom?: string;
     description?: string;
-    estdisponible?: boolean;
-    estmutualisable?: boolean;
+    estdisponible?: boolean|number;
+    estmutualisable?: boolean|number;
     etat?: string;
     acquereur?: string;
     typeacquisition?: string;

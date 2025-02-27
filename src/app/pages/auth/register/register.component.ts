@@ -8,12 +8,15 @@ import { RegisterUser } from './user.model';
 import { PasswordModule } from 'primeng/password';
 import { DropdownModule } from 'primeng/dropdown';
 import { CommonModule } from '@angular/common';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Toast, ToastModule } from 'primeng/toast';
 
 @Component({
     selector: 'app-register',
     templateUrl: './register.component.html',
     styleUrls: ['./register.component.scss'],
     standalone: true,
+    providers: [MessageService, ConfirmationService],
     imports: 
     [ 
         InputTextModule,
@@ -24,6 +27,8 @@ import { CommonModule } from '@angular/common';
         FormsModule,
         DropdownModule,
         CommonModule,
+        ToastModule,
+       
     ],
 })
 export class RegisterComponent implements OnInit {
@@ -51,7 +56,9 @@ export class RegisterComponent implements OnInit {
     formulaire! : FormGroup;
     constructor (
         private fb: FormBuilder,
-        private authService: AuthService,) { }
+        private authService: AuthService,
+        private messageService: MessageService,
+        private confirmationService: ConfirmationService) { }
 
      initForm() {
         this.formulaire = this.fb.group({

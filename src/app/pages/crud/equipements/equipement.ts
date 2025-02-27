@@ -82,9 +82,9 @@ export class Equipementt implements OnInit {
     exportColumns!: ExportColumn[];
 
     dropdownValues = [
-        { name: 'Neuf' },
-        { name: 'En maintenance' },
-        { name: 'Hors service' },
+         'Neuf' ,
+        'En maintenance' ,
+        'Hors service' ,
     ];
 
     constructor(
@@ -134,11 +134,13 @@ export class Equipementt implements OnInit {
     }
 
     openNew() {
+        this.equipement = {};
         this.submitted = false;
         this.equipementDialog = true;
     }
 
     editEquipement(equipement: Equipement) {
+        this.equipement = { ...equipement };
         this.equipementDialog = true;
     }
 
@@ -187,30 +189,53 @@ export class Equipementt implements OnInit {
 
     saveEquipement() {
         this.submitted = true;
-        if (this.equipement.nom?.trim() && this.equipement.description?.trim() && this.equipement.laboratoire_id) {
-            if (this.equipement.id) {
-                // Mise à jour d'un équipement existant
-                this.equipementService.updateEquipement(this.equipement).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis à jour', life: 3000 });
-                        this.loadEquipementsWithLaboratoires();
-                    },
-                    error: (err) => console.error('Erreur lors de la mise à jour de l\'équipement', err),
-                });
-            } else {
-                // Création d'un nouvel équipement
-                this.equipementService.createEquipement(this.equipement).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement créé', life: 3000 });
-                        this.loadEquipementsWithLaboratoires();
-                    },
-                    error: (err) => console.error('Erreur lors de la création de l\'équipement', err),
-                });
-            }
-            this.equipementDialog = false;
-            this.equipement = {};
+    
+        // Vérification de la saisie
+        if (!this.equipement.nom || !this.equipement.description || !this.equipement.laboratoire_id) {
+            return;
         }
+    
+        const formData = new FormData();
+        formData.append('nom', this.equipement.nom);
+        formData.append('description', this.equipement.description);
+        formData.append('estdisponible', this.equipement.estdisponible ? '1' : '0');
+        formData.append('estmutualisable', this.equipement.estmutualisable ? '1' : '0');
+        if (this.equipement.etat) {
+            formData.append('etat', this.equipement.etat);
+        }
+        formData.append('acquereur', this.equipement.acquereur || '');
+        if (this.equipement.typeacquisition) {
+            formData.append('typeacquisition', this.equipement.typeacquisition);
+        }
+        formData.append('laboratoire_id', this.equipement.laboratoire_id);
+    
+        if (this.equipement.image) {
+            formData.append('image', this.equipement.image); // Ajoute l'image uniquement si elle existe
+        }
+    
+        if (this.equipement.id) {
+            this.equipementService.updateEquipement(this.equipement.id, formData).subscribe({
+                next: () => {
+                    this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement mis à jour', life: 3000 });
+                    this.loadEquipementsWithLaboratoires();
+                },
+                error: (err) => console.error('Erreur lors de la mise à jour', err),
+            });
+        } else {
+            this.equipementService.createEquipement(formData).subscribe({
+                next: () => {
+                    this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Équipement créé', life: 3000 });
+                    this.loadEquipementsWithLaboratoires();
+                },
+                error: (err) => console.error('Erreur lors de la création', err),
+            });
+        }
+    
+        this.equipementDialog = false;
+        this.equipement = {};
     }
+    
+    
 
     hideDialog() {
         this.equipementDialog = false;
@@ -248,17 +273,13 @@ export class Equipementt implements OnInit {
     onFileChange(event: any) {
         const file = event.target.files[0];
         if (file) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const imageDataUrl = reader.result as string;
-            const imgElement = document.getElementById('image-preview') as HTMLImageElement;
-            imgElement.src = imageDataUrl;
-          };
-          reader.readAsDataURL(file);
-        }
-      }
+            this.equipement.image = file; // Stocke le fichier directement
+        }
+    }
+    
 
       getImageUrl(imagePath: string): string {
         return `${imageUrl}/${imagePath}`;
     }
+
 }

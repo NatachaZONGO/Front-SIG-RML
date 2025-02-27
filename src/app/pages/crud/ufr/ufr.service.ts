@@ -31,14 +31,14 @@ export class Ufrservice {
     }
 
     createUfr(ufr: Ufr): Observable<Ufr> {
-        return this.http.post<Ufr>(`${this.apiUrl}/ufr`, ufr);
+        return this.http.post<Ufr>(`${this.apiUrl}`, ufr);
     }
     
     updateUfr(ufr: Ufr): Observable<Ufr> {
-        return this.http.put<Ufr>(`${this.apiUrl}/ufr/${ufr.id}`, ufr);
+        return this.http.put<Ufr>(`${this.apiUrl}/${ufr.id}`, ufr);
     }
 
     deleteUfr(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/ufr/${id}`);
+        return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }
 }

@@ -1,3 +1,5 @@
+<p-toast></p-toast>
+
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
         <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
@@ -92,8 +94,8 @@
 
     <div>
         <label for="role" class="block font-bold mb-2">Rôle</label>
-        <p-dropdown id="role" [(ngModel)]="user.scope" [options]="roles" optionLabel="label" optionValue="value" placeholder="Sélectionnez un rôle" required [style]="{ 'width': '100%' }"></p-dropdown>
-        <small class="text-red-500" *ngIf="submitted && !user.scope">Le rôle est obligatoire.</small>
+        <p-dropdown id="role" [(ngModel)]="user.role" [options]="roles" optionLabel="label" optionValue="value" placeholder="Sélectionnez un rôle" required [style]="{ 'width': '100%' }"></p-dropdown>
+        <small class="text-red-500" *ngIf="submitted && !user.role">Le rôle est obligatoire.</small>
     </div>
 
     <div class="flex gap-4">

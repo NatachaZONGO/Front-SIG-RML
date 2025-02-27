@@ -21,6 +21,8 @@ import { UserService } from '../user/user.service';
 import { Reservation } from './resrvation.model';
 import { Equipement } from '../equipements/equipement.model';
 import { User } from '../user/user.model';
+import { BadgeModule } from 'primeng/badge';
+import { TooltipModule } from 'primeng/tooltip';
 
 
 interface Column {
@@ -51,6 +53,8 @@ interface ExportColumn {
         DatePickerModule,
         IconFieldModule,
         InputIconModule,
+        BadgeModule,
+        TooltipModule,
     ],
     templateUrl: './reservation.component.html',
     
@@ -118,41 +122,30 @@ export class ReservationComponent implements OnInit {
         this.reservationDialog = true;
     }
 
-    validateReservation(reservation: Reservation) {
-        this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir valider cette réservation ?',
-            header: 'Confirmation',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                //reservation.etat = 'confirmed';
-                // Envoyer une requête PUT à l'API pour mettre à jour la réservation
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Succès',
-                    detail: 'Réservation validée',
-                    life: 3000,
-                });
-            },
+    validateReservation(reservation: any) {
+        this.reservationService.changerStatutReservation(reservation.id).subscribe({
+          next: (response) => {
+            console.log("Réservation validée avec succès:", response);
+            this.loadReservationsWithDetails();
+          },
+          error: (error) => {
+            console.error("Erreur lors de la validation:", error);
+          }
         });
     }
-
-    cancelReservation(reservation: Reservation) {
-        this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir annuler cette réservation ?',
-            header: 'Confirmation',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                //reservation.etat = 'cancelled';
-                // Envoyer une requête PUT à l'API pour mettre à jour la réservation
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Succès',
-                    detail: 'Réservation annulée',
-                    life: 3000,
-                });
+    
+    cancelReservation(reservation: any) {
+        this.reservationService.cancelReservation(reservation.id).subscribe({
+            next: (response) => {
+                console.log("Réservation annulée avec succès:", response);
+                this.loadReservationsWithDetails();
             },
+            error: (error) => {
+                console.error("Erreur lors de l'annulation:", error);
+            }
         });
     }
+    
 
     hideDialog() {
         this.reservationDialog = false;

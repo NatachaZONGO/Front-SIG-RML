@@ -10,7 +10,7 @@ import { Laboratoiree } from './crud/laboratoire/laboratoire';
 
 
 export default [
-
+    {path:'resrvation-details', component: ReservationComponent},
     {path: 'connexion', component: ConnexionComponent},
     {path:'register', component: RegisterComponent},
     { path: 'user', component: Userr },

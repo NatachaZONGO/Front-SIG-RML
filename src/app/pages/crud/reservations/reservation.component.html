@@ -1,3 +1,4 @@
+<p-toast/>
 <p-toolbar styleClass="mb-6">
     <ng-template #end>
         <p-button label="Exporter" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
@@ -10,7 +11,7 @@
     [rows]="10"
     [columns]="cols"
     [paginator]="true"
-    [globalFilterFields]="['equipement', 'user', 'createdAt', 'updatedAt', 'statut','endAt','startAt']"
+    [globalFilterFields]="['equipementName', 'userName', 'date_debut', 'date_fin', 'status','endAt','startAt']"
     [tableStyle]="{ 'min-width': '75rem' }"
     [rowHover]="true"
     dataKey="id"
@@ -58,12 +59,42 @@
             <td style="min-width: 16rem">{{ reservation.userName }}</td>
             <td style="min-width: 16rem">{{ reservation.date_debut | date:'dd/MM/yyyy' }}</td>
             <td style="min-width: 16rem">{{ reservation.date_fin | date:'dd/MM/yyyy' }}</td>
-            <td style="min-width: 16rem">{{ reservation.status }}</td>
             <td>
-                <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true" (click)="validateReservation(reservation)" [disabled]="reservation.state !== 'pending'" />
-                <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true" (click)="cancelReservation(reservation)" [disabled]="reservation.state !== 'pending'" />
-                <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" (click)="viewReservation(reservation)" />
+                @switch (reservation.status) {
+                    @case ('en attente') {
+                        <p-badge value="En attente" severity="info" />
+                    }
+                    @case ('acceptee') {
+                        <p-badge value="Acceptée" severity="success" />
+                    }
+                    @case ('refusee') {
+                        <p-badge value="Refusée" severity="danger" />
+                    }
+                    @case ('annulee') {
+                        <p-badge value="Annulée" severity="warn" />
+                    }
+                    @default {
+                        -
+                    }
+                }
             </td>
+            <td>
+                <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true"
+                    (click)="validateReservation(reservation)"
+                    pTooltip="Accepter la réservation" tooltipPosition="top"
+                    />
+            
+                <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true"
+                    (click)="cancelReservation(reservation)"
+                    pTooltip="Annuler la réservation" tooltipPosition="top"
+                    [disabled]="reservation.status === 'acceptee'" />
+            
+                <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true"
+                    (click)="viewReservation(reservation)"
+                    pTooltip="Voir la réservation" tooltipPosition="top" />
+            </td>
+            
+            
         </tr>
     </ng-template>
 </p-table>
@@ -101,4 +132,3 @@
 
 
 <p-confirmdialog [style]="{ width: '450px' }" />
-`,
