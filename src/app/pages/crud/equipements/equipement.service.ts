@@ -14,17 +14,17 @@ import { Equipement } from './equipement.model';
 })
 export class Equipementservice {
     private apiUrl = `${BackendURL}equipements`;
-    
+
 
     constructor(private http: HttpClient, private Laboratoireservice: Laboratoireservice) {}
 
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
         return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}`).pipe(
-            map((response) => response.content), 
+            map((response) => response.content),
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements', err);
-                return of([]); 
+                return of([]);
             })
         );
     }
@@ -34,7 +34,7 @@ export class Equipementservice {
         return this.http.get<Equipement>(`${this.apiUrl}/${id}`).pipe(
             catchError((err) => {
                 console.error('Erreur lors de la récupération de l\'équipement', err);
-                throw err; 
+                throw err;
             })
         );
     }
@@ -48,7 +48,7 @@ export class Equipementservice {
             })
         );
     }
-    
+
     updateEquipement(id: string, formData: FormData): Observable<Equipement> {
         return this.http.post<Equipement>(this.apiUrl + '/' + id, formData, { headers: {} }).pipe(
             catchError((err) => {
@@ -57,8 +57,8 @@ export class Equipementservice {
             })
         );
     }
-    
-    
+
+
 
     // Supprimer un équipement
     deleteEquipement(id: string): Observable<void> {
@@ -111,5 +111,5 @@ export class Equipementservice {
             })
         );
     }
-    
+
 }

@@ -13,7 +13,7 @@ export const appRoutes: Routes = [
         path: '',
         component: AppLayout,
         children: [
-             
+
             { path: 'uikit', loadChildren: () => import('./app/pages/uikit/uikit.routes') },
             { path: 'pages', loadChildren: () => import('./app/pages/pages.routes'),  },
         ]
@@ -25,6 +25,5 @@ export const appRoutes: Routes = [
     { path: 'notfound', component: Notfound },
     { path: '**', redirectTo: '/notfound' },
 
-    
+
 ];
- 
