@@ -7,8 +7,10 @@ import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'topbar-widget',
+    standalone: true,
     imports: [RouterModule, StyleClassModule, ButtonModule, RippleModule, CommonModule],
-    template: `<a class="flex items-center" href="#">
+    template: `
+        <a class="flex items-center" href="#">
             <img src="assets/images/UJKZ.png" alt="UJKZ" class="h-12 mr-2" />
             <span><span class="text-red-500">SIG</span><span class="text-green-500">-RML</span></span>
         </a>
@@ -30,8 +32,8 @@ import { CommonModule } from '@angular/common';
                     </a>
                 </li>
                 
-                <li (click)="afficherSection('suivre-reservation')">
-                    <a (click)="router.navigate(['/landing'], { fragment: 'suivre.reservation' })" pRipple class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
+                <li>
+                    <a (click)="openReservationModal()" pRipple class="px-0 py-4 text-surface-900 dark:text-surface-0 font-medium text-xl">
                         <span>Suivre Reservation</span>
                     </a>
                 </li>
@@ -40,14 +42,15 @@ import { CommonModule } from '@angular/common';
                 <button pButton pRipple label="Connexion" routerLink="/auth/login" [rounded]="true" [text]="true"></button>
                 <button pButton pRipple label="Register" routerLink="/auth/login" [rounded]="true"></button>
             </div>
-        </div> `
+        </div>
+    `,
 })
 export class TopbarWidget {
-    @Output() sectionChange = new EventEmitter<string>();
-
-    afficherSection(section: string) {
-        this.sectionChange.emit(section);
-    }
+    @Output() openReservationModalEvent = new EventEmitter<void>(); // Événement pour ouvrir le modal
 
     constructor(public router: Router) {}
+
+    openReservationModal(): void {
+        this.openReservationModalEvent.emit(); // Émettre l'événement
+    }
 }

@@ -1,45 +1,43 @@
 <p-dialog
-  [(visible)]="reservationDialog"
-  [style]="{ width: '600px' }"
-  header="Détails de la Réservation"
-  [modal]="true"
+[(visible)]="reservationDialog"
+[style]="{ width: '600px' }"
+header="Détails de la Réservation"
+[modal]="true"
 >
-  <ng-template #content>
-    <div class="flex flex-col gap-4">
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Équipement :</span>
-        <span>{{ reservation.equipement.nom }}</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Nom de l'utilisateur :</span>
-        <span>{{ utilisateur.firstname }} {{ utilisateur.lastname }}</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Email :</span>
-        <span>{{ utilisateur.email }}</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Téléphone :</span>
-        <span>{{ utilisateur.phone }}</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Date Début :</span>
-        <span>{{ reservation.date_debut }}</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Date Fin :</span>
-        <span>{{ reservation.date_fin }}</span>
-      </div>
-      <div class="flex justify-between items-center">
-        <span class="font-bold">Statut :</span>
-        <span>{{ reservation.status }}</span>
-      </div>
+<ng-template #content>
+  <div class="flex flex-col gap-4">
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Équipement :</span>
+      <span>{{ reservation.equipement?.nom }}</span>
     </div>
-  </ng-template>
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Nom de l'utilisateur :</span>
+      <span>{{ utilisateur.firstname }} {{ utilisateur.lastname }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Email :</span>
+      <span>{{ utilisateur.email }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Téléphone :</span>
+      <span>{{ utilisateur.phone }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Date Début :</span>
+      <span>{{ reservation.date_debut }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Date Fin :</span>
+      <span>{{ reservation.date_fin }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span class="font-bold">Statut :</span>
+      <span>{{ reservation.status }}</span>
+    </div>
+  </div>
+</ng-template>
 
-  <ng-template #footer>
-    <p-button label="Fermer" icon="pi pi-times" text (click)="hideDialog()" />
-  </ng-template>
+<ng-template #footer>
+  <p-button label="Fermer" icon="pi pi-times" text (click)="hideDialog()" />
+</ng-template>
 </p-dialog>
-
-<p-confirmdialog [style]="{ width: '450px' }" />

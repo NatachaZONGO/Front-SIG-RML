@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ReservationService } from './../../../crud/reservations/reservation.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
@@ -15,12 +15,11 @@ import { ConfirmationService } from 'primeng/api';
 @Component({
   selector: 'reservationdetails',
   templateUrl: './reservation-details.component.html',
-  providers: [ConfirmationService, ReservationService],
+  standalone: true, // Ajoutez cette ligne si vous utilisez des composants autonomes
   imports: [
     ButtonModule,
     CommonModule,
     FormsModule,
-    ButtonModule,
     RippleModule,
     ToastModule,
     ToolbarModule,
@@ -28,24 +27,28 @@ import { ConfirmationService } from 'primeng/api';
     DialogModule,
     ConfirmDialogModule,
   ],
+  providers: [ConfirmationService, ReservationService], // Fournissez les services ici
 })
 export class ReservationDetailsComponent implements OnInit {
-  reservationDialog: boolean = false;
-  reservation: any = {}; 
-  utilisateur: any = {}; // Variable pour stocker les infos utilisateur
+  @Input() reservationCode: string = ''; // Code de réservation passé depuis le parent
+  @Output() closeModal = new EventEmitter<void>(); // Événement pour fermer le modal
+  reservationDialog: boolean = true; // Afficher le modal par défaut
+  reservation: any = {}; // Détails de la réservation
+  utilisateur: any = {}; // Informations de l'utilisateur
 
   constructor(
     private route: ActivatedRoute,
-    private ReservationService: ReservationService
+    private reservationService: ReservationService,
+    private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
-    // Récupérer le code de réservation depuis l'URL
-    const reservationCode = this.route.snapshot.paramMap.get('code');
+    // Récupérer le code de réservation depuis l'URL ou l'input
+    const code = this.reservationCode || this.route.snapshot.paramMap.get('code');
 
-    if (reservationCode) {
+    if (code) {
       // Appeler le service pour récupérer les détails de la réservation
-      this.ReservationService.getReservationDetails(reservationCode).subscribe({
+      this.reservationService.getReservationDetails(code).subscribe({
         next: (data) => {
           this.reservation = data.reservation; // Stocker les détails de la réservation
 
@@ -70,5 +73,6 @@ export class ReservationDetailsComponent implements OnInit {
   // Méthode pour fermer le dialogue
   hideDialog(): void {
     this.reservationDialog = false;
+    this.closeModal.emit(); // Émettre l'événement pour fermer le modal
   }
 }
