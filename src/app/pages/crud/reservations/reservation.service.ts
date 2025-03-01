@@ -12,15 +12,15 @@ import { HttpHeaders } from '@angular/common/http';
     providedIn: 'root',
 })
 export class ReservationService {
-    private apiUrl = `${BackendURL}reservations`; 
-    
+    private apiUrl = `${BackendURL}reservations`;
+
 
     constructor(private http: HttpClient) {}
 
     getReservations(): Observable<Reservation[]> {
         const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
         console.log("Token avant la requête de réservation (getReservations) :", token); // Log du token
-    
+
         return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}`).pipe(
             map((response) => {
                 console.log("Réponse de l'API (getReservations) :", response); // Log de la réponse
@@ -33,20 +33,20 @@ export class ReservationService {
             })
         );
     }
-       
+
            // Récupère les réservations avec les noms des utilisateurs et des équipements
            getReservationsWithDetails(userService: UserService, equipementService: Equipementservice): Observable<Reservation[]> {
             const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
             console.log("Token avant la requête de réservation (getReservationsWithDetails) :", token); // Log du token
-        
+
             return this.http.get<{ content: Reservation[] }>(`${this.apiUrl}/all`).pipe(
                 switchMap((response) => {
                     console.log("Réponse de l'API (getReservationsWithDetails) :", response); // Log de la réponse
-        
+
                     // Pour chaque réservation, récupérez les détails de l'utilisateur et de l'équipement
                     const requests = response.content.map((reservation) => {
                         console.log("Token avant la sous-requête pour la réservation :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token avant chaque sous-requête
-        
+
                         return forkJoin({
                             user: userService.getUserById(reservation.user_id).pipe(
                                 catchError((err) => {
@@ -71,7 +71,7 @@ export class ReservationService {
                             })
                         );
                     });
-        
+
                     // Combinez toutes les requêtes et retournez un Observable<Reservation[]>
                     return forkJoin(requests);
                 }),
@@ -84,32 +84,40 @@ export class ReservationService {
         }
 
         createReservation(reservation: Reservation): Observable<Reservation> {
-            const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
-            console.log("Token avant la requête de création de réservation (createReservation) :", token); // Log du token
-        
-            const headers = new HttpHeaders({
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            });
-        
-            return this.http.post<Reservation>(`${this.apiUrl}`, reservation, { headers }).pipe(
+            // Récupère le token
+            const token = localStorage.getItem(LocalStorageFields.accessToken);
+
+            console.log("Token avant la requête de création de réservation :", token); // Log du token
+
+            // Détermine l'URL en fonction de la présence du token
+            const url = token ? `${this.apiUrl}` : `${this.apiUrl}/guest`;
+
+            // Détermine les headers, en ajoutant le token si disponible
+            let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+
+            if (token) {
+                headers = headers.set('Authorization', `Bearer ${token}`);
+            }
+
+            return this.http.post<Reservation>(url, reservation, { headers }).pipe(
                 catchError((err) => {
-                    console.error('Erreur lors de la création de la réservation (createReservation) :', err);
-                    console.log("Token après erreur (createReservation) :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après erreur
+                    console.error('Erreur lors de la création de la réservation :', err);
+                    console.log("Token après erreur :", localStorage.getItem(LocalStorageFields.accessToken)); // Log du token après erreur
                     return throwError(() => err);
                 })
             );
         }
-    
+
+
         changerStatutReservation(id: string): Observable<Reservation> {
             const token = localStorage.getItem(LocalStorageFields.accessToken); // Récupère le token
             console.log("Token avant la requête de changement de statut de réservation :", token); // Log du token
-        
+
             const headers = new HttpHeaders({
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             });
-        
+
             return this.http.post<Reservation>(`${this.apiUrl}/valider/${id}`, {}, { headers }).pipe(
                 catchError((err) => {
                     console.error('Erreur lors du changement de statut de la réservation :', err);
@@ -124,7 +132,7 @@ export class ReservationService {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             });
-        
+
             return this.http.post<Reservation>(`${this.apiUrl}/rejeter/${id}`, {}, { headers }).pipe(
                 catchError((err) => {
                     console.error("Erreur lors de l'annulation de la réservation :", err);
@@ -136,4 +144,4 @@ export class ReservationService {
             return this.http.get<any>(`${this.apiUrl}/code/${code}`);
           }
 }
-    
+

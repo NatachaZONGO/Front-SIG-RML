@@ -1,0 +1,29 @@
+<div class="container">
+    <h1>Dashboard</h1>
+
+    <div class="row">
+      <div class="col-md-6">
+        <h3>Bar Chart</h3>
+        <canvas baseChart
+                [datasets]="barChartData.datasets"
+                [labels]="barChartData.labels"
+                [options]="barChartOptions"
+                [plugins]="barChartPlugins"
+                [legend]="barChartLegend"
+                [type]="barChartType">
+        </canvas>
+      </div>
+
+      <div class="col-md-6">
+        <h3>Pie Chart</h3>
+        <canvas baseChart
+                [datasets]="pieChartData.datasets"
+                [labels]="pieChartData.labels"
+                [options]="pieChartOptions"
+                [plugins]="pieChartPlugins"
+                [legend]="pieChartLegend"
+                [type]="pieChartType">
+        </canvas>
+      </div>
+    </div>
+  </div>

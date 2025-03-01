@@ -5,8 +5,17 @@
             <span class="text-muted-color text-2xl">Liste des équipements disponibles</span>
         </div>
 
+        <!-- Search and Filter -->
+        <div class="col-span-12 mb-4">
+            <input type="text" [(ngModel)]="searchTerm" placeholder="Rechercher par nom" class="p-2 border rounded w-full mb-2" />
+            <select [(ngModel)]="selectedLaboratoire" class="p-2 border rounded w-full">
+                <option value="">Tous les laboratoires</option>
+                <option *ngFor="let lab of laboratoires" [value]="lab.id">{{ lab.nom }}</option>
+            </select>
+        </div>
+
         <!-- Boucle pour afficher chaque équipement -->
-        <div *ngFor="let equipement of equipements" class="col-span-12 md:col-span-6 lg:col-span-4 p-0 lg:pr-8 lg:pb-8 mt-6 lg:mt-0">
+        <div *ngFor="let equipement of filteredEquipements | paginate: { itemsPerPage: itemsPerPage, currentPage: currentPage }" class="col-span-12 md:col-span-6 lg:col-span-4 p-0 lg:pr-8 lg:pb-8 mt-6 lg:mt-0">
             <div style="height: 400px; padding: 2px; border-radius: 10px; background: linear-gradient(90deg, rgba(253, 228, 165, 0.2), rgba(187, 199, 205, 0.2))">
                 <div class="p-4 bg-surface-0 dark:bg-surface-900 h-full" style="border-radius: 8px">
                     <!-- Photo de l'équipement -->
@@ -46,6 +55,11 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="col-span-12 flex justify-center mt-4">
+            <pagination-controls (pageChange)="pageChanged($event)"></pagination-controls>
         </div>
     </div>
 </div>

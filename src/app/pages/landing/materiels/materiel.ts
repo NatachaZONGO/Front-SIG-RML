@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReservationService } from '../../crud/reservations/reservation.service';
 import { FormsModule } from '@angular/forms';
+import { NgxPaginationModule } from 'ngx-pagination';
+import { ReservationService } from '../../crud/reservations/reservation.service';
 import { AuthService } from '../../auth/auth.service';
 import { Equipementservice } from '../../crud/equipements/equipement.service';
+import { Laboratoireservice } from '../../crud/laboratoire/laboratoire.service';
 import { Equipement } from '../../crud/equipements/equipement.model';
 
 @Component({
     selector: 'materiel',
     standalone: true,
-    imports: [CommonModule, FormsModule],
-    providers: [Equipementservice, ReservationService],
+    imports: [CommonModule, FormsModule, NgxPaginationModule],
+    providers: [Equipementservice, ReservationService, Laboratoireservice],
     templateUrl: './materiel.component.html',
 })
 export class MaterielComponent implements OnInit {
@@ -31,19 +33,28 @@ export class MaterielComponent implements OnInit {
         nom: '',
         prenom: '',
         email: '',
-        contact: '',
+        contact: '',
     };
 
     isLoggedIn: boolean = false;
 
+    // Variables for search and pagination
+    searchTerm: string = '';
+    selectedLaboratoire: string = '';
+    currentPage: number = 1;
+    itemsPerPage: number = 10;
+    laboratoires: any[] = [];
+
     constructor(
         private equipementService: Equipementservice,
         private reservationService: ReservationService,
-        private authService: AuthService
+        private authService: AuthService,
+        private laboratoireService: Laboratoireservice
     ) {}
 
     ngOnInit(): void {
         this.loadEquipements();
+        this.loadLaboratoires();
         this.checkLoginStatus();
     }
 
@@ -54,15 +65,22 @@ export class MaterielComponent implements OnInit {
         });
     }
 
+    // Charge les laboratoires disponibles
+    loadLaboratoires() {
+        this.laboratoireService.getLaboratoires().subscribe((data) => {
+            this.laboratoires = data.content;
+        });
+    }
+
     // Vérifie si l'utilisateur est connecté
     checkLoginStatus() {
         this.isLoggedIn = this.authService.isLoggedIn();
         console.log('Statut de connexion:', this.isLoggedIn);
-    
+
         if (this.isLoggedIn) {
             const user = this.authService.getCurrentUser();
             console.log('Utilisateur récupéré:', user);
-    
+
             if (user && user.id) {
                 this.reservation = { // Crée une nouvelle copie de l'objet pour forcer la détection du changement
                     ...this.reservation,
@@ -75,7 +93,7 @@ export class MaterielComponent implements OnInit {
                         address: user.address,
                     }),
                 };
-    
+
                 console.log('ID utilisateur stocké:', this.reservation.user_id);
                 console.log('Infos utilisateur stockées:', this.reservation.info_utilisateur);
             } else {
@@ -83,8 +101,30 @@ export class MaterielComponent implements OnInit {
             }
         }
     }
-    
-    
+
+    // Filtre les équipements en fonction du terme de recherche et du laboratoire sélectionné
+    get filteredEquipements() {
+        return this.equipements.filter(equipement => {
+            const laboratoireId = equipement.laboratoire?.id;
+            console.log('Laboratoire ID:', laboratoireId); // Vérifiez l'ID du laboratoire
+            console.log('Selected Laboratoire:', this.selectedLaboratoire); // Vérifiez la valeur sélectionnée
+
+            const isLaboratoireMatch = this.selectedLaboratoire ? Number(laboratoireId) === Number(this.selectedLaboratoire) : true;
+            console.log('Laboratoire Match:', isLaboratoireMatch); // Vérifiez si le match est vrai
+
+            const isSearchMatch = this.searchTerm ? equipement.nom?.toLowerCase().includes(this.searchTerm.toLowerCase()) : true;
+
+            return isLaboratoireMatch && isSearchMatch;
+        });
+    }
+
+
+
+
+    // Change la page actuelle
+    pageChanged(event: number): void {
+        this.currentPage = event;
+    }
 
     // Affiche les détails d'un équipement
     voirDetails(equipement: Equipement) {
@@ -129,7 +169,7 @@ export class MaterielComponent implements OnInit {
                     address: '',
                 });
             }
-    
+
             this.reservationService.createReservation(this.reservation).subscribe({
                 next: (response) => {
                     alert("Réservation réussie !");
@@ -159,7 +199,7 @@ export class MaterielComponent implements OnInit {
             nom: '',
             prenom: '',
             email: '',
-            contact: '',
+            contact: '',
         };
     }
 
