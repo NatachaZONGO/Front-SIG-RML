@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, firstValueFrom, Observable, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, firstValueFrom, last, Observable, tap, throwError } from 'rxjs';
 import { UserConnexion } from './connexion/userconnexion.model';
 import { BackendURL, LocalStorageFields } from '../../const';
 import { RegisterUser } from './register/user.model';
@@ -46,25 +46,28 @@ export class AuthService {
     }
 
     //-----------------------------Inscription-------------------------------------------
-    register(registerData: RegisterUser): Promise<any> {
-        const formData = {
-            nom: registerData.firstname,
-            prenom: registerData.lastname,
-            email: registerData.email,
-            password: registerData.password,
-            scope: registerData.scope,
-            phone: registerData.phone,
-        };
+     // Méthode pour l'inscription (utilisable par l'admin et l'utilisateur)
+  register(registerData: RegisterUser, isAdmin: boolean = false): Promise<any> {
+    const formData = {
+      firstname: registerData.firstname,
+      lastname: registerData.lastname,
+      email: registerData.email,
+      password: registerData.password,
+      phone: registerData.phone,
+      address: registerData.address,
+      scope: isAdmin ? registerData.role : 'reservant', 
+      
+    };
 
-        return firstValueFrom(
-            this.http.post(BackendURL + "/register", formData).pipe(
-                catchError(error => {
-                    console.error("Erreur lors de l'inscription:", error);
-                    return throwError(() => new Error("Erreur lors de l'inscription"));
-                })
-            )
-        );
-    }
+    return firstValueFrom(
+      this.http.post( `${BackendURL}register`, formData).pipe(
+        catchError((error) => {
+          console.error("Erreur lors de l'inscription:", error);
+          return throwError(() => new Error("Erreur lors de l'inscription"));
+        })
+      )
+    );
+  }
 
     //-----------------------------Connexion-------------------------------------------
     connexion(userConnexion: UserConnexion): Promise<any> {

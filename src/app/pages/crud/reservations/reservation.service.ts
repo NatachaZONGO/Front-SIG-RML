@@ -143,5 +143,15 @@ export class ReservationService {
         getReservationDetails(code: string): Observable<any> {
             return this.http.get<any>(`${this.apiUrl}/code/${code}`);
           }
+
+          updateReservation(reservation: any): Observable<any> {
+            // Envoyer la requête PUT sans en-tête d'authentification
+            return this.http.put<any>(`${this.apiUrl}/${reservation.id}`, reservation).pipe(
+              catchError((err) => {
+                console.error("Erreur lors de la modification de la réservation :", err);
+                return throwError(() => err);
+              })
+            );
+          }
 }
 

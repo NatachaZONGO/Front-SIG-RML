@@ -45,7 +45,7 @@ export class ConnexionComponent implements OnInit {
             const userConnexion: UserConnexion = this.formulaireconnexion.value as UserConnexion;
             const resultat = await this.authService.connexion(userConnexion);
             console.log(resultat);
-            this.router.navigateByUrl("");
+            this.router.navigateByUrl("/landing");
         } catch (error) {
             console.log(error);
         }finally{

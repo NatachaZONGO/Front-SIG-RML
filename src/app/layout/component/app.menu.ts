@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 import { AppMenuitem } from './app.menuitem';
+import { AuthService } from '../../pages/auth/auth.service';
+
 
 @Component({
     selector: 'app-menu',
@@ -17,7 +19,7 @@ import { AppMenuitem } from './app.menuitem';
 })
 export class AppMenu {
     model: MenuItem[] = [];
-
+    constructor(private authService: AuthService, private router: Router) {}
     ngOnInit() {
         this.model = [
             {
@@ -61,13 +63,13 @@ export class AppMenu {
                         routerLink: ['/landing']
                     },
                     {
-                        label: 'Auth',
+                        label: 'Authentication',
                         icon: 'pi pi-fw pi-user',
                         items: [
                             {
-                                label: 'Login',
+                                label: 'Connexion',
                                 icon: 'pi pi-fw pi-sign-in',
-                                routerLink: ['/auth/login']
+                                routerLink: ['/connexion']
                             },
                             {
                                 label: 'Error',
@@ -75,9 +77,9 @@ export class AppMenu {
                                 routerLink: ['/auth/error']
                             },
                             {
-                                label: 'Access Denied',
+                                label: 'Déconnexion',
                                 icon: 'pi pi-fw pi-lock',
-                                routerLink: ['/auth/access']
+                                command: () => this.onLogout(),
                             }
                         ]
                     },
@@ -91,4 +93,9 @@ export class AppMenu {
             
         ];
     }
+
+    onLogout() {
+        this.authService.logout();
+        this.router.navigate(['/connexion']);
+      }
 }

@@ -4,7 +4,8 @@ export interface RegisterUser {
     lastname: string;
     email: string;
     password: string;
-    scope: 'admin' | 'responsable' | 'reservant';
+    role: 'admin' | 'responsable' | 'reservant';
     phone:number;
+    address: string;
 }
 

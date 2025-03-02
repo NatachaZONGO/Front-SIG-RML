@@ -1,43 +1,191 @@
+<p-toast></p-toast>
+<!-- Boîte de dialogue pour afficher les détails de la réservation -->
 <p-dialog
-[(visible)]="reservationDialog"
-[style]="{ width: '600px' }"
-header="Détails de la Réservation"
-[modal]="true"
+  [(visible)]="reservationDialog"
+  [style]="{ width: '800px' }"
+  header="Détails de la Réservation"
+  [modal]="true"
 >
-<ng-template #content>
-  <div class="flex flex-col gap-4">
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Équipement :</span>
-      <span>{{ reservation.equipement?.nom }}</span>
+  <ng-template #content>
+    <div class="flex flex-col gap-4">
+      <!-- Détails de la réservation -->
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Équipement :</span>
+        <span>{{ reservation.equipement?.nom }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Nom de l'utilisateur :</span>
+        <span>{{ utilisateur.firstname }} {{ utilisateur.lastname }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Email :</span>
+        <span>{{ utilisateur.email }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Téléphone :</span>
+        <span>{{ utilisateur.phone }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Date Début :</span>
+        <span>{{ reservation.date_debut }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Date Fin :</span>
+        <span>{{ reservation.date_fin }}</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="font-bold">Statut :</span>
+        <span>{{ reservation.status }}</span>
+      </div>
     </div>
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Nom de l'utilisateur :</span>
-      <span>{{ utilisateur.firstname }} {{ utilisateur.lastname }}</span>
-    </div>
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Email :</span>
-      <span>{{ utilisateur.email }}</span>
-    </div>
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Téléphone :</span>
-      <span>{{ utilisateur.phone }}</span>
-    </div>
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Date Début :</span>
-      <span>{{ reservation.date_debut }}</span>
-    </div>
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Date Fin :</span>
-      <span>{{ reservation.date_fin }}</span>
-    </div>
-    <div class="flex justify-between items-center">
-      <span class="font-bold">Statut :</span>
-      <span>{{ reservation.status }}</span>
-    </div>
-  </div>
-</ng-template>
+  </ng-template>
 
-<ng-template #footer>
-  <p-button label="Fermer" icon="pi pi-times" text (click)="hideDialog()" />
-</ng-template>
+  <ng-template #footer>
+    <div class="flex justify-between items-center">
+      <!-- Bouton Annuler -->
+      <p-button
+        label="Annuler"
+        icon="pi pi-times"
+        severity="danger"
+        (click)="annulerReservation()"
+      />
+      <!-- Bouton Modifier -->
+      <p-button
+        label="Modifier"
+        icon="pi pi-pencil"
+        severity="info"
+        (click)="ouvrirModificationDialog()" 
+      />
+      <!-- Bouton Fermer -->
+      <p-button
+        label="Fermer"
+        icon="pi pi-times"
+        text
+        (click)="hideDialog()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Boîte de dialogue pour la modification de la réservation -->
+<p-dialog
+  [(visible)]="modificationDialog"
+  [style]="{ width: '800px' }"
+  header="Modifier la Réservation"
+  [modal]="true"
+>
+  <ng-template #content>
+    <form (ngSubmit)="modifierReservation()" class="flex flex-col gap-4">
+      <!-- Champ Équipement (non modifiable) -->
+      <div class="flex flex-col gap-2">
+        <label for="equipement" class="font-bold">Équipement :</label>
+        <input
+          pInputText
+          id="equipement"
+          [(ngModel)]="reservation.equipement.nom"
+          name="equipement"
+          readonly 
+          class="w-full"
+        />
+      </div>
+
+      <!-- Champ Nom de l'utilisateur -->
+      <div class="flex flex-col gap-2">
+        <label for="userName" class="font-bold">Nom de l'utilisateur :</label>
+        <input
+          pInputText
+          id="userName"
+          [(ngModel)]="utilisateur.firstname"
+          name="userName"
+          placeholder="Prénom de l'utilisateur"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Champ Email -->
+      <div class="flex flex-col gap-2">
+        <label for="email" class="font-bold">Email :</label>
+        <input
+          pInputText
+          id="email"
+          [(ngModel)]="utilisateur.email"
+          name="email"
+          placeholder="Email de l'utilisateur"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Champ Téléphone -->
+      <div class="flex flex-col gap-2">
+        <label for="phone" class="font-bold">Téléphone :</label>
+        <input
+          pInputText
+          id="phone"
+          [(ngModel)]="utilisateur.phone"
+          name="phone"
+          placeholder="Téléphone de l'utilisateur"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Champ Date Début -->
+      <div class="flex flex-col gap-2">
+        <label for="dateDebut" class="font-bold">Date Début :</label>
+        <p-datepicker
+          id="dateDebut"
+          [(ngModel)]="reservation.date_debut"
+          name="dateDebut"
+          dateFormat="dd/mm/yy"
+          placeholder="Date de début"
+          class="w-full"
+          [showIcon]="true"
+        ></p-datepicker>
+      </div>
+
+      <!-- Champ Date Fin -->
+      <div class="flex flex-col gap-2">
+        <label for="dateFin" class="font-bold">Date Fin :</label>
+        <p-datepicker
+          id="dateFin"
+          [(ngModel)]="reservation.date_fin"
+          name="dateFin"
+          dateFormat="dd/mm/yy"
+          placeholder="Date de fin"
+          class="w-full"
+          [showIcon]="true"
+        ></p-datepicker>
+      </div>
+
+      <!-- Champ Statut (non modifiable) -->
+      <div class="flex flex-col gap-2">
+        <label for="status" class="font-bold">Statut :</label>
+        <p-dropdown
+          id="status"
+          [(ngModel)]="reservation.status"
+          name="status"
+          [options]="statuts"
+          placeholder="Sélectionnez un statut"
+          [disabled]="true"
+          class="w-full"
+        ></p-dropdown>
+      </div>
+
+      <!-- Boutons du formulaire -->
+      <div class="flex justify-end gap-2 mt-4">
+        <p-button
+          type="button"
+          label="Annuler"
+          icon="pi pi-times"
+          severity="danger"
+          (click)="fermerModificationDialog()"
+        ></p-button>
+        <p-button
+          type="submit"
+          label="Enregistrer"
+          icon="pi pi-check"
+          severity="success"
+        ></p-button>
+      </div>
+    </form>
+  </ng-template>
 </p-dialog>

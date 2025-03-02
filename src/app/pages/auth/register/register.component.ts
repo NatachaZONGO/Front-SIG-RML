@@ -1,94 +1,70 @@
-import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { FloatLabel, FloatLabelModule } from 'primeng/floatlabel';
-import { InputTextModule } from 'primeng/inputtext';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
-import { RegisterUser } from './user.model';
-import { PasswordModule } from 'primeng/password';
-import { DropdownModule } from 'primeng/dropdown';
 import { CommonModule } from '@angular/common';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Toast, ToastModule } from 'primeng/toast';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmationService } from 'primeng/api';
+
 
 @Component({
-    selector: 'app-register',
-    templateUrl: './register.component.html',
-    styleUrls: ['./register.component.scss'],
-    standalone: true,
-    providers: [MessageService, ConfirmationService],
-    imports: 
-    [ 
-        InputTextModule,
-        FloatLabelModule,
-        ButtonModule,
-        ReactiveFormsModule,
-        PasswordModule,
-        FormsModule,
-        DropdownModule,
-        CommonModule,
-        ToastModule,
-       
-    ],
+  selector: 'app-register',
+  templateUrl: './register.component.html',
+  imports:[
+    CommonModule, 
+    ButtonModule,
+    FormsModule,
+    ReactiveFormsModule,
+
+],
+ providers:[ConfirmationService]
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent {
+  formulaireInscription: FormGroup;
 
-    user: RegisterUser = {
-        id: 0,
-        firstname: '',
-        lastname: '',
-        email: '',
-        password: '',
-        scope: 'reservant', // Valeur par défaut
-        phone: 0
-    };
-    
-    
-    value!: string;
-    ngOnInit(): void {
-        this.initForm();
-     }
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    // Initialisation du formulaire
+    this.formulaireInscription = this.fb.group({
+      firstname: ['', Validators.required],
+      lastname: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      phone: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      confirmPassword: ['', Validators.required],
+      address: ['', Validators.required], 
+    });
+    { validator: this.passwordMatchValidator };
+  }
 
-    valCheck: string[] = ['remember'];
+  // Méthode pour soumettre le formulaire
+  async register(): Promise<void> {
+    if (this.formulaireInscription.valid) {
+      const userData = this.formulaireInscription.value;
 
-    password!: string;
-
-    formulaire! : FormGroup;
-    constructor (
-        private fb: FormBuilder,
-        private authService: AuthService,
-        private messageService: MessageService,
-        private confirmationService: ConfirmationService) { }
-
-     initForm() {
-        this.formulaire = this.fb.group({
-             nom: ['', Validators.required],
-             prenom: ['', Validators.required],
-             email: ['', Validators.required],
-             password: ['', [Validators.required, Validators.minLength(8)]],
-             scope: ['', Validators.required, Validators.pattern('admin|chef_lab|reservant')],
-             phone: ['', Validators.required],
-             coche: [false, Validators.requiredTrue],
-        })
-        
-    }  
-
-    async inscription(){
-        //fonction qui va permetre d'envoyer les infos du formulaire au backend laravel 
-        console.log(this.formulaire.value);
-        const registerUser: RegisterUser = this.formulaire.value as RegisterUser;
-        
-        const resultat = await this.authService.register(registerUser);
-        console.log(resultat);
-        this.formulaire.reset();
+      try {
+        // Appeler la méthode register du service AuthService
+        await this.authService.register(userData, false); // false pour indiquer que c'est une inscription utilisateur
+        console.log('Inscription réussie');
+        this.router.navigate(['/connexion']); // Rediriger vers la page de connexion
+      } catch (error) {
+        console.error("Erreur lors de l'inscription", error);
+        // Afficher un message d'erreur à l'utilisateur
+      }
     }
+  }
 
-    dropdownValues = [
-        { name: 'Administrateur', value: 'admin' },
-        { name: 'Responsable', value: 'responsable' },
-        { name: 'Réservant', value: 'reservant' }
-      ];
+  // Validateur personnalisé pour vérifier que les mots de passe correspondent
+  passwordMatchValidator(formGroup: FormGroup) {
+    const password = formGroup.get('password')?.value;
+    const confirmPassword = formGroup.get('confirmPassword')?.value;
+    return password === confirmPassword ? null : { mismatch: true };
+  }
 
+  navigateToConnexion() {
+    this.router.navigate(['/connexion']);
+  }
 }
-
-
