@@ -7,17 +7,18 @@ import { ConnexionComponent } from './auth/connexion/connexion.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { Ufrr } from './crud/ufr/ufr';
 import { Laboratoiree } from './crud/laboratoire/laboratoire';
+import { authGuard } from './auth/auth.guard';
 
 
 export default [
-    {path:'resrvation-details', component: ReservationComponent},
-    {path: 'connexion', component: ConnexionComponent},
-    {path:'register', component: RegisterComponent},
-    { path: 'user', component: Userr },
-    { path: 'ufr', component: Ufrr },
-    { path: 'equipement', component: Equipementt },
-    { path: 'laboratoire', component: Laboratoiree},
-    { path: 'reservation', component: ReservationComponent},
-    { path: 'empty', component: Empty },
-    { path: '**', redirectTo: '/notfound' }
+  { path: 'resrvation-details', component: ReservationComponent },
+  { path: 'connexion', component: ConnexionComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'user', component: Userr, canActivate: [authGuard], data: { roles: ['admin'] } }, // Seul l'admin peut accéder
+  { path: 'ufr', component: Ufrr, canActivate: [authGuard], data: { roles: ['admin'] } }, // Seul l'admin peut accéder
+  { path: 'equipement', component: Equipementt, canActivate: [authGuard], data: { roles: ['responsable' ,'admin'] } }, // Seul l'admin peut accéder
+  { path: 'laboratoire', component: Laboratoiree, canActivate: [authGuard], data: { roles: [, 'admin', 'responsable'] } }, // Seul le responsable peut accéder
+  { path: 'reservation', component: ReservationComponent, canActivate: [authGuard], data: { roles: ['reservant', 'admin', 'responsable'] } }, // Seul le reservant peut accéder
+  { path: 'empty', component: Empty },
+  { path: '**', redirectTo: '/notfound' },
 ] as Routes;

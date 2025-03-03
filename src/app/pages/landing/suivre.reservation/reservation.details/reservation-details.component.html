@@ -131,7 +131,7 @@
       <!-- Champ Date Début -->
       <div class="flex flex-col gap-2">
         <label for="dateDebut" class="font-bold">Date Début :</label>
-        <p-datepicker
+        <p-calendar
           id="dateDebut"
           [(ngModel)]="reservation.date_debut"
           name="dateDebut"
@@ -139,13 +139,13 @@
           placeholder="Date de début"
           class="w-full"
           [showIcon]="true"
-        ></p-datepicker>
+        ></p-calendar>
       </div>
 
       <!-- Champ Date Fin -->
       <div class="flex flex-col gap-2">
         <label for="dateFin" class="font-bold">Date Fin :</label>
-        <p-datepicker
+        <p-calendar
           id="dateFin"
           [(ngModel)]="reservation.date_fin"
           name="dateFin"
@@ -153,7 +153,7 @@
           placeholder="Date de fin"
           class="w-full"
           [showIcon]="true"
-        ></p-datepicker>
+        ></p-calendar>
       </div>
 
       <!-- Champ Statut (non modifiable) -->

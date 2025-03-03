@@ -21,78 +21,73 @@ export class AppMenu {
     model: MenuItem[] = [];
     constructor(private authService: AuthService, private router: Router) {}
     ngOnInit() {
+        const role = this.authService.getUserRole();
+      
         this.model = [
-            {
-                label: 'Home',
-                items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
+          {
+            label: 'Home',
+            items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }],
+          },
+          {
+            label: 'Pages',
+            icon: 'pi pi-fw pi-briefcase',
+            routerLink: ['/pages'],
+            items: [
+              {
+                label: 'Utilisateurs',
+                icon: 'pi pi fw pi-users',
+                routerLink: ['/pages/user'],
+                visible: role === 'admin', 
+              },
+              {
+                label: 'UFR',
+                icon: 'pi pi-fw pi-book',
+                routerLink: ['/pages/ufr'],
+                visible: role === 'admin', 
+              },
+              {
+                label: 'Laboratoire',
+                icon: 'pi pi-fw pi-building',
+                routerLink: ['/pages/laboratoire'],
+                visible:  role === 'admin'
+              },
+              {
+                label: 'Equipements',
+                icon: 'pi pi-fw pi-cog',
+                routerLink: ['/pages/equipement'],
+                visible: role === 'admin'|| role === 'responsable'
+              },
+              {
+                label: 'Reservations',
+                icon: 'pi pi-fw pi-calendar',
+                routerLink: ['/pages/reservation'],
+                visible: role === 'reservant'|| role === 'admin'|| role === 'responsable'
             },
-           
-            {
-                label: 'Pages',
-                icon: 'pi pi-fw pi-briefcase',
-                routerLink: ['/pages'],
+            { 
+              },
+              
+              {
+                label: 'Authentication',
+                icon: 'pi pi-fw pi-user',
                 items: [
-                    {
-                        label: 'Utilisateurs',
-                        icon: 'pi pi fw pi-users',
-                        routerLink: ['/pages/user']
-                    },
-                    {
-                        label: 'UFR',
-                        icon: 'pi pi-fw pi-book',
-                        routerLink: ['/pages/ufr']
-                    },
-                    {
-                        label: 'Laboratoire',
-                        icon: 'pi pi-fw pi-building',
-                        routerLink: ['/pages/laboratoire']
-                    },
-                    {
-                        label: 'Equipements',
-                        icon: 'pi pi-fw pi-cog',
-                        routerLink: ['/pages/equipement']
-                    },
-                    {
-                        label: 'Reservations',
-                        icon: 'pi pi-fw pi-calendar',
-                        routerLink: ['/pages/reservation'] 
-                    },
-                    {
-                        label: 'Site',
-                        icon: 'pi pi-fw pi-globe',
-                        routerLink: ['/landing']
-                    },
-                    {
-                        label: 'Authentication',
-                        icon: 'pi pi-fw pi-user',
-                        items: [
-                            {
-                                label: 'Connexion',
-                                icon: 'pi pi-fw pi-sign-in',
-                                routerLink: ['/connexion']
-                            },
-                            {
-                                label: 'Error',
-                                icon: 'pi pi-fw pi-times-circle',
-                                routerLink: ['/auth/error']
-                            },
-                            {
-                                label: 'Déconnexion',
-                                icon: 'pi pi-fw pi-lock',
-                                command: () => this.onLogout(),
-                            }
-                        ]
-                    },
-                    {
-                        label: 'Empty',
-                        icon: 'pi pi-fw pi-circle-off',
-                        routerLink: ['/pages/empty']
-                    }
-                ]
-            },
-            
+                  {
+                    label: 'Connexion',
+                    icon: 'pi pi-fw pi-sign-in',
+                    routerLink: ['/connexion'],
+                  },
+                 
+                  {
+                    label: 'Déconnexion',
+                    icon: 'pi pi-fw pi-lock',
+                    command: () => this.onLogout(),
+                  },
+                ],
+              },
+             
+            ],
+          },
         ];
-    }
+      }
 
     onLogout() {
         this.authService.logout();

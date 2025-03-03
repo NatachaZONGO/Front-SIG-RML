@@ -25,6 +25,7 @@ import { Equipementservice } from './equipement.service';
 import { Equipement } from './equipement.model';
 import { Laboratoireservice } from '../laboratoire/laboratoire.service';
 import { Laboratoire } from '../laboratoire/laboratoire.model';
+import { AuthService } from '../../auth/auth.service';
 
 
 interface Column {
@@ -92,6 +93,7 @@ export class Equipementt implements OnInit {
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private laboratoireService: Laboratoireservice,
+        private authService: AuthService
     ) {}
 
     ngOnInit() {
@@ -111,6 +113,8 @@ export class Equipementt implements OnInit {
             { field: 'image', header: 'Images' }, 
         ];
         this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
+
+        
 
     }
 
@@ -261,14 +265,30 @@ export class Equipementt implements OnInit {
     }
     
     loadEquipementsWithLaboratoires() {
-        this.equipementService.getEquipementsWithLaboratoires().subscribe({
+        const user = this.authService.getCurrentUser(); // Récupérer l'utilisateur connecté
+        const role = this.authService.getUserRole(); // Récupérer le rôle de l'utilisateur
+      
+        if (role === 'responsable') {
+          // Si l'utilisateur est un responsable, charger uniquement les équipements de son laboratoire
+          const laboratoireId = user.laboratoire_id; // Supposons que l'ID du laboratoire est stocké dans l'objet utilisateur
+          this.equipementService.getEquipementsByLaboratoire(laboratoireId).subscribe({
             next: (data) => {
-                console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
-                this.equipements.set(data);
+              console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
+              this.equipements.set(data);
             },
             error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
-        });
-    }
+          });
+        } else if (role === 'admin') {
+          // Si l'utilisateur est un admin, charger tous les équipements
+          this.equipementService.getEquipementsWithLaboratoires().subscribe({
+            next: (data) => {
+              console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
+              this.equipements.set(data);
+            },
+            error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
+          });
+        }
+      }
 
     onFileChange(event: any) {
         const file = event.target.files[0];

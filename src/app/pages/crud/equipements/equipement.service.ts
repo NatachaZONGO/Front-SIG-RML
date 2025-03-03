@@ -102,8 +102,8 @@ export class Equipementservice {
         );
     }
 
-    getEquipementsByLaboratoire(laboratoryId: string): Observable<Equipement[]> {
-        return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}/equipment/labo/${laboratoryId}`).pipe(
+    getEquipementsByLaboratoire(laboratoireId: string): Observable<Equipement[]> {
+        return this.http.get<{ content: Equipement[] }>(`${BackendURL}laboratoires/${laboratoireId}/equipements`).pipe(
             map((response) => response.content),
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements par laboratoire', err);

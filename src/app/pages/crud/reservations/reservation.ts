@@ -23,6 +23,7 @@ import { Equipement } from '../equipements/equipement.model';
 import { User } from '../user/user.model';
 import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
+import { AuthService } from '../../auth/auth.service';
 
 
 interface Column {
@@ -81,7 +82,8 @@ export class ReservationComponent implements OnInit {
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
         private equipementService: Equipementservice,
-        private userService: UserService
+        private userService: UserService,
+        private authService: AuthService
     ) {}
 
     exportCSV() {
@@ -152,35 +154,74 @@ export class ReservationComponent implements OnInit {
     }
 
     loadReservationsWithDetails() {
-        this.reservationService.getReservations().subscribe({
+        const user = this.authService.getCurrentUser(); // Récupérer l'utilisateur connecté
+        const role = this.authService.getUserRole(); // Récupérer le rôle de l'utilisateur
+      
+        if (role === 'responsable') {
+          // Si l'utilisateur est un responsable, charger uniquement les réservations de son laboratoire
+          const laboratoireId = user.laboratoire_id; // Récupérer l'ID du laboratoire
+      
+          if (!laboratoireId) {
+            console.error('ID du laboratoire non trouvé pour l\'utilisateur responsable');
+            return;
+          }
+      
+          this.reservationService.getReservationsByLaboratoire(laboratoireId).subscribe({
             next: (reservations) => {
-                const reservationsWithDetails = reservations.map((reservation) => {
-                    const equipement = this.equipements.find((e) => e.id === reservation.equipement_id);
-                    let userName = 'Inconnu';
-    
-                    if (reservation.user_id) {
-                        const user = this.users.find((u) => u.id === reservation.user_id);
-                        userName = user ? `${user.firstname} ${user.lastname}` : 'Inconnu';
-                    } else if (reservation.info_utilisateur) {
-                        // Si l'utilisateur n'est pas connecté, extraire les informations de info_utilisateur
-                        const infoUtilisateur = JSON.parse(reservation.info_utilisateur);
-                        const firstName = infoUtilisateur.firstname || '';
-                        const lastName = infoUtilisateur.lastname || '';
-                        userName = firstName && lastName ? `${firstName} ${lastName}` : 'Inconnu';
-                    }
-    
-                    return {
-                        ...reservation,
-                        equipementName: equipement ? equipement.nom : 'Inconnu',
-                        userName: userName,
-                    };
-                });
-    
-                console.log('Réservations mappées:', reservationsWithDetails); // Log des réservations mappées
-                this.reservations.set(reservationsWithDetails);
+              this.mapReservationsWithDetails(reservations);
+            },
+            error: (err) => console.error('Erreur lors du chargement des réservations par laboratoire', err),
+          });
+        } else if (role === 'reservant') {
+          // Si l'utilisateur est un reservant, charger uniquement ses propres réservations
+          const userId = user.id; // Récupérer l'ID de l'utilisateur
+      
+          if (!userId) {
+            console.error('ID de l\'utilisateur non trouvé pour le reservant');
+            return;
+          }
+      
+          this.reservationService.getReservationsByUser(userId).subscribe({
+            next: (reservations) => {
+              this.mapReservationsWithDetails(reservations);
+            },
+            error: (err) => console.error('Erreur lors du chargement des réservations par utilisateur', err),
+          });
+        } else if (role === 'admin') {
+          // Si l'utilisateur est un admin, charger toutes les réservations
+          this.reservationService.getReservations().subscribe({
+            next: (reservations) => {
+              this.mapReservationsWithDetails(reservations);
             },
             error: (err) => console.error('Erreur lors du chargement des réservations', err),
+          });
+        }
+      }
+      mapReservationsWithDetails(reservations: Reservation[]) {
+        const reservationsWithDetails = reservations.map((reservation) => {
+          const equipement = this.equipements.find((e) => e.id === reservation.equipement_id);
+          let userName = 'Inconnu';
+      
+          if (reservation.user_id) {
+            const user = this.users.find((u) => u.id === reservation.user_id);
+            userName = user ? `${user.firstname} ${user.lastname}` : 'Inconnu';
+          } else if (reservation.info_utilisateur) {
+            // Si l'utilisateur n'est pas connecté, extraire les informations de info_utilisateur
+            const infoUtilisateur = JSON.parse(reservation.info_utilisateur);
+            const firstName = infoUtilisateur.firstname || '';
+            const lastName = infoUtilisateur.lastname || '';
+            userName = firstName && lastName ? `${firstName} ${lastName}` : 'Inconnu';
+          }
+      
+          return {
+            ...reservation,
+            equipementName: equipement ? equipement.nom : 'Inconnu',
+            userName: userName,
+          };
         });
-    }
+      
+        console.log('Réservations mappées:', reservationsWithDetails); // Log des réservations mappées
+        this.reservations.set(reservationsWithDetails);
+      }
     
 }

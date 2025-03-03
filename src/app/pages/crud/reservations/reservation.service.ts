@@ -144,11 +144,44 @@ export class ReservationService {
             return this.http.get<any>(`${this.apiUrl}/code/${code}`);
           }
 
-          updateReservation(reservation: any): Observable<any> {
+          updateReservation( reservation: any): Observable<any> {
+            const formattedReservation = {
+                ...reservation,
+                date_debut: this.formatDate(reservation.date_debut),
+                date_fin: this.formatDate(reservation.date_fin),
+            };
             // Envoyer la requête PUT sans en-tête d'authentification
             return this.http.put<any>(`${this.apiUrl}/${reservation.id}`, reservation).pipe(
+                catchError((err) => {
+                    console.error("Erreur lors de la modification de la réservation :", err);
+                    return throwError(() => err);
+                })
+            );
+        }
+        
+        private formatDate(date: Date): string {
+            const d = new Date(date);
+            return d.getFullYear() + '-' +
+                   ('0' + (d.getMonth() + 1)).slice(-2) + '-' +
+                   ('0' + d.getDate()).slice(-2) + ' ' +
+                   ('0' + d.getHours()).slice(-2) + ':' +
+                   ('0' + d.getMinutes()).slice(-2) + ':' +
+                   ('0' + d.getSeconds()).slice(-2);
+        }
+
+        getReservationsByLaboratoire(laboratoireId: number): Observable<any> {
+            return this.http.get<any>(`${BackendURL}laboratoires/${laboratoireId}/reservations`).pipe(
               catchError((err) => {
-                console.error("Erreur lors de la modification de la réservation :", err);
+                console.error("Erreur lors de la récupération des réservations :", err);
+                return throwError(() => err);
+              })
+            );
+          }
+
+          getReservationsByUser(userId: number): Observable<any> {
+            return this.http.get<any>(`${BackendURL}user/reservations?userId=${userId}`).pipe(
+              catchError((err) => {
+                console.error("Erreur lors de la récupération des réservations :", err);
                 return throwError(() => err);
               })
             );
