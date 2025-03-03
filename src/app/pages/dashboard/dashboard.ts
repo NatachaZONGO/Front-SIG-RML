@@ -1,59 +1,83 @@
 import { Component, OnInit } from '@angular/core';
-import { ChartOptions, ChartType, ChartData } from 'chart.js'; // Importation de ChartData
-import { DashboardService } from './dashboard.service';
+import { ChartModule } from 'primeng/chart'; 
+import { TableModule } from 'primeng/table'; 
 import { CommonModule } from '@angular/common';
-import { BaseChartDirective} from 'ng2-charts';
+import { DashboardService } from './dashboard.service';
 
 @Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, BaseChartDirective],
-  templateUrl: './dashboard.component.html',
-  styleUrls: []
+    selector: 'app-dashboard',
+    standalone: true,
+    imports: [CommonModule, ChartModule, TableModule],
+    templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
-  // Bar Chart
-  public barChartOptions: ChartOptions = {
-    responsive: true,
-  };
-  public barChartLabels: string[] = ['January', 'February', 'March', 'April', 'May', 'June', 'July'];
-  public barChartType: ChartType = 'bar';
-  public barChartLegend = true;
-  public barChartPlugins = [];
-  // Correction ici : Utilisation de ChartData au lieu de ChartDataset
-  public barChartData: ChartData<'bar'> = {
-    labels: this.barChartLabels,
-    datasets: [
-      { data: [65, 59, 80, 81, 56, 55, 40], label: 'Series A' },
-      { data: [28, 48, 40, 19, 86, 27, 90], label: 'Series B' }
-    ]
-  };
+    totalReservations: number = 0;
+    totalEquipements: number = 0;
+    totalUsers: number = 0;
+    monthlyReservations: number = 0;
+    upcomingReservations: any[] = [];
+    prochainesReservations: number = 0;
+    totalUFRs: number = 0;
+    reservationsEnAttente: number = 0;
+    mostUsedEquipments: any[] = []; 
+    users_now: number = 0;
 
-  // Pie Chart
-  public pieChartOptions: ChartOptions = {
-    responsive: true,
-  };
-  public pieChartLabels: (string | string[])[] = [['Download', 'Sales'], ['In', 'Store', 'Sales'], 'Mail Sales'];
-  // Correction ici aussi : Utilisation de ChartData pour Pie Chart
-  public pieChartData: ChartData<'pie'> = {
-    labels: this.pieChartLabels,
-    datasets: [{ data: [300, 500, 100], label: 'Sales' }]
-  };
-  public pieChartType: ChartType = 'pie';
-  public pieChartLegend = true;
-  public pieChartPlugins = [];
+    equipementUsageChartData: any;
+    equipementRiskChartData: any;
+    chartOptions: any;
 
-  constructor(private dashboardService: DashboardService) {}
+    constructor(private dashboardService: DashboardService) {}
 
-  ngOnInit(): void {
-    this.loadStatistics();
-  }
+    ngOnInit() {
+        this.dashboardService.getStats().subscribe((data) => {
+            console.log('Données reçues :', data); // Debugging
 
-  loadStatistics(): void {
-    this.dashboardService.getStatistics().subscribe(data => {
-      // Mise à jour des données des graphiques avec les statistiques récupérées
-      this.barChartData = data.barChartData;
-      this.pieChartData = data.pieChartData;
-    });
-  }
+            this.totalReservations = data.total_reservations;
+            this.totalEquipements = data.total_equipements;
+            this.totalUsers = data.total_users;
+            this.users_now = data.users_now;
+            this.monthlyReservations = data.reservations_ce_mois;
+            this.upcomingReservations = data.prochaines_reservations;
+            this.prochainesReservations = data.prochaines_reservations;
+            this.totalUFRs = data.total_ufrs;
+            this.reservationsEnAttente = data.reservations_en_attente;
+
+            
+
+            // Formatage des équipements les plus utilisés
+            this.mostUsedEquipments = data.equipements_utilises 
+            ? data.equipements_utilises.map((item: any) => ({
+                nom: item.equipement.nom,
+                laboratoire: item.equipement.laboratoire.nom,
+                nombreReservations: item.total_reservations,
+            }))
+            : []; // Si undefined, retourne un tableau vide
+        
+
+            this.equipementUsageChartData = {
+                labels: ['Utilisés', 'Non Utilisés'],
+                datasets: [
+                    {
+                        data: [data.equipements_utilises_percentage, 100 - data.equipements_utilises_percentage],
+                        backgroundColor: ['#36A2EB', '#FF6384'],
+                    },
+                ],
+            };
+
+            this.equipementRiskChartData = {
+                labels: ['À Risque', 'Sécurisés'],
+                datasets: [
+                    {
+                        data: [data.equipements_susceptibles_pannes_percentage, 100 - data.equipements_susceptibles_pannes_percentage],
+                        backgroundColor: ['#FF6384', '#36A2EB'],
+                    },
+                ],
+            };
+
+            this.chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+            };
+        });
+    }
 }

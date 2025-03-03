@@ -26,6 +26,7 @@ import { Equipement } from './equipement.model';
 import { Laboratoireservice } from '../laboratoire/laboratoire.service';
 import { Laboratoire } from '../laboratoire/laboratoire.model';
 import { AuthService } from '../../auth/auth.service';
+import autoTable from 'jspdf-autotable';
 
 
 interface Column {
@@ -73,9 +74,9 @@ export class Equipementt implements OnInit {
     equipement: Equipement = {};
     selectedEquipements: Equipement[] | null = [];
     submitted: boolean = false;
-    
+    role: string = '';
     laboratoires: Laboratoire[] = [];
-   
+    laboratoireId!: string;
 
     @ViewChild('dt') dt!: Table;
 
@@ -267,28 +268,49 @@ export class Equipementt implements OnInit {
     loadEquipementsWithLaboratoires() {
         const user = this.authService.getCurrentUser(); // Récupérer l'utilisateur connecté
         const role = this.authService.getUserRole(); // Récupérer le rôle de l'utilisateur
-      
+    
+        console.log('Utilisateur connecté:', user); // Log l'utilisateur
+        console.log('Rôle de l\'utilisateur:', role); // Log le rôle
+    
         if (role === 'responsable') {
-          // Si l'utilisateur est un responsable, charger uniquement les équipements de son laboratoire
-          const laboratoireId = user.laboratoire_id; // Supposons que l'ID du laboratoire est stocké dans l'objet utilisateur
-          this.equipementService.getEquipementsByLaboratoire(laboratoireId).subscribe({
-            next: (data) => {
-              console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
-              this.equipements.set(data);
-            },
-            error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
-          });
+            // Si l'utilisateur est un responsable, récupérer les laboratoires dont il est responsable
+            this.laboratoireService.getLaboratoires().subscribe({
+                next: (data) => {
+                    // Filtrer les laboratoires dont le responsable_id correspond à l'ID de l'utilisateur
+                    const laboratoiresResponsable = data.content.filter(
+                        (labo) => labo.responsable_id === user.id
+                    );
+    
+                    if (laboratoiresResponsable.length > 0) {
+                        // Récupérer les équipements du premier laboratoire (ou tous les laboratoires si nécessaire)
+                        const laboratoireId = laboratoiresResponsable[0].id??''; // Prenez le premier laboratoire
+                        console.log('Laboratoire ID:', laboratoireId); // Log l'ID du laboratoire
+    
+                        // Récupérer les équipements du laboratoire
+                        this.equipementService.getEquipementsByLaboratoire(laboratoireId).subscribe({
+                            next: (equipements) => {
+                                console.log('Équipements récupérés:', equipements); // Log les équipements
+                                this.equipements.set(equipements);
+                            },
+                            error: (err) => console.error('Erreur lors de la récupération des équipements', err),
+                        });
+                    } else {
+                        console.error('Aucun laboratoire trouvé pour ce responsable');
+                    }
+                },
+                error: (err) => console.error('Erreur lors de la récupération des laboratoires', err),
+            });
         } else if (role === 'admin') {
-          // Si l'utilisateur est un admin, charger tous les équipements
-          this.equipementService.getEquipementsWithLaboratoires().subscribe({
-            next: (data) => {
-              console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
-              this.equipements.set(data);
-            },
-            error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
-          });
+            // Si l'utilisateur est un admin, charger tous les équipements
+            this.equipementService.getEquipementsWithLaboratoires().subscribe({
+                next: (data) => {
+                    console.log('Données reçues de l\'API avec laboratoires :', data); // Log les données
+                    this.equipements.set(data);
+                },
+                error: (err) => console.error('Erreur lors du chargement des équipements avec laboratoires', err),
+            });
         }
-      }
+    }
 
     onFileChange(event: any) {
         const file = event.target.files[0];
@@ -301,5 +323,7 @@ export class Equipementt implements OnInit {
       getImageUrl(imagePath: string): string {
         return `${imageUrl}/${imagePath}`;
     }
+
+
 
 }

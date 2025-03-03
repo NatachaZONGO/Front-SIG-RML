@@ -1,10 +1,13 @@
-import { HttpClient } from '@angular/common/http';
+import * as jsPDF from 'jspdf';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { forkJoin, Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { BackendURL } from '../../../const';
 import { Laboratoireservice } from '../laboratoire/laboratoire.service';
 import { Equipement } from './equipement.model';
+import { AuthService } from '../../auth/auth.service';
+import autoTable from 'jspdf-autotable';
 
 
 
@@ -14,10 +17,18 @@ import { Equipement } from './equipement.model';
 })
 export class Equipementservice {
     private apiUrl = `${BackendURL}equipements`;
+    private reservations: any[] = [];
 
-
-    constructor(private http: HttpClient, private Laboratoireservice: Laboratoireservice) {}
-
+    constructor(private http: HttpClient, private Laboratoireservice: Laboratoireservice, private authService: AuthService) {}
+    // Méthode pour obtenir les en-têtes avec le token
+    private getHeaders(): HttpHeaders {
+        const token = this.authService.getToken();
+        console.log('Token utilisé pour la requête:', token); // Vérification
+        return new HttpHeaders({
+            'Authorization': `Bearer ${token}`,
+        });
+    }
+    
     // Récupérer tous les équipements
     getEquipements(): Observable<Equipement[]> {
         return this.http.get<{ content: Equipement[] }>(`${this.apiUrl}`).pipe(
@@ -84,6 +95,7 @@ export class Equipementservice {
 
     // Récupérer tous les équipements avec les laboratoires associés
     getEquipementsWithLaboratoires(): Observable<Equipement[]> {
+        const headers = this.getHeaders();
         return forkJoin({
             equipements: this.getEquipements(),
             laboratoires: this.Laboratoireservice.getLaboratoires(), // Récupère tous les laboratoires
@@ -103,13 +115,18 @@ export class Equipementservice {
     }
 
     getEquipementsByLaboratoire(laboratoireId: string): Observable<Equipement[]> {
-        return this.http.get<{ content: Equipement[] }>(`${BackendURL}laboratoires/${laboratoireId}/equipements`).pipe(
-            map((response) => response.content),
+        const headers = this.getHeaders();
+        return this.http.get<Equipement[]>(
+            `${BackendURL}laboratoires/${laboratoireId}/equipements`, 
+            { headers }
+        ).pipe(
             catchError((err) => {
                 console.error('Erreur lors de la récupération des équipements par laboratoire', err);
                 return of([]);
             })
         );
     }
+
+    
 
 }

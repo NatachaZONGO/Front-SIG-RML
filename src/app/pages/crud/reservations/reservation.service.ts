@@ -178,13 +178,17 @@ export class ReservationService {
             );
           }
 
-          getReservationsByUser(userId: number): Observable<any> {
-            return this.http.get<any>(`${BackendURL}user/reservations?userId=${userId}`).pipe(
-              catchError((err) => {
-                console.error("Erreur lors de la récupération des réservations :", err);
-                return throwError(() => err);
-              })
+          getReservationsByUser(userId: number): Observable<any[]> {
+            return this.http.get<any>(`${BackendURL}user/reservations/${userId}`).pipe(
+                map(response => {
+                    console.log("Réponse brute de l'API :", response); // 🔍 Debugging
+                    return Array.isArray(response.reservations) ? response.reservations : []; // ✅ Toujours un tableau
+                }),
+                catchError((err) => {
+                    console.error("Erreur lors de la récupération des réservations :", err);
+                    return throwError(() => err);
+                })
             );
-          }
+        }
 }
 

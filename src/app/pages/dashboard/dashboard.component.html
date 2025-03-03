@@ -1,29 +1,140 @@
-<div class="container">
-    <h1>Dashboard</h1>
-
-    <div class="row">
-      <div class="col-md-6">
-        <h3>Bar Chart</h3>
-        <canvas baseChart
-                [datasets]="barChartData.datasets"
-                [labels]="barChartData.labels"
-                [options]="barChartOptions"
-                [plugins]="barChartPlugins"
-                [legend]="barChartLegend"
-                [type]="barChartType">
-        </canvas>
-      </div>
-
-      <div class="col-md-6">
-        <h3>Pie Chart</h3>
-        <canvas baseChart
-                [datasets]="pieChartData.datasets"
-                [labels]="pieChartData.labels"
-                [options]="pieChartOptions"
-                [plugins]="pieChartPlugins"
-                [legend]="pieChartLegend"
-                [type]="pieChartType">
-        </canvas>
-      </div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <!-- Nombre d'utilisateurs -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+        <div>
+            <span class="block text-muted-color font-medium mb-2">Nombre d'utilisateurs</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalUsers }}</div>
+        </div>
+        <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-full w-12 h-12">
+            <i class="pi pi-users text-purple-500 !text-xl"></i>
+        </div>
     </div>
+</div>
+<div class="card">
+  <div class="flex justify-between items-center">
+      <div>
+          <span class="block text-muted-color font-medium mb-2">Nombre d'utilisateurs connectés actuellement</span>
+          <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ users_now }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-full w-12 h-12">
+          <i class="pi pi-users text-purple-500 !text-xl"></i>
+      </div>
   </div>
+</div>
+
+<!-- Nombre d'équipements -->
+<div class="card">
+  <div class="flex justify-between items-center">
+      <div>
+          <span class="block text-muted-color font-medium mb-2">Équipements</span>
+          <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalEquipements }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-green-100 dark:bg-green-400/10 rounded-full w-12 h-12">
+          <i class="pi pi-box text-green-500 !text-xl"></i>
+      </div>
+  </div>
+</div>
+  <!-- Nombre total de réservations -->
+  <div class="card">
+      <div class="flex justify-between items-center">
+          <div>
+              <span class="block text-muted-color font-medium mb-2">Total Réservations</span>
+              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalReservations }}</div>
+          </div>
+          <div class="flex items-center justify-center bg-blue-100 dark:bg-blue-400/10 rounded-full w-12 h-12">
+              <i class="pi pi-calendar text-blue-500 !text-xl"></i>
+          </div>
+      </div>
+  </div>
+
+  <div class="card">
+    <div class="flex justify-between items-center">
+        <div>
+            <span class="block text-muted-color font-medium mb-2">Réservations en Attente</span>
+            <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ reservationsEnAttente }}</div>
+        </div>
+        <div class="flex items-center justify-center bg-red-100 dark:bg-red-400/10 rounded-full w-12 h-12">
+            <i class="pi pi-clock text-red-500 !text-xl"></i>
+        </div>
+    </div>
+</div>
+  <!-- Réservations du mois -->
+  <div class="card">
+      <div class="flex justify-between items-center">
+          <div>
+              <span class="block text-muted-color font-medium mb-2">Réservations (Mois)</span>
+              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ monthlyReservations }}</div>
+          </div>
+          <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-full w-12 h-12">
+              <i class="pi pi-chart-bar text-orange-500 !text-xl"></i>
+          </div>
+      </div>
+  </div>
+
+  <!-- Nombre de Prochaines Réservations -->
+  <div class="card">
+      <div class="flex justify-between items-center">
+          <div>
+              <span class="block text-muted-color font-medium mb-2">Prochaines Réservations</span>
+              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ prochainesReservations }}</div>
+          </div>
+          <div class="flex items-center justify-center bg-yellow-100 dark:bg-yellow-400/10 rounded-full w-12 h-12">
+              <i class="pi pi-clock text-yellow-500 !text-xl"></i>
+          </div>
+      </div>
+  </div>
+
+  <!-- Nombre d'UFRs -->
+  <div class="card">
+      <div class="flex justify-between items-center">
+          <div>
+              <span class="block text-muted-color font-medium mb-2">UFRs</span>
+              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalUFRs }}</div>
+          </div>
+          <div class="flex items-center justify-center bg-teal-100 dark:bg-teal-400/10 rounded-full w-12 h-12">
+              <i class="pi pi-building text-teal-500 !text-xl"></i>
+          </div>
+      </div>
+  </div>
+
+  <!-- Nombre de Réservations en Attente -->
+  
+</div>
+
+
+<!-- Graphiques et Tableaux -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+  <!-- Pourcentage d'équipements utilisés -->
+  <div class="card">
+      <div class="font-semibold text-xl mb-4">Équipements Utilisés</div>
+      <p-chart type="doughnut" [data]="equipementUsageChartData" [options]="chartOptions" class="h-80"></p-chart>
+  </div>
+
+  <!-- Pourcentage d'équipements susceptibles d'être en panne -->
+  <div class="card">
+      <div class="font-semibold text-xl mb-4">Équipements à Risque</div>
+      <p-chart type="doughnut" [data]="equipementRiskChartData" [options]="chartOptions" class="h-80"></p-chart>
+  </div>
+
+  <!-- Prochaines réservations -->
+  <div class="card col-span-2">
+    <div class="font-semibold text-xl mb-4">Les équipements les plus utilisés</div>
+    <p-table [value]="mostUsedEquipments" [paginator]="true" [rows]="5" responsiveLayout="scroll">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Nom</th>
+                <th>Laboratoire</th>
+                <th>Nombre de réservations</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-equipement>
+            <tr>
+                <td>{{ equipement.nom }}</td>
+                <td>{{ equipement.laboratoire }}</td>
+                <td>{{ equipement.nombreReservations }}</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+</div>

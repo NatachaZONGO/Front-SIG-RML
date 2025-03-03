@@ -11,14 +11,15 @@ import { authGuard } from './auth/auth.guard';
 
 
 export default [
+
   { path: 'resrvation-details', component: ReservationComponent },
   { path: 'connexion', component: ConnexionComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'user', component: Userr, canActivate: [authGuard], data: { roles: ['admin'] } }, // Seul l'admin peut accéder
   { path: 'ufr', component: Ufrr, canActivate: [authGuard], data: { roles: ['admin'] } }, // Seul l'admin peut accéder
-  { path: 'equipement', component: Equipementt, canActivate: [authGuard], data: { roles: ['responsable' ,'admin'] } }, // Seul l'admin peut accéder
+  { path: 'equipement', component: Equipementt, canActivate: [authGuard], data: { roles: ['responsable' ,'admin'] } }, 
   { path: 'laboratoire', component: Laboratoiree, canActivate: [authGuard], data: { roles: [, 'admin', 'responsable'] } }, // Seul le responsable peut accéder
-  { path: 'reservation', component: ReservationComponent, canActivate: [authGuard], data: { roles: ['reservant', 'admin', 'responsable'] } }, // Seul le reservant peut accéder
+  { path: 'reservation', component: ReservationComponent, canActivate: [authGuard], data: { roles: ['reservant', 'admin', 'responsable'] } }, 
   { path: 'empty', component: Empty },
   { path: '**', redirectTo: '/notfound' },
 ] as Routes;

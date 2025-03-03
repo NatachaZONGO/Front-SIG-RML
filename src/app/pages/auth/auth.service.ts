@@ -178,4 +178,9 @@ export class AuthService {
     getUserRole(): string | undefined {
         return this.role;
     }
+
+     //-----------------------------Récupération du token d'accès-------------------------------------------
+     getToken(): string | null {
+        return localStorage.getItem(LocalStorageFields.accessToken);
+    }
 }

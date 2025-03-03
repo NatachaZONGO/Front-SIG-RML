@@ -1,7 +1,7 @@
 <p-toast/>
 <p-toolbar styleClass="mb-6">
     <ng-template #end>
-        <p-button label="Exporter" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+        <p-button label="Exporter" icon="pi pi-upload" severity="secondary" (onClick)="exportPDF()" />
     </ng-template>
 </p-toolbar>
 
@@ -79,20 +79,26 @@
                 }
             </td>
             <td>
-                <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true"
-                    (click)="validateReservation(reservation)"
-                    pTooltip="Accepter la réservation" tooltipPosition="top"
+                <ng-container *ngIf="role === 'responsable'">
+                    <p-button icon="pi pi-check" class="mr-2" [rounded]="true" [outlined]="true"
+                        (click)="validateReservation(reservation)"
+                        pTooltip="Accepter la réservation" tooltipPosition="top"
                     />
             
-                <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true"
-                    (click)="cancelReservation(reservation)"
-                    pTooltip="Annuler la réservation" tooltipPosition="top"
-                    [disabled]="reservation.status === 'acceptee'" />
+                    <p-button icon="pi pi-times" severity="danger" class="mr-2" [rounded]="true" [outlined]="true"
+                        (click)="cancelReservation(reservation)"
+                        pTooltip="Annuler la réservation" tooltipPosition="top"
+                        [disabled]="reservation.status === 'acceptee'" 
+                    />
+                </ng-container>
             
                 <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true"
                     (click)="viewReservation(reservation)"
-                    pTooltip="Voir la réservation" tooltipPosition="top" />
+                    pTooltip="Voir la réservation" tooltipPosition="top" 
+                    *ngIf="role === 'reservant' || role === 'admin' || role === 'responsable'"
+                />
             </td>
+            
             
             
         </tr>
