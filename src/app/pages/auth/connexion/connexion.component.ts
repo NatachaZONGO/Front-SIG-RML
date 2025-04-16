@@ -7,20 +7,27 @@ import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { UserConnexion } from './userconnexion.model';
+import { CommonModule } from '@angular/common';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-connexion',
     templateUrl: './connexion.component.html',
     standalone: true,
+    providers: [AuthService, MessageService],
     imports: [
         InputTextModule,
         FloatLabelModule,
         ButtonModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        CommonModule,
+        ToastModule,
     ]
 })
 export class ConnexionComponent implements OnInit {
     formulaireconnexion! : FormGroup;
+    messageErreur: string = "";
     constructor(
         private fb: FormBuilder,
         private authService: AuthService,
@@ -47,14 +54,19 @@ export class ConnexionComponent implements OnInit {
             console.log(resultat);
             this.router.navigateByUrl("/landing");
         } catch (error) {
-            console.log(error);
+            console.log("Erreur de connexion :", error);
+            this.messageErreur = "Email ou mot de passe incorrect. Veuillez réessayer.";
         }finally{
         }
     } 
 
     //fonction de mot de passe oublie l'utilisateur sera rediriger vers un formulaire ou il va renseigner son email
     onForgotPassword() {
-
 }
+    
+    //fonction pour rediriger l'utilisateur vers la page d'inscription
+    navigateToRegister() {
+        this.router.navigateByUrl("/register");
+    }
 
 }

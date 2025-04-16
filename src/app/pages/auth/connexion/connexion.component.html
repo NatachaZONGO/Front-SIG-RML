@@ -1,3 +1,4 @@
+<p-toast></p-toast>
 <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
             <div class="flex flex-col items-center justify-center">
@@ -26,10 +27,19 @@
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Mot de passe oublie?</span>
                             </div>
-                            <p-button type="submit" label="Connexion" [disabled]="formulaireconnexion.invalid" styleClass="w-full"></p-button>
+                            <div *ngIf="messageErreur" class="text-red-500 text-center mb-4">
+                                {{ messageErreur }}
+                            </div> 
+                            <p-button type="submit" label="Connexion" [disabled]="formulaireconnexion.invalid" styleClass="w-full"></p-button>  
+                            <!-- Lien vers la page de connexion -->
+                <div class="text-center mt-8">
+                    <span class="text-muted-color">Vous n'avez pas de compte?</span>
+                    <a (click)="navigateToRegister()"  class="font-medium no-underline ml-2 text-primary cursor-pointer">Créez-en un</a>
+                </div>
                         </form>
                     </div>
                 </div>
             </div>
-        </div>
+        </div> 
     </div>
+   
