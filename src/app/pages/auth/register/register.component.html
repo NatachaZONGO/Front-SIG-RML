@@ -1,70 +1,507 @@
-<div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
-    <div class="flex flex-col items-center justify-center">
-        <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
-            <!-- Conteneur principal agrandi -->
-            <div class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20" style="border-radius: 53px; max-width: 800px;">
-                <div class="text-center mb-8">
-                    <img src="assets/images/UJKZ.png" alt="Logo ujkz" style="max-width: 120px; margin-bottom: 0.3rem;">
-                    <h5 style="margin-top: 0.2rem; font-size: 1.5rem;">
-                        <span style="color: green;">SIG</span><span style="color: red;">RML</span>
-                    </h5>
-                    <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Inscription</div>
-                    <span class="text-muted-color font-medium">Créez un compte pour continuer</span>
+<p-toast></p-toast>
+
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-12">
+    <div class="w-full max-w-5xl">
+        <!-- Card principale -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+            
+            <!-- En-tête simplifié -->
+            <div class="bg-blue-600 p-8 text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-white rounded-full p-4 shadow-lg">
+                        <img src="assets/images/LOGO.png" 
+                             alt="Logo AlerteEmploi" 
+                             class="w-20 h-20 object-contain"
+                             onerror="this.style.display='none'">
+                    </div>
                 </div>
-
-                <form (ngSubmit)="register()" [formGroup]="formulaireInscription">
-                    <!-- Prénom et Nom sur la même ligne -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <label for="lastname" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Nom</label>
-                            <input pInputText id="lastname" type="text" placeholder="Votre nom" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="lastname" />
-                        </div>
-                        <div>
-                            <label for="firstname" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Prénom</label>
-                            <input pInputText id="firstname" type="text" placeholder="Votre prénom" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="firstname" />
-                        </div>
-                    </div>
-
-                    <!-- Email -->
-                    <div class="mb-8">
-                        <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                        <input pInputText id="email" type="email" placeholder="Adresse email" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="email" />
-                    </div>
-
-                    <!-- Téléphone et Adresse sur la même ligne -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <label for="phone" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Téléphone</label>
-                            <input pInputText id="phone" type="text" placeholder="Numéro de téléphone" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="phone" />
-                        </div>
-                        <div>
-                            <label for="address" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Adresse</label>
-                            <input pInputText id="address" type="text" placeholder="Votre adresse" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="address" />
-                        </div>
-                    </div>
-
-                    <!-- Mot de passe et Confirmation du mot de passe -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <label for="password" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Mot de passe</label>
-                            <input pInputText id="password" type="password" placeholder="Mot de passe" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="password" />
-                        </div>
-                        <div>
-                            <label for="confirmPassword" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Confirmer le mot de passe</label>
-                            <input pInputText id="confirmPassword" type="password" placeholder="Confirmer le mot de passe" class="w-full border border-surface-300 rounded-md p-2 min-w-[300px]" formControlName="confirmPassword" />
-                        </div>
-                    </div>
-
-                    <!-- Bouton d'inscription -->
-                    <p-button type="submit" label="S'inscrire" [disabled]="formulaireInscription.invalid" styleClass="w-full"></p-button>
-                </form>
-
-                <!-- Lien vers la page de connexion -->
-                <div class="text-center mt-8">
-                    <span class="text-muted-color">Vous avez déjà un compte?</span>
-                    <a (click)="navigateToConnexion()"  class="font-medium no-underline ml-2 text-primary cursor-pointer">Connectez-vous</a>
-                </div>
+                
+                <h1 class="text-3xl font-bold text-white mb-2">
+                    AlerteEmploi<span style="color: rgb(225, 120, 7);">&</span>Offres
+                </h1>
+                
+                <p class="text-white/90 text-lg">Créez votre compte et trouvez votre opportunité</p>
             </div>
+
+            <!-- Corps du formulaire -->
+            <div class="p-8 md:p-12">
+                <form [formGroup]="formulaireInscription" (ngSubmit)="register()">
+                    
+                    <!-- Sélection du type de compte avec cards -->
+                    <div class="mb-8">
+                        <label class="block text-lg font-bold text-gray-800 mb-4 text-center">
+                            Je m'inscris en tant que
+                        </label>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Card Candidat -->
+                            <div 
+                                (click)="formulaireInscription.patchValue({type: 'candidat'})"
+                                [class.ring-4]="formulaireInscription.value.type === 'candidat'"
+                                [class.ring-blue-500]="formulaireInscription.value.type === 'candidat'"
+                                [class.bg-blue-50]="formulaireInscription.value.type === 'candidat'"
+                                class="relative border-2 border-gray-200 rounded-2xl p-6 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all duration-300">
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-blue-100 rounded-full p-4">
+                                        <i class="pi pi-user text-3xl text-blue-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-xl text-gray-800">Candidat</h3>
+                                        <p class="text-sm text-gray-600">Je recherche un emploi</p>
+                                    </div>
+                                </div>
+                                <div *ngIf="formulaireInscription.value.type === 'candidat'" 
+                                     class="absolute top-4 right-4 bg-blue-600 text-white rounded-full p-2">
+                                    <i class="pi pi-check text-sm"></i>
+                                </div>
+                            </div>
+
+                            <!-- Card Recruteur -->
+                            <div 
+                                (click)="formulaireInscription.patchValue({type: 'recruteur'})"
+                                [class.ring-4]="formulaireInscription.value.type === 'recruteur'"
+                                [class.ring-green-500]="formulaireInscription.value.type === 'recruteur'"
+                                [class.bg-green-50]="formulaireInscription.value.type === 'recruteur'"
+                                class="relative border-2 border-gray-200 rounded-2xl p-6 cursor-pointer hover:border-green-400 hover:shadow-lg transition-all duration-300">
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-green-100 rounded-full p-4">
+                                        <i class="pi pi-briefcase text-3xl text-green-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="font-bold text-xl text-gray-800">Recruteur</h3>
+                                        <p class="text-sm text-gray-600">Je propose des offres</p>
+                                    </div>
+                                </div>
+                                <div *ngIf="formulaireInscription.value.type === 'recruteur'" 
+                                     class="absolute top-4 right-4 bg-green-600 text-white rounded-full p-2">
+                                    <i class="pi pi-check text-sm"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 1: Informations personnelles -->
+                    <div class="mb-8">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shrink-0">
+                                1
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-800 ml-4">Informations personnelles</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Nom -->
+                            <div class="space-y-2">
+                                <label class="block font-semibold text-gray-700">
+                                    Nom <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    pInputText 
+                                    formControlName="nom" 
+                                    placeholder="Votre nom"
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                            </div>
+
+                            <!-- Prénom -->
+                            <div class="space-y-2">
+                                <label class="block font-semibold text-gray-700">
+                                    Prénom <span class="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    pInputText 
+                                    formControlName="prenom" 
+                                    placeholder="Votre prénom"
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="space-y-2">
+                                <label class="block font-semibold text-gray-700">
+                                    Email <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="pi pi-envelope absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                                    <input 
+                                        pInputText 
+                                        type="email" 
+                                        formControlName="email" 
+                                        placeholder="exemple@email.com"
+                                        class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                </div>
+                            </div>
+
+                            <!-- Téléphone -->
+                            <div class="space-y-2">
+                                <label class="block font-semibold text-gray-700">
+                                    Téléphone <span class="text-red-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <i class="pi pi-phone absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                                    <input 
+                                        pInputText 
+                                        formControlName="telephone" 
+                                        placeholder="+226 XX XX XX XX"
+                                        class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Sécurité -->
+                    <div class="mb-8">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shrink-0">
+                                2
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-800 ml-4">Sécurité</h2>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Mot de passe -->
+                        <div class="space-y-2">
+                            <label class="block font-semibold text-gray-700">
+                                Mot de passe <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <i class="pi pi-lock absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                                <input 
+                                    pInputText 
+                                    [type]="showPassword ? 'text' : 'password'"
+                                    formControlName="password" 
+                                    placeholder="••••••••"
+                                    class="w-full pl-14 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                <button
+                                    type="button"
+                                    (click)="showPassword = !showPassword"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10">
+                                    <i [class]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                                </button>
+                            </div>
+                            <small class="text-gray-500 flex items-center">
+                                <i class="pi pi-info-circle mr-2"></i> Minimum 8 caractères
+                            </small>
+                        </div>  
+
+                            <!-- Confirmation mot de passe -->
+                        <div class="space-y-2">
+                            <label class="block font-semibold text-gray-700">
+                                Confirmer le mot de passe <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <i class="pi pi-lock absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                                <input 
+                                    pInputText 
+                                    [type]="showConfirmPassword ? 'text' : 'password'"
+                                    formControlName="confirmPassword" 
+                                    placeholder="••••••••"
+                                    class="w-full pl-14 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                <button
+                                    type="button"
+                                    (click)="showConfirmPassword = !showConfirmPassword"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10">
+                                    <i [class]="showConfirmPassword ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                                </button>
+                            </div>
+                            <small *ngIf="formulaireInscription.errors?.['mismatch']" class="text-red-500 flex items-center">
+                                <i class="pi pi-exclamation-circle mr-2"></i> Les mots de passe ne correspondent pas
+                            </small>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION CANDIDAT -->
+                    <div *ngIf="formulaireInscription.value.type === 'candidat'" class="mb-8 animate-fade-in">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shrink-0">
+                                3
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-800 ml-4">Profil candidat</h2>
+                        </div>
+
+                        <div class="bg-blue-50/50 rounded-2xl p-6 space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Sexe -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Sexe <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-dropdown
+                                        [options]="[{label:'Homme',value:'Homme'},{label:'Femme',value:'Femme'}]"
+                                        formControlName="sexe"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Sélectionner"
+                                        styleClass="w-full">
+                                    </p-dropdown>
+                                </div>
+
+                                <!-- Date de naissance -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Date de naissance <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-calendar 
+                                        formControlName="date_naissance" 
+                                        dateFormat="yy-mm-dd"
+                                        [showIcon]="true"
+                                        placeholder="AAAA-MM-JJ"
+                                        styleClass="w-full">
+                                    </p-calendar>
+                                </div>
+
+                                <!-- Catégorie -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Catégorie <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-dropdown
+                                        [options]="categories"
+                                        formControlName="categorie_id"
+                                        optionLabel="nom"
+                                        optionValue="id"
+                                        placeholder="Choisir"
+                                        [filter]="true"
+                                        filterBy="nom"
+                                        styleClass="w-full">
+                                    </p-dropdown>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Ville -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Ville <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        pInputText 
+                                        formControlName="ville" 
+                                        placeholder="Ex: Ouagadougou"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                </div>
+
+                                <!-- Niveau d'étude -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Niveau d'étude <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-dropdown
+                                        [options]="niveauEtudeOptions"
+                                        formControlName="niveau_etude"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Sélectionner"
+                                        styleClass="w-full">
+                                    </p-dropdown>
+                                </div>
+
+                                <!-- Disponibilité -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Disponibilité <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-dropdown
+                                        [options]="disponibiliteOptions"
+                                        formControlName="disponibilite"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Sélectionner"
+                                        styleClass="w-full">
+                                    </p-dropdown>
+                                </div>
+                            </div>
+
+                            <!-- Champ "Autre" pour disponibilité -->
+                            <div *ngIf="formulaireInscription.value.disponibilite === 'autre'" class="space-y-2 animate-fade-in">
+                                <label class="block font-semibold text-gray-700">
+                                    Précisez votre disponibilité
+                                </label>
+                                <input
+                                    pInputText
+                                    formControlName="disponibilite_autre"
+                                    placeholder="Ex: début octobre"
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                <small class="text-gray-500 flex items-center">
+                                    <i class="pi pi-info-circle mr-2"></i> Indiquez votre disponibilité en quelques mots
+                                </small>
+                            </div>
+
+                            <!-- Pays -->
+                            <div class="space-y-2">
+                                <label class="block font-semibold text-gray-700">
+                                    Pays <span class="text-red-500">*</span>
+                                </label>
+                                <p-dropdown
+                                    [options]="paysList"
+                                    formControlName="pays_id"
+                                    optionLabel="nom"
+                                    optionValue="id"
+                                    placeholder="Choisir un pays"
+                                    [filter]="true"
+                                    filterBy="nom"
+                                    styleClass="w-full">
+                                </p-dropdown>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION RECRUTEUR -->
+                    <div *ngIf="formulaireInscription.value.type === 'recruteur'" class="mb-8 animate-fade-in">
+                        <div class="flex items-center mb-6">
+                            <div class="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg shrink-0">
+                                3
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-800 ml-4">Informations entreprise</h2>
+                        </div>
+
+                        <div class="bg-green-50/50 rounded-2xl p-6 space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Nom entreprise -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Nom de l'entreprise <span class="text-red-500">*</span>
+                                    </label>
+                                    <input 
+                                        pInputText 
+                                        formControlName="nom_entreprise" 
+                                        placeholder="Ex: Tech Solutions"
+                                        class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"/>
+                                </div>
+
+                                <!-- Secteur d'activité -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Secteur d'activité <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-dropdown
+                                        [options]="secteursActivite"
+                                        formControlName="secteur_activite"
+                                        optionLabel="label"
+                                        optionValue="value"
+                                        placeholder="Sélectionner"
+                                        styleClass="w-full">
+                                    </p-dropdown>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Pays -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Pays <span class="text-red-500">*</span>
+                                    </label>
+                                    <p-dropdown
+                                        [options]="paysList"
+                                        formControlName="pays_id_recruteur"
+                                        optionLabel="nom"
+                                        optionValue="id"
+                                        placeholder="Choisir un pays"
+                                        [filter]="true"
+                                        filterBy="nom"
+                                        styleClass="w-full">
+                                    </p-dropdown>
+                                </div>
+
+                                <!-- Site web -->
+                                <div class="space-y-2">
+                                    <label class="block font-semibold text-gray-700">
+                                        Site web <span class="text-gray-400">(Optionnel)</span>
+                                    </label>
+                                    <div class="relative">
+                                        <i class="pi pi-globe absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                                        <input 
+                                            pInputText 
+                                            formControlName="site_web" 
+                                            placeholder="https://example.com"
+                                            class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div class="space-y-2">
+                                <label class="block font-semibold text-gray-700">
+                                    Description <span class="text-gray-400">(Optionnel)</span>
+                                </label>
+                                <input 
+                                    pInputText 
+                                    formControlName="description"
+                                    placeholder="Présentez brièvement votre entreprise..."
+                                    class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-green-500 transition-colors"/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton de soumission -->
+                    <div class="space-y-4">
+                        <button
+                            type="submit"
+                            [disabled]="formulaireInscription.invalid || isSubmitting()"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-lg">
+                            <span *ngIf="!isSubmitting()" class="flex items-center justify-center">
+                                <i class="pi pi-user-plus mr-3"></i>
+                                Créer mon compte
+                            </span>
+                            <span *ngIf="isSubmitting()" class="flex items-center justify-center">
+                                <i class="pi pi-spin pi-spinner mr-3"></i>
+                                Création en cours...
+                            </span>
+                        </button>
+
+                        <!-- Lien connexion -->
+                        <div class="text-center">
+                            <span class="text-gray-600">Vous avez déjà un compte ?</span>
+                            <a 
+                                (click)="navigateToConnexion()" 
+                                class="text-blue-600 font-semibold ml-2 cursor-pointer hover:text-blue-800 hover:underline transition-colors">
+                                Se connecter
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-600 text-sm">
+            <p>En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité</p>
         </div>
     </div>
 </div>
+
+<style>
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+
+    /* Styles PrimeNG */
+    ::ng-deep .p-dropdown {
+        border-radius: 0.75rem !important;
+        border: 2px solid #e5e7eb !important;
+    }
+
+    ::ng-deep .p-dropdown:hover {
+        border-color: #3b82f6 !important;
+    }
+
+    ::ng-deep .p-calendar input {
+        border-radius: 0.75rem !important;
+        border: 2px solid #e5e7eb !important;
+        padding: 0.75rem !important;
+    }
+
+    ::ng-deep .p-inputtext {
+        border-radius: 0.75rem !important;
+    }
+</style>

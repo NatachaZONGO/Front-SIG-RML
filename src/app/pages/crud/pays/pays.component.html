@@ -1,0 +1,155 @@
+<p-toast />
+<p-confirmDialog />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="ouvrirNouveau()" />
+        <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined 
+                 (onClick)="supprimerPaysSelectionnes()" 
+                 [disabled]="!paysSelectionnes || !paysSelectionnes.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Export" icon="pi pi-upload" severity="secondary" (click)="exporterCSV()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table
+    #dt
+    [value]="listePays"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="['nom', 'code', 'isActive']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [(selection)]="paysSelectionnes"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} entrées"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Gestion des Pays</h5>
+            <p-iconField>
+                <p-inputIcon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..." />
+            </p-iconField>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="nom" style="min-width:12rem">
+                Nom <p-sortIcon field="nom" />
+            </th>
+            <th pSortableColumn="code" style="min-width:8rem">
+                Code ISO <p-sortIcon field="code" />
+            </th>
+            <th style="min-width:10rem">Drapeau</th>
+            <th pSortableColumn="isActive" style="min-width:10rem">
+                Statut <p-sortIcon field="isActive" />
+            </th>
+            <th style="min-width:8rem">Actions</th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-pays>
+        <tr>
+            <td>
+                <p-tableCheckbox [value]="pays" />
+            </td>
+            <td>{{ pays.nom }}</td>
+            <td>{{ pays.code | uppercase }}</td>
+            <td>
+                <img *ngIf="pays.flagImage" [src]="pays.flagImage" [alt]="pays.nom" width="40" height="30" />
+            </td>
+            <td>
+                <p-tag [severity]="pays.isActive ? 'success' : 'danger'" 
+                      [value]="pays.isActive ? 'Actif' : 'Inactif'"></p-tag>
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <p-button icon="pi pi-pencil" severity="secondary" [rounded]="true" [text]="true" 
+                             (click)="modifierPays(pays)"></p-button>
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [text]="true" 
+                             (click)="supprimerPays(pays)"></p-button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="paysDialog" [style]="{ width: '650px' }" [modal]="true" [closable]="false">
+    <ng-template pTemplate="header">
+        <div class="flex items-center gap-2">
+            <span class="font-bold text-xl">{{ currentPays.id ? 'Modifier' : 'Créer' }} un pays</span>
+        </div>
+    </ng-template>
+
+    <div class="grid gap-4">
+        <div class="field">
+            <label for="nom" class="font-medium required">Nom</label>
+            <input pInputText id="nom" [(ngModel)]="currentPays.nom" class="w-full" />
+            <small *ngIf="submitted && !currentPays.nom" class="text-red-500">Ce champ est requis</small>
+        </div>
+
+        <div class="field">
+            <label for="code" class="font-medium required">Code ISO (2 lettres)</label>
+            <input pInputText id="code" [(ngModel)]="currentPays.code" [maxlength]="2" class="w-full" 
+                   (input)="currentPays.code = currentPays.code ? currentPays.code.toUpperCase() : ''"/>
+            <small *ngIf="submitted && !currentPays.code" class="text-red-500">Ce champ est requis</small>
+        </div>
+
+        <div class="field">
+            <label class="font-medium">Source du drapeau</label>
+            <div class="flex gap-4 mt-2">
+                <p-radioButton name="flagSource" value="url" [(ngModel)]="flagSource" 
+                             label="URL externe"></p-radioButton>
+                <p-radioButton name="flagSource" value="upload" [(ngModel)]="flagSource" 
+                             label="Upload fichier"></p-radioButton>
+            </div>
+        </div>
+
+        <div class="field" *ngIf="flagSource === 'url'">
+            <label for="flagUrl" class="font-medium">URL du drapeau</label>
+            <input pInputText id="flagUrl" [(ngModel)]="currentPays.flagImage" class="w-full" 
+                   placeholder="https://example.com/drapeau.png" />
+        </div>
+
+        <div class="field" *ngIf="flagSource === 'upload'">
+            <label class="font-medium">Upload du drapeau</label>
+            <p-fileUpload 
+                mode="basic"
+                name="flagFile" 
+                accept="image/*" 
+                maxFileSize="1000000"
+                (onSelect)="onFileUpload($event)"
+                chooseLabel="Choisir une image"
+                [auto]="true"
+                [showCancelButton]="false"
+                [chooseIcon]="'pi pi-cloud-upload'"
+                class="mt-2">
+            </p-fileUpload>
+        </div>
+
+        <div class="field" *ngIf="currentPays.flagImage">
+            <label class="font-medium">Aperçu du drapeau</label>
+            <img [src]="currentPays.flagImage" [alt]="'Drapeau ' + currentPays.nom" 
+                 class="flag-preview mt-2">
+        </div>
+
+        <div class="field-checkbox mt-3">
+            <p-checkbox [(ngModel)]="currentPays.isActive" inputId="isctive" [binary]="true"></p-checkbox>
+            <label for="isActive" class="ml-2">Pays actif (visible dans les listes)</label>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <div class="flex justify-end gap-2">
+            <p-button label="Annuler" icon="pi pi-times" (click)="fermerDialog()" [outlined]="true" />
+            <p-button label="Enregistrer" icon="pi pi-check" (click)="sauvegarderPays()" />
+        </div>
+    </ng-template>
+</p-dialog>

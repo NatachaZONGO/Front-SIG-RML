@@ -1,0 +1,747 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- Barre de chargement globale -->
+<p-progressBar *ngIf="loading()" mode="indeterminate" styleClass="mb-4"></p-progressBar>
+
+<p-toolbar styleClass="mb-6">
+  <ng-template pTemplate="start">
+    <p-button
+      label="Nouvelle offre"
+      icon="pi pi-plus"
+      severity="secondary"
+      class="mr-2"
+      (onClick)="openNew()"
+      [disabled]="loading()">
+    </p-button>
+    <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined
+              (onClick)="deleteSelectedOffres()" [disabled]="!selectedOffres || !selectedOffres.length" />
+  </ng-template>
+
+  <ng-template pTemplate="end">
+      <p-button
+      [label]="getExportLabel('CSV')"
+      icon="pi pi-download"
+      severity="secondary"
+      class="mr-2"
+      (onClick)="exportCSV()"
+      [disabled]="loading() || offres().length === 0">
+    </p-button>
+    <p-button
+      [label]="getExportLabel('PDF')"
+      icon="pi pi-file-pdf"
+      severity="warn"
+      (onClick)="exportPDF()"
+      [disabled]="loading() || offres().length === 0">
+    </p-button>
+  </ng-template>
+</p-toolbar>
+
+<p-table
+  #dt
+  [value]="offres()"
+  [rows]="10"
+  [columns]="cols"
+  [paginator]="true"
+  [(selection)]="selectedOffres" 
+  [globalFilterFields]="['titre','entreprise.nom_entreprise','type_offre','localisation','statut','experience']"
+  [tableStyle]="{ 'min-width': '100rem' }"
+  [rowHover]="true"
+  dataKey="id"
+  currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} offres"
+  [showCurrentPageReport]="true"
+  [rowsPerPageOptions]="[10, 20, 30]"
+  [loading]="loading()"
+  loadingIcon="pi pi-spinner"
+  [sortMode]="'multiple'">
+
+  <ng-template pTemplate="caption">
+    <div class="flex items-center justify-between">
+      <h2 class="m-0 text-xl font-semibold">Gestion des Offres</h2>
+      <p-iconField>
+        <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+        <input
+          pInputText
+          type="text"
+          (input)="onGlobalFilter(dt, $event)"
+          placeholder="Rechercher une offre..."
+          class="w-full"
+          [disabled]="loading()" />
+      </p-iconField>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 3rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+      <th pSortableColumn="titre" style="min-width: 200px">
+        Titre <p-sortIcon field="titre"></p-sortIcon>
+      </th>
+      <th pSortableColumn="entreprise.nom_entreprise" style="min-width: 180px">
+        Entreprise <p-sortIcon field="entreprise.nom_entreprise"></p-sortIcon>
+      </th>
+      <th pSortableColumn="categorie.nom" style="min-width: 150px">
+        Catégorie <p-sortIcon field="categorie.nom"></p-sortIcon>
+      </th>
+      <th pSortableColumn="type_offre" style="min-width: 120px">
+        Type Offre <p-sortIcon field="type_offre"></p-sortIcon>
+      </th>
+      <th pSortableColumn="type_contrat" style="min-width: 120px">
+        Type Contrat <p-sortIcon field="type_contrat"></p-sortIcon>
+      </th>
+      <th pSortableColumn="experience" style="min-width: 140px">
+        Expérience <p-sortIcon field="experience"></p-sortIcon>
+      </th>
+      <th pSortableColumn="localisation" style="min-width: 140px">
+        Localisation <p-sortIcon field="localisation"></p-sortIcon>
+      </th>
+      <th pSortableColumn="salaire" style="min-width: 120px">
+        Salaire <p-sortIcon field="salaire"></p-sortIcon>
+      </th>
+      <th pSortableColumn="date_publication" style="min-width: 130px">
+        Date Publication <p-sortIcon field="date_publication"></p-sortIcon>
+      </th>
+      <th pSortableColumn="date_expiration" style="min-width: 130px">
+        Date Expiration <p-sortIcon field="date_expiration"></p-sortIcon>
+      </th>
+      <th pSortableColumn="date_validation" style="min-width: 130px">
+        Date Validation <p-sortIcon field="date_validation"></p-sortIcon>
+      </th>
+      <th pSortableColumn="statut" style="min-width: 140px">
+        Statut <p-sortIcon field="statut"></p-sortIcon>
+      </th>
+      <th pSortableColumn="vues" style="min-width: 100px">
+        Vedettes <p-sortIcon field="vues"></p-sortIcon>
+      </th>
+      <th pSortableColumn="created_at" style="min-width: 130px">
+        Créée le <p-sortIcon field="created_at"></p-sortIcon>
+      </th>
+      <th style="min-width: 200px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-offre>
+    <tr>
+      <td style="width: 3rem">
+        <p-tableCheckbox [value]="offre" />
+      </td>
+      <td style="min-width: 200px">
+        <div class="flex flex-col">
+          <span class="font-semibold truncate" [title]="offre.titre">{{ offre.titre }}</span>
+          <small class="text-gray-500 truncate" [title]="getPlainText(offre.description)">
+            <span [innerHTML]="getTruncatedHTML(offre.description)"></span>
+          </small>
+        </div>
+      </td>
+
+      <td style="min-width: 180px">
+        <div class="flex flex-col">
+          <span class="font-medium">{{ offre.entreprise?.nom_entreprise || '-' }}</span>
+          <small class="text-gray-500">{{ offre.entreprise?.secteur_activite || '' }}</small>
+        </div>
+      </td>
+
+      <td style="min-width: 150px">
+        <span>{{ offre.categorie?.nom || '-' }}</span>
+      </td>
+
+      <td style="min-width: 120px">
+        <p-tag [value]="offre.type_offre || '-'" severity="info"></p-tag>
+      </td>
+
+      <td style="min-width: 120px">
+        <p-tag [value]="offre.type_contrat || '-'" [severity]="getContratSeverity(offre.type_contrat)"></p-tag>
+      </td>
+
+      <td style="min-width: 140px">
+        <span>{{ offre.experience || '-' }}</span>
+      </td>
+
+      <td style="min-width: 140px">
+        <span>{{ offre.localisation || '-' }}</span>
+      </td>
+
+      <td style="min-width: 120px">
+        <div class="flex flex-col">
+          <span class="font-semibold">{{ (offre.salaire | number:'1.0-0') || '0' }} FCFA</span>
+        </div>
+      </td>
+
+      <td style="min-width: 130px">
+        <span *ngIf="offre.date_publication">{{ offre.date_publication | date:'dd/MM/yyyy' }}</span>
+        <span *ngIf="!offre.date_publication" class="text-gray-500 italic">Non publiée</span>
+      </td>
+
+      <td style="min-width: 130px">
+        <div class="flex items-center">
+          <span>{{ offre.date_expiration | date:'dd/MM/yyyy' }}</span>
+          <i
+            class="pi pi-exclamation-triangle text-orange-500 ml-2"
+            *ngIf="offre.isExpired"
+            pTooltip="Offre expirée"
+            aria-label="Offre expirée"></i>
+        </div>
+      </td>
+
+      <td style="min-width: 130px">
+        <span *ngIf="offre.date_validation">{{ offre.date_validation | date:'dd/MM/yyyy HH:mm' }}</span>
+        <span *ngIf="!offre.date_validation" class="text-gray-500 italic">Non validée</span>
+      </td>
+
+      <td style="min-width: 140px">
+        <div class="flex flex-col gap-1">
+          <p-tag [value]="offre.statut" [severity]="getStatutSeverity(offre.statut)"></p-tag>
+          <div *ngIf="offre.motif_rejet && offre.statut === 'rejetee'" class="text-xs text-red-600 p-2 bg-red-50 rounded border">
+            <i class="pi pi-exclamation-circle mr-1"></i>
+            <span>{{ offre.motif_rejet }}</span>
+          </div>
+          <div *ngIf="offre.validateur" class="text-xs text-gray-500">
+            Validé par: {{ offre.validateur?.firstname }} {{ offre.validateur?.lastname }}
+          </div>
+        </div>
+      </td>
+      <td style="min-width: 120px">
+      <div class="flex flex-col">
+        <p-tag
+          [value]="getFeatureLabel(offre.sponsored_level)"
+          [severity]="getFeatureSeverity(offre.sponsored_level)">
+        </p-tag>
+        <small class="text-gray-500" *ngIf="offre.isFeaturedActive">
+          Actif
+          <ng-container *ngIf="offre.featured_until">
+            jusqu’au {{ offre.featured_until | date:'dd/MM/yyyy' }}
+          </ng-container>
+        </small>
+        <small class="text-gray-400" *ngIf="!offre.isFeaturedActive && (offre.sponsored_level ?? 0) > 0">
+          (expiré)
+        </small>
+      </div>
+      </td>
+      <td style="min-width: 130px">
+        <span class="text-sm text-gray-500">{{ offre.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+      </td>
+
+      <td style="min-width: 200px">
+        <div class="flex flex-wrap gap-1">
+          <!-- Bouton Détails -->
+          <p-button
+            icon="pi pi-eye"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="info"
+            (onClick)="viewDetails(offre)"
+            [disabled]="loading()"
+            pTooltip="Voir détails">
+          </p-button>
+
+          <!-- Bouton Modifier -->
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="editOffre(offre)"
+            [disabled]="loading() || !canEdit(offre)"
+            pTooltip="Modifier">
+          </p-button>
+
+          <!-- Bouton Supprimer -->
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="deleteOffre(offre)"
+            [disabled]="loading() || !canDelete(offre)"
+            pTooltip="Supprimer">
+          </p-button>
+
+          <!-- Bouton Soumettre à validation -->
+          <p-button
+            icon="pi pi-send"
+            severity="info"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="soumettreValidation(offre)"
+            [disabled]="loading() || !canSubmitValidation(offre)"
+            pTooltip="Soumettre à validation">
+          </p-button>
+
+          <!-- Bouton Valider -->
+          <p-button
+            icon="pi pi-check"
+            severity="success"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="validerOffre(offre)"
+            [disabled]="loading() || !canValidate(offre)"
+            pTooltip="Valider l'offre">
+          </p-button>
+
+          <!-- Bouton Rejeter -->
+          <p-button
+            icon="pi pi-times"
+            severity="danger"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="ouvrirDialogRejet(offre)"
+            [disabled]="loading() || !canValidate(offre)"
+            pTooltip="Rejeter l'offre">
+          </p-button>
+
+          <!-- Bouton Publier -->
+          <p-button
+            icon="pi pi-globe"
+            severity="primary"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="publierOffre(offre)"
+            [disabled]="loading() || !canPublish(offre)"
+            pTooltip="Publier l'offre">
+          </p-button>
+
+          <!-- Bouton Fermer -->
+          <p-button
+            icon="pi pi-lock"
+            severity="secondary"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="fermerOffre(offre)"
+            [disabled]="loading() || !canClose(offre)"
+            pTooltip="Fermer l'offre">
+          </p-button>
+          <!-- Passer en vedette -->
+          <p-button
+            icon="pi pi-star"
+            severity="warn"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="openFeatureDialog(offre)"
+            [disabled]="loading()"
+            pTooltip="Passer en vedette">
+          </p-button>
+
+          <!-- Retirer la vedette -->
+          <p-button
+            icon="pi pi-star-fill"
+            severity="help"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            (onClick)="unfeature(offre)"
+            [disabled]="loading() || !(offre.sponsored_level && (offre.sponsored_level > 0))"
+            pTooltip="Retirer la vedette">
+          </p-button>
+
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="15" class="text-center py-8">
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-briefcase text-4xl text-gray-400"></i>
+          <p class="text-gray-500">Aucune offre trouvée</p>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- Dialog de rejet -->
+<p-dialog
+  [(visible)]="rejetDialog"
+  [style]="{ width: '500px' }"
+  header="Rejeter l'offre"
+  [modal]="true">
+
+  <ng-template #content>
+    <div class="flex flex-col gap-4">
+      <p>Vous êtes sur le point de rejeter l'offre <strong>"{{ offre.titre }}"</strong></p>
+      
+      <div class="field">
+        <label for="motifRejet" class="block font-semibold mb-2">Motif de rejet *</label>
+        <textarea
+          id="motifRejet"
+          pInputTextarea
+          [(ngModel)]="motifRejet"
+          rows="4"
+          class="w-full"
+          placeholder="Expliquez pourquoi cette offre est rejetée..."
+          [disabled]="loading()">
+        </textarea>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Annuler"
+        icon="pi pi-times"
+        severity="secondary"
+        outlined
+        (onClick)="rejetDialog = false"
+        [disabled]="loading()" />
+      <p-button
+        label="Rejeter"
+        icon="pi pi-times"
+        severity="danger"
+        (onClick)="rejeterOffre()"
+        [loading]="loading()"
+        [disabled]="!motifRejet || !motifRejet.trim()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialogue créer/modifier une offre (gardez votre dialog existant) -->
+<!-- ... votre dialog existant ... -->
+
+<style>
+.required::after { content: ' *'; color: red; }
+.field { margin-bottom: 1rem; }
+.truncate { 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  max-width: 200px;
+}
+</style>
+
+<!-- Dialogue créer/modifier une offre -->
+<p-dialog
+  [(visible)]="offreDialog"
+  [style]="{ width: '700px' }"
+  [header]="(offre && offre.id) ? 'Modifier une offre' : 'Créer une nouvelle offre'"
+  [modal]="true"
+  [closable]="!loading()">
+
+  <ng-template #content>
+    <form class="flex flex-col gap-4">
+      <!-- Titre -->
+      <div class="field">
+        <label for="titre" class="block font-semibold mb-2 required">Titre *</label>
+        <input
+          type="text"
+          pInputText
+          id="titre"
+          [(ngModel)]="offre.titre"
+          name="titre"
+          required
+          autofocus
+          class="w-full"
+          [class.ng-invalid]="submitted && !offre.titre"
+          [disabled]="loading()" />
+        <small class="text-red-500" *ngIf="submitted && !offre.titre">Le titre est obligatoire.</small>
+      </div>
+
+      <!-- Type offre et Type contrat -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="field">
+          <label for="type_offre" class="block font-semibold mb-2 required">Type d'offre *</label>
+          <p-dropdown
+            id="type_offre"
+            [options]="typeOffreOptions"
+            [(ngModel)]="offre.type_offre"
+            name="type_offre"
+            placeholder="Sélectionner un type"
+            [showClear]="true"
+            class="w-full"
+            [class.ng-invalid]="submitted && !offre.type_offre"
+            [disabled]="loading()">
+          </p-dropdown>
+          <small class="text-red-500" *ngIf="submitted && !offre.type_offre">Le type d'offre est obligatoire.</small>
+        </div>
+
+        <div class="field">
+          <label for="type_contrat" class="block font-semibold mb-2 required">Type de contrat *</label>
+          <p-dropdown
+            id="type_contrat"
+            [options]="typeContratOptions"
+            [(ngModel)]="offre.type_contrat"
+            name="type_contrat"
+            placeholder="Sélectionner un contrat"
+            [showClear]="true"
+            class="w-full"
+            [class.ng-invalid]="submitted && !offre.type_contrat"
+            [disabled]="loading()">
+          </p-dropdown>
+          <small class="text-red-500" *ngIf="submitted && !offre.type_contrat">Le type de contrat est obligatoire.</small>
+        </div>
+      </div>
+
+      <!-- Localisation et Salaire -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="field">
+          <label for="localisation" class="block font-semibold mb-2">Localisation</label>
+          <input
+            type="text"
+            pInputText
+            id="localisation"
+            [(ngModel)]="offre.localisation"
+            name="localisation"
+            class="w-full"
+            [disabled]="loading()" />
+        </div>
+
+        <div class="field">
+          <label for="salaire" class="block font-semibold mb-2">Salaire (FCFA)</label>
+          <p-inputNumber
+            id="salaire"
+            [(ngModel)]="offre.salaire"
+            name="salaire"
+            mode="decimal"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="0"
+            suffix=" FCFA"
+            class="w-full"
+            [disabled]="loading()">
+          </p-inputNumber>
+        </div>
+      </div>
+
+      <!-- Expérience -->
+      <div class="field">
+        <label for="experience" class="block font-semibold mb-2">Expérience requise</label>
+        <input
+          type="text"
+          pInputText
+          id="experience"
+          [(ngModel)]="offre.experience"
+          name="experience"
+          placeholder="Ex: 2-5 ans, Débutant accepté, Senior..."
+          class="w-full"
+          [disabled]="loading()" />
+      </div>
+
+      <!-- Catégorie et Date d'expiration -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="field">
+          <label for="categorie_id" class="block font-semibold mb-2">Catégorie</label>
+          <p-dropdown
+            id="categorie_id"
+            [options]="categories"
+            [(ngModel)]="offre.categorie_id"
+            name="categorie_id"
+            optionLabel="nom"
+            optionValue="id"
+            placeholder="Sélectionner une catégorie"
+            [showClear]="true"
+            class="w-full"
+            [disabled]="loading()">
+          </p-dropdown>
+        </div>
+
+        <div class="field">
+          <label for="date_expiration" class="block font-semibold mb-2 required">Date d'expiration *</label>
+          <p-calendar
+            id="date_expiration"
+            [(ngModel)]="offre.date_expiration"
+            name="date_expiration"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            class="w-full"
+            [minDate]="minDate"
+            [class.ng-invalid]="submitted && !offre.date_expiration"
+            [disabled]="loading()">
+          </p-calendar>
+          <small class="text-red-500" *ngIf="submitted && !offre.date_expiration">La date d'expiration est obligatoire.</small>
+        </div>
+      </div>
+        <!-- Description -->
+    <div class="field">
+      <label for="description" class="block font-semibold mb-2 required">Description *</label>
+      <p-editor
+        id="description"
+        [(ngModel)]="offre.description"
+        name="description"
+        [style]="{ height: '320px' }"
+        class="w-full"
+        [class.ng-invalid]="submitted && !offre.description"
+        [disabled]="loading()">
+      </p-editor>
+      <small class="text-red-500" *ngIf="submitted && !offre.description">La description est obligatoire.</small>
+    </div>
+      <!-- Statut (admin seulement) -->
+      <div class="field">
+        <label for="statut" class="block font-semibold mb-2">Statut</label>
+        <p-dropdown
+          id="statut"
+          [options]="statutOptions"
+          [(ngModel)]="offre.statut"
+          name="statut"
+          placeholder="Sélectionner un statut"
+          class="w-full"
+          [disabled]="loading()">
+        </p-dropdown>
+      </div>
+
+    </form>
+  </ng-template>
+
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button
+        label="Annuler"
+        icon="pi pi-times"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="hideDialog()"
+        [disabled]="loading()" />
+      <p-button
+        label="Enregistrer"
+        icon="pi pi-check"
+        (onClick)="saveOffre()"
+        [loading]="loading()" />
+    </div>
+  </ng-template>
+</p-dialog>
+<!-- Dialog de détails -->
+<p-dialog
+  [(visible)]="detailsDialog"
+  [style]="{ width: '800px' }"
+  header="Détails de l'offre"
+  [modal]="true">
+
+  <ng-template #content>
+    <div class="flex flex-col gap-6" *ngIf="selectedOffreForDetails">
+      <!-- En-tête -->
+      <div class="flex justify-between items-start border-b pb-4">
+        <div>
+          <h3 class="mt-0 mb-2 text-xl font-bold">{{ selectedOffreForDetails.titre }}</h3>
+          <p-tag [value]="selectedOffreForDetails.statut" [severity]="getStatutSeverity(selectedOffreForDetails.statut)"></p-tag>
+        </div>
+        <span class="text-sm text-gray-500">#{{ selectedOffreForDetails.id }}</span>
+      </div>
+
+      <!-- Informations principales -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h4 class="font-semibold mb-3">Informations générales</h4>
+          <div class="space-y-2">
+            <div><strong>Entreprise:</strong> {{ selectedOffreForDetails.entreprise?.nom_entreprise || '-' }}</div>
+            <div><strong>Catégorie:</strong> {{ selectedOffreForDetails.categorie?.nom || '-' }}</div>
+            <div><strong>Type d'offre:</strong> {{ selectedOffreForDetails.type_offre || '-' }}</div>
+            <div><strong>Type de contrat:</strong> {{ selectedOffreForDetails.type_contrat || '-' }}</div>
+            <div><strong>Localisation:</strong> {{ selectedOffreForDetails.localisation || '-' }}</div>
+            <div><strong>Expérience:</strong> {{ selectedOffreForDetails.experience || '-' }}</div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-semibold mb-3">Détails financiers et dates</h4>
+          <div class="space-y-2">
+            <div><strong>Salaire:</strong> {{ (selectedOffreForDetails.salaire | number:'1.0-0') || 'Non précisé' }} FCFA</div>
+            <div><strong>Date de publication:</strong> 
+              <span *ngIf="selectedOffreForDetails.date_publication">{{ selectedOffreForDetails.date_publication | date:'dd/MM/yyyy' }}</span>
+              <span *ngIf="!selectedOffreForDetails.date_publication" class="text-gray-500">Non publiée</span>
+            </div>
+            <div><strong>Date d'expiration:</strong> {{ selectedOffreForDetails.date_expiration | date:'dd/MM/yyyy' }}</div>
+            <div><strong>Créée le:</strong> {{ selectedOffreForDetails.created_at | date:'dd/MM/yyyy à HH:mm' }}</div>
+            <div *ngIf="selectedOffreForDetails.date_validation">
+              <strong>Validée le:</strong> {{ selectedOffreForDetails.date_validation | date:'dd/MM/yyyy à HH:mm' }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <h4 class="font-semibold mb-3">Description</h4>
+        <div class="p-4 bg-gray-50 rounded border">
+          <div [innerHTML]="selectedOffreForDetails.description || 'Aucune description'"></div>
+        </div>
+      </div>
+
+      <!-- Motif de rejet si applicable -->
+      <div *ngIf="selectedOffreForDetails.motif_rejet" class="p-4 bg-red-50 border-l-4 border-red-500">
+        <h4 class="font-semibold text-red-700 mb-2">Motif de rejet</h4>
+        <p class="text-red-600">{{ selectedOffreForDetails.motif_rejet }}</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #footer>
+    <div class="flex justify-between">
+      <div class="flex gap-2">
+        <p-button
+          *ngIf="canEdit(selectedOffreForDetails!)"
+          label="Modifier"
+          icon="pi pi-pencil"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="editFromDetails()" />
+        <p-button
+          *ngIf="canValidate(selectedOffreForDetails!)"
+          label="Valider"
+          icon="pi pi-check"
+          severity="success"
+          (onClick)="validerFromDetails()" />
+      </div>
+      <p-button label="Fermer" icon="pi pi-times" (onClick)="hideDetailsDialog()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialogue de mise en avant -->
+ <p-dialog
+  [(visible)]="featureDialogVisible"
+  [style]="{ width: '520px' }"
+  header="Passer l’offre en vedette"
+  [modal]="true">
+  <ng-template #content>
+    <div class="flex flex-col gap-4">
+      <div class="text-sm text-gray-600">
+        <div><strong>Offre :</strong> {{ selectedOffreForFeature?.titre }}</div>
+        <div><strong>Entreprise :</strong> {{ selectedOffreForFeature?.entreprise?.nom_entreprise || '-' }}</div>
+      </div>
+
+      <div class="field">
+        <label class="block font-semibold mb-2">Niveau de mise en avant</label>
+        <p-dropdown
+          [options]="[{label:'Niveau 1',value:1},{label:'Niveau 2',value:2},{label:'Niveau 3',value:3}]"
+          [(ngModel)]="featureForm.sponsored_level"
+          [style]="{width:'100%'}">
+        </p-dropdown>
+        <small class="text-gray-500">Plus le niveau est élevé, plus la mise en avant est forte.</small>
+      </div>
+
+      <div class="field">
+        <label class="block font-semibold mb-2">Durée / fin</label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <p-radioButton name="featMode" inputId="featDuration" value="duration" [(ngModel)]="featureForm.mode"></p-radioButton>
+          <label for="featDuration">Pendant (jours)</label>
+
+          <p-radioButton name="featMode" inputId="featUntil" value="until" [(ngModel)]="featureForm.mode"></p-radioButton>
+          <label for="featUntil">Jusqu’à une date</label>
+        </div>
+
+        <div *ngIf="featureForm.mode==='duration'" class="mt-2">
+          <p-inputNumber [(ngModel)]="featureForm.duration_days" [min]="1" [max]="365"></p-inputNumber>
+          <small class="text-gray-500 ml-2">jours</small>
+        </div>
+
+        <div *ngIf="featureForm.mode==='until'" class="mt-2">
+          <p-calendar [(ngModel)]="featureForm.featured_until" [minDate]="minDate" dateFormat="dd/mm/yy" [showIcon]="true"></p-calendar>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #footer>
+    <div class="flex justify-end gap-2">
+      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="featureDialogVisible=false"/>
+      <p-button label="Valider" icon="pi pi-check" (onClick)="submitFeature()" [loading]="loading()"/>
+    </div>
+  </ng-template>
+</p-dialog>

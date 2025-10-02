@@ -1,0 +1,89 @@
+<p-toast />
+<p-confirmDialog />
+
+<p-toolbar styleClass="mb-6">
+    <ng-template #start>
+        <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+        <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedCategories()" [disabled]="!selectedCategories || !selectedCategories.length" />
+    </ng-template>
+
+    <ng-template #end>
+        <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+    </ng-template>
+</p-toolbar>
+
+<p-table
+    #dt
+    [value]="categories()"
+    [rows]="10"
+    [columns]="cols"
+    [paginator]="true"
+    [globalFilterFields]="['nom', 'description']"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    [(selection)]="selectedCategories"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[10, 20, 30]"
+>
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Gestion des Catégories</h5>
+            <p-iconField>
+                <p-inputIcon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+            </p-iconField>
+        </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th pSortableColumn="nom" style="min-width:16rem">
+                Nom <p-sortIcon field="nom" />
+            </th>
+            <th pSortableColumn="description" style="min-width:16rem">
+                Description <p-sortIcon field="description" />
+            </th>
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-categorie>
+        <tr>
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="categorie" />
+            </td>
+            <td style="min-width: 16rem">{{ categorie.nom }}</td>
+            <td style="min-width: 16rem">{{ categorie.description }}</td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editCategorie(categorie)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteCategorie(categorie)" />
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="categorieDialog" [style]="{ width: '450px' }" header="Ajouter une Catégorie" [modal]="true">
+    <ng-template #content>
+        <div class="flex flex-col gap-6">
+            <div>
+                <label for="nom" class="block font-bold mb-3">Nom</label>
+                <input type="text" pInputText id="nom" [(ngModel)]="categorie.nom" required autofocus [style]="{ 'width': '100%' }"/>
+                <small class="text-red-500" *ngIf="submitted && !categorie.nom">Le nom est obligatoire.</small>
+            </div>
+           
+            <div>
+                <label for="description" class="block font-bold mb-3">Description</label>
+                <textarea pInputText id="description" [(ngModel)]="categorie.description" required [style]="{ 'width': '100%' }"></textarea>
+                <small class="text-red-500" *ngIf="submitted && !categorie.description">La description est obligatoire.</small>
+            </div>
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
+        <p-button label="Enregistrer" icon="pi pi-check" (click)="saveCategorie()" />
+    </ng-template>
+</p-dialog>

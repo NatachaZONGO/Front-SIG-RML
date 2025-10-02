@@ -1,0 +1,111 @@
+<!-- app/pages/notification/notification.component.html -->
+<p-toast></p-toast>
+
+<div class="grid grid-cols-12 gap-3 h-[calc(100vh-140px)]">
+
+  <!-- Liste -->
+  <div class="col-span-12 md:col-span-4 lg:col-span-3 border rounded-lg overflow-hidden flex flex-col bg-white">
+    <div class="p-3 border-b flex items-center gap-2">
+      <p-iconField iconPosition="left" class="flex-1">
+        <p-inputIcon><i class="pi pi-search"></i></p-inputIcon>
+        <input pInputText type="text" [(ngModel)]="search" placeholder="Rechercher..." />
+      </p-iconField>
+
+      <select class="p-2 border rounded"
+              [(ngModel)]="filter"
+              (ngModelChange)="loadList()">
+        <option value="all">Toutes</option>
+        <option value="unread">Non lues</option>
+        <option value="read">Lues</option>
+      </select>
+    </div>
+
+    <div class="p-2 border-b bg-gray-50 flex items-center justify-between">
+      <span class="text-sm text-gray-600">Mes notifications</span>
+      <button pButton type="button" label="Tout marquer lu" size="small" (click)="markAllRead()"></button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto">
+      <div *ngFor="let n of items()"
+           class="px-3 py-2 border-b cursor-pointer hover:bg-gray-50"
+           [ngClass]="{'bg-blue-50': active?.id === n.id}"
+           (click)="select(n)">
+        <div class="flex items-start gap-2">
+          <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            🔔
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <div class="truncate" [ngClass]="{'font-semibold': isUnread(n)}">
+                {{ n.titre || 'Notification' }}
+              </div>
+              <small class="text-gray-500 whitespace-nowrap">
+                {{ n.date_creation | date:'short' }}
+              </small>
+            </div>
+
+            <div class="text-sm text-gray-600 truncate" [ngClass]="{'font-medium': isUnread(n)}">
+              {{ n.message || '—' }}
+            </div>
+
+            
+          </div>
+
+          <!-- petit point rouge si non lu -->
+          <span *ngIf="isUnread(n)" class="inline-block w-2 h-2 rounded-full bg-red-500 mt-2"></span>
+        </div>
+      </div>
+
+      <div *ngIf="!items().length" class="p-6 text-center text-gray-500">
+        Aucune notification
+      </div>
+    </div>
+  </div>
+
+  <!-- Détail -->
+  <div class="col-span-12 md:col-span-8 lg:col-span-9 border rounded-lg bg-white flex flex-col">
+    <ng-container *ngIf="active; else placeholder">
+      <div class="p-4 border-b flex items-center justify-between">
+        <div>
+          <div class="text-lg font-semibold">{{ active.titre || 'Notification' }}</div>
+          <div class="text-xs text-gray-500">
+            Créée: {{ active.date_creation | date:'short' }}
+            <span *ngIf="active?.date_envoi"> • Envoyée: {{ active.date_envoi | date:'short' }}</span>
+          </div>
+        </div>
+        
+      </div>
+
+      <div class="p-5 overflow-y-auto">
+      <!-- Texte (sans l’URL pour éviter la répétition) -->
+      <p class="whitespace-pre-wrap leading-6 text-gray-800">
+        {{ getMessageWithoutUrl(active) }}
+      </p>
+
+      <!-- CTA si lien détecté -->
+      <div *ngIf="getFirstUrl(active) as offUrl" class="mt-4">
+        <a pButton
+          icon="pi pi-external-link"
+          label="Voir l’offre"
+          (click)="goToOffers()"
+          target="_blank"
+          rel="noopener noreferrer">
+        </a>
+      </div>
+
+      <!-- (optionnel) détails -->
+      <div class="grid md:grid-cols-2 gap-3 mt-6 text-sm">
+        <div><span class="text-gray-500">Type:</span> <b>{{ active.type || '—' }}</b></div>
+      </div>
+    </div>
+
+    </ng-container>
+
+    <ng-template #placeholder>
+      <div class="flex-1 grid place-items-center text-gray-500">
+        Sélectionne une notification dans la liste
+      </div>
+    </ng-template>
+  </div>
+</div>

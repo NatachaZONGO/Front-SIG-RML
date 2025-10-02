@@ -16,9 +16,16 @@ import { LayoutService } from '../service/layout.service';
                 <i class="pi pi-bars"></i>
             </button>
             <a class="layout-topbar-logo" routerLink="/">
-            <img src="assets/images/UJKZ.png" alt="ujkz" class="h-12 mr-2"/>
-                <span><span class="text-red-500">SIG</span><span class="text-green-500">-RML</span></span>
+                <img src="assets/images/LOGO.png" alt="logo" class="h-20 mr-2"/> 
+                <div class="logo-text">
+                    <span class="text-blue-600 text-xl">ALERTE EMPLOI</span> 
+                    <div class="offer-text">
+                        <span class="text-orange-600 text-lg">& </span> 
+                        <span class="text-green-600 text-lg">OFFRES</span> 
+                    </div>
+                </div> 
             </a>
+
         </div>
 
         <div class="layout-topbar-actions">

@@ -1,0 +1,352 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+<p-progressBar *ngIf="loading()" mode="indeterminate" styleClass="mb-4"></p-progressBar>
+
+<p-toolbar styleClass="mb-6">
+  <ng-template pTemplate="start">
+    <p-dropdown
+      [options]="offresOptions"
+      [(ngModel)]="selectedOffreId"
+      [showClear]="true"
+      placeholder="Filtrer par offre"
+      styleClass="mr-2 min-w-20"
+      (onChange)="onOffreChange()">
+    </p-dropdown>
+
+    <p-button
+      label="Nouvelle candidature"
+      icon="pi pi-plus"
+      severity="primary"
+      class="mr-2"
+      (onClick)="openPostulerDialog()"
+      [disabled]="loading()">
+    </p-button>
+
+    <p-button
+      label="Exporter CSV"
+      icon="pi pi-download"
+      severity="secondary"
+      class="mr-2"
+      (onClick)="exportCSV()"
+      [disabled]="loading() || candidatures().length === 0">
+    </p-button>
+
+    <p-button
+      label="Exporter PDF"
+      icon="pi pi-file-pdf"
+      severity="warn"
+      (onClick)="exportPDF()"
+      [disabled]="loading() || candidatures().length === 0">
+    </p-button>
+  </ng-template>
+
+  <ng-template pTemplate="end">
+    <p-iconField>
+      <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+      <input pInputText type="text" (input)="onGlobalFilter($event)" placeholder="Rechercher..." />
+    </p-iconField>
+  </ng-template>
+</p-toolbar>
+
+<p-table
+  #dt
+  [value]="candidatures()"
+  [rows]="10"
+  [paginator]="true"
+  [rowsPerPageOptions]="[10,20,30]"
+  [rowHover]="true"
+  [globalFilterFields]="['fullName','email','telephone','offreTitre','statut']"
+  dataKey="id"
+  currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} candidatures"
+  [showCurrentPageReport]="true"
+  [loading]="loading()"
+  loadingIcon="pi pi-spinner">
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th pSortableColumn="fullName">Candidat <p-sortIcon field="fullName"></p-sortIcon></th>
+      <th pSortableColumn="email">Email <p-sortIcon field="email"></p-sortIcon></th>
+      <th pSortableColumn="telephone">Téléphone <p-sortIcon field="telephone"></p-sortIcon></th>
+      <th pSortableColumn="offreTitre">Offre <p-sortIcon field="offreTitre"></p-sortIcon></th>
+      <th pSortableColumn="created_at">Soumise le <p-sortIcon field="created_at"></p-sortIcon></th>
+      <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+      <th style="min-width: 220px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-c>
+    <tr>
+      <td><span class="font-semibold">{{ c.fullName || '—' }}</span></td>
+      <td>
+        <a *ngIf="c.email" [href]="'mailto:' + c.email" class="text-blue-500 hover:underline">{{ c.email }}</a>
+        <span *ngIf="!c.email">—</span>
+      </td>
+      <td>{{ c.telephone || '—' }}</td>
+      <td>{{ c.offreTitre || '—' }}</td>
+      <td>{{ c.created_at || '—' }}</td>
+      <td><p-tag [value]="c.statut || '—'" [severity]="getSeverity(c.statut)"></p-tag></td>
+      <td>
+        <div class="flex flex-wrap gap-1">
+          <!-- Voir détails -->
+          <p-button
+            icon="pi pi-eye"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="info"
+            (onClick)="openDetail(c)"
+            pTooltip="Voir détails">
+          </p-button>
+
+          <!-- Modifier le statut -->
+          <p-button
+            icon="pi pi-pencil"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="secondary"
+            (onClick)="openModifyDialog(c)"
+            pTooltip="Modifier le statut">
+          </p-button>
+
+          <!-- Supprimer -->
+          <p-button
+            icon="pi pi-trash"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="danger"
+            (onClick)="deleteCandidature(c)"
+            pTooltip="Supprimer la candidature">
+          </p-button>
+
+          <!-- Télécharger CV -->
+          <p-button
+            *ngIf="c.cv_dl"
+            icon="pi pi-download"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="success"
+            (onClick)="downloadCV(c)"
+            pTooltip="Télécharger le CV">
+          </p-button>
+
+          <!-- Télécharger LM (fichier) -->
+          <p-button
+            *ngIf="c.lm_dl"
+            icon="pi pi-file"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="help"
+            (onClick)="downloadLM(c)"
+            pTooltip="Télécharger la lettre (fichier)">
+          </p-button>
+
+
+          <!-- Export WP Form -->
+          <p-button
+            icon="pi pi-external-link"
+            [rounded]="true"
+            [outlined]="true"
+            size="small"
+            severity="warn"
+            (onClick)="downloadWPForm(c)"
+            pTooltip="Télécharger en format WP Form (HTML)">
+          </p-button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="text-center py-8">
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-users text-4xl text-gray-400"></i>
+          <p class="text-gray-500">Aucune candidature trouvée</p>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- DIALOG DÉTAIL -->
+<p-dialog [(visible)]="detailDialog" [style]="{width: '760px'}" header="Détail de la candidature" [modal]="true">
+  <ng-template pTemplate="content">
+    <div *ngIf="current">
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <h4 class="mb-2">Candidat</h4>
+          <p><b>Nom :</b> {{ current.fullName || '—' }}</p>
+          <p><b>Email :</b>
+            <a *ngIf="current.email" [href]="'mailto:' + current.email" class="text-blue-500 hover:underline">
+              {{ current.email }}
+            </a>
+            <span *ngIf="!current.email">—</span>
+          </p>
+          <p><b>Téléphone :</b> {{ current.telephone || '—' }}</p>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <h4 class="mb-2">Offre</h4>
+          <p><b>Titre :</b> {{ current.offre?.titre || '—' }}</p>
+          <p><b>Soumise le :</b> {{ current.created_at ? (current.created_at | date:'dd/MM/yyyy') : '—' }}</p>
+          <p><b>Statut :</b> <p-tag [value]="current.statut || '—'" [severity]="getSeverity(current.statut)"></p-tag></p>
+        </div>
+      </div>
+
+      <h4 class="mt-3 mb-2">Lettre de motivation</h4>
+      <div class="p-3 bg-gray-50 rounded border">
+        <ng-container *ngIf="!current?.lm_dl; else lmFileNotice">
+          <p class="whitespace-pre-line">{{ current?.motivationText || '—' }}</p>
+        </ng-container>
+        <ng-template #lmFileNotice>
+          <i>(Lettre de motivation fournie en fichier — voir ci-dessous)</i>
+        </ng-template>
+      </div>
+
+
+      <h4 class="mt-3 mb-2">Fichiers</h4>
+      <h4 class="mt-3 mb-2">Lettre de motivation</h4>
+<div class="p-3 bg-gray-50 rounded border">
+  <!-- Si un FICHIER LM existe : on affiche un message + le lien de download -->
+  <ng-container *ngIf="current?.lm_dl; else lmTextBlock">
+    <i>(Lettre de motivation fournie en fichier)</i>
+    <div class="mt-2">
+      <a
+        [href]="current.lm_dl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-600 hover:underline"
+      >
+        <i class="pi pi-file mr-1"></i>Télécharger la lettre de motivation
+      </a>
+    </div>
+  </ng-container>
+
+  <!-- Sinon on montre le TEXTE -->
+  <ng-template #lmTextBlock>
+    <p class="whitespace-pre-line">{{ current?.motivationText || '—' }}</p>
+  </ng-template>
+</div>
+
+<h4 class="mt-3 mb-2">Fichiers</h4>
+  <ul class="list-disc ml-5">
+    <li *ngIf="current?.cv_dl">
+      <a
+        [href]="current.cv_dl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-600 hover:underline"
+      >
+        <i class="pi pi-file mr-1"></i>CV
+      </a>
+    </li>
+
+    <li *ngIf="current?.lm_dl">
+      <a
+        [href]="current.lm_dl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-600 hover:underline"
+      >
+        <i class="pi pi-file mr-1"></i>Lettre de motivation (fichier)
+      </a>
+    </li>
+
+    <li *ngIf="!current?.cv_dl && !current?.lm_dl">
+      <span class="text-gray-500">Aucun fichier joint</span>
+    </li>
+  </ul>
+</div>
+</ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between w-full">
+      <div class="flex gap-2">
+        <p-button
+          *ngIf="current?.statut === 'en_attente'"
+          label="Accepter"
+          icon="pi pi-check"
+          severity="success"
+          (onClick)="changerStatut(current, 'acceptee')">
+        </p-button>
+
+        <p-button
+          *ngIf="current?.statut === 'en_attente'"
+          label="Refuser"
+          icon="pi pi-times"
+          severity="danger"
+          (onClick)="changerStatut(current, 'refusee')">
+        </p-button>
+      </div>
+
+      <div class="flex gap-2">
+        <p-button
+          label="WP Form (HTML)"
+          icon="pi pi-external-link"
+          severity="warn"
+          (onClick)="downloadWPForm(current)">
+        </p-button>
+
+        <p-button label="Fermer" icon="pi pi-times" (onClick)="detailDialog=false"></p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<style>
+.required::after { content: ' *'; color: red; }
+</style>
+
+<!-- Dialog pour modifier le statut -->
+<p-dialog [(visible)]="modifyDialog" [style]="{width: '500px'}" header="Modifier le statut de la candidature" [modal]="true">
+  <ng-template pTemplate="content">
+    <div *ngIf="currentToModify">
+      <p class="mb-3"><strong>Candidat :</strong> {{ currentToModify.fullName }}</p>
+      <p class="mb-3"><strong>Offre :</strong> {{ currentToModify.offreTitre }}</p>
+
+      <div class="field">
+        <label for="nouveauStatut" class="block font-semibold mb-2">Nouveau statut</label>
+        <p-dropdown
+          id="nouveauStatut"
+          [options]="statutOptions"
+          [(ngModel)]="nouveauStatut"
+          placeholder="Choisir un statut"
+          class="w-full">
+        </p-dropdown>
+      </div>
+
+      <div *ngIf="nouveauStatut === 'refusee'" class="field">
+        <label for="motifRefus" class="block font-semibold mb-2">Motif du refus (optionnel)</label>
+        <textarea
+          id="motifRefus"
+          pInputTextarea
+          [(ngModel)]="motifRefus"
+          rows="3"
+          class="w-full"
+          placeholder="Expliquez la raison du refus...">
+        </textarea>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Annuler"
+      icon="pi pi-times"
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="modifyDialog = false">
+    </p-button>
+    <p-button
+      label="Confirmer"
+      icon="pi pi-check"
+      severity="primary"
+      (onClick)="confirmModifyStatut()"
+      [disabled]="!nouveauStatut">
+    </p-button>
+  </ng-template>
+</p-dialog>

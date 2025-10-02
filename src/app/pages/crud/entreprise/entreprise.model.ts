@@ -1,0 +1,78 @@
+export interface Entreprise {
+  id?: number;
+  user_id?: number;
+  nom_entreprise: string;
+  description?: string;
+  site_web?: string;
+  telephone?: string;
+  email?: string;
+  secteur_activite?: string;
+  logo?: string;
+  logoFile?: File;
+  pays_id?: number;
+  statut?: 'en attente' | 'valide' | 'refuse';
+  motif_rejet?: string;
+  created_at?: string;
+  updated_at?: string;
+  
+  // Relations
+  user?: {
+    id: number;
+    nom: string;
+    prenom: string;
+    email: string;
+  };
+  pays?: {
+    id: number;
+    nom: string;
+    code_iso: string;
+  };
+}
+
+export interface CreateEntrepriseRequest {
+  user_id: number;
+  nom_entreprise: string;
+  description?: string;
+  site_web?: string;
+  telephone?: string;
+  email?: string;
+  secteur_activite: string;
+  logo?: string;
+  logoFile?: File;
+  pays_id?: number;
+  statut?: string;
+}
+
+export interface UpdateEntrepriseRequest {
+  nom_entreprise?: string;
+  description?: string;
+  site_web?: string;
+  telephone?: string;
+  email?: string;
+  secteur_activite?: string;
+  logo?: string;
+  logoFile?: File;
+  pays_id?: number;
+  statut?: string;
+  motif_rejet?: string;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  errors?: any;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
+  };
+}

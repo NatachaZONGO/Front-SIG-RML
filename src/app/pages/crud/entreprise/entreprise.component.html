@@ -1,0 +1,393 @@
+<p-toast></p-toast>
+<p-confirmDialog 
+  [style]="{ width: '420px' }" 
+  header="Confirmer"
+  icon="pi pi-exclamation-triangle"
+  acceptLabel="Oui"
+  rejectLabel="Non">
+</p-confirmDialog>
+<p-toolbar styleClass="mb-6">
+  <ng-template pTemplate="start">
+    <p-button label="Nouvelle entreprise" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+    <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined
+              (onClick)="deleteSelectedEntreprises()" [disabled]="!selectedEntreprises || !selectedEntreprises.length" />
+  </ng-template>
+
+  <ng-template pTemplate="end">
+    <div class="flex gap-2">
+      <p-button 
+        label="Export CSV" 
+        icon="pi pi-file-excel" 
+        severity="secondary" 
+        (onClick)="exportCSV()"
+        [disabled]="entreprises().length === 0" />
+      <p-button 
+        label="Export PDF" 
+        icon="pi pi-file-pdf" 
+        severity="warn" 
+        (onClick)="exportPDF()"
+        [disabled]="entreprises().length === 0" />
+    </div>
+  </ng-template>
+</p-toolbar>
+
+<p-table
+  #dt
+  [value]="entreprises()"
+  [rows]="rowsPerPage"
+  [paginator]="true"
+  [rowHover]="true"
+  dataKey="id"
+  [totalRecords]="totalRecords"
+  [lazy]="true"
+  (onLazyLoad)="onPageChange($event)"
+  currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} entreprises"
+  [showCurrentPageReport]="true"
+  [rowsPerPageOptions]="[10, 15, 20, 30]"
+  [globalFilterFields]="['nom_entreprise','user.email','user.nom','secteur_activite','statut']"
+  [(selection)]="selectedEntreprises"
+>
+  <!-- CAPTION -->
+  <ng-template pTemplate="caption">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <h5 class="m-0">Gestion des entreprises</h5>
+      
+      <div class="flex items-center gap-4">
+        <!-- Filtre par statut -->
+        <div class="flex items-center gap-2">
+          <label for="statusFilter" class="text-sm font-medium">Filtrer par statut:</label>
+          <p-dropdown 
+            id="statusFilter"
+            [(ngModel)]="selectedStatusFilter" 
+            [options]="statusFilterOptions" 
+            optionLabel="label" 
+            optionValue="value"
+            placeholder="Tous les statuts"
+            [style]="{ 'min-width': '150px' }"
+            (onChange)="onStatusFilterChange($event)"
+            [showClear]="true">
+          </p-dropdown>
+        </div>
+        
+        <!-- Recherche globale -->
+        <p-iconField>
+          <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+          <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+        </p-iconField>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- HEADER -->
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 3rem">
+        <p-tableHeaderCheckbox />
+      </th>
+      <th pSortableColumn="nom_entreprise" style="min-width:16rem">
+        Nom entreprise <p-sortIcon field="nom_entreprise" />
+      </th>
+      <th style="min-width:12rem">Propriétaire</th>
+      <th pSortableColumn="secteur_activite" style="min-width:12rem">
+        Secteur <p-sortIcon field="secteur_activite" />
+      </th>
+      <th style="min-width:12rem">Contact</th>
+      <th style="min-width:8rem">Logo</th>
+      <th pSortableColumn="statut" style="min-width:10rem">
+        Statut <p-sortIcon field="statut" />
+      </th>
+      <th style="min-width:8rem">Pays</th>
+      <th style="min-width:16rem">Actions</th>
+    </tr>
+  </ng-template>
+
+  <!-- BODY -->
+  <ng-template pTemplate="body" let-entreprise>
+    <tr>
+      <td style="width: 3rem">
+        <p-tableCheckbox [value]="entreprise" />
+      </td>
+      <td>
+        <div class="flex flex-col">
+          <span class="font-semibold">{{ entreprise.nom_entreprise || 'N/A' }}</span>
+          <small class="text-gray-500" *ngIf="entreprise.description">
+            {{ entreprise.description.length > 50 ? (entreprise.description | slice:0:50) + '...' : entreprise.description }}
+          </small>
+        </div>
+      </td>
+      <td>
+        <div class="flex flex-col" *ngIf="entreprise.user">
+          <span class="font-medium">{{ entreprise.user.nom }} {{ entreprise.user.prenom }}</span>
+          <small class="text-gray-500">{{ entreprise.user.email }}</small>
+        </div>
+        <span *ngIf="!entreprise.user" class="text-gray-400">N/A</span>
+      </td>
+      <td>
+        <p-tag *ngIf="entreprise.secteur_activite" 
+               [value]="entreprise.secteur_activite" 
+               severity="info">
+        </p-tag>
+        <span *ngIf="!entreprise.secteur_activite" class="text-gray-400">N/A</span>
+      </td>
+      <td>
+        <div class="flex flex-col">
+          <span *ngIf="entreprise.email" class="text-sm">
+            <i class="pi pi-envelope mr-1"></i>{{ entreprise.email }}
+          </span>
+          <span *ngIf="entreprise.telephone" class="text-sm">
+            <i class="pi pi-phone mr-1"></i>{{ entreprise.telephone }}
+          </span>
+          <span *ngIf="entreprise.site_web" class="text-sm">
+            <i class="pi pi-globe mr-1"></i>
+            <a [href]="entreprise.site_web" target="_blank" class="text-blue-500 hover:underline">
+              Site web
+            </a>
+          </span>
+        </div>
+      </td>
+      <td>
+        <!-- Logo dans le tableau -->
+        <ng-container *ngIf="entreprise.logo; else noLogoTemplate">
+          <img [src]="getImageUrl(entreprise.logo)"
+               alt="Logo de {{ entreprise.nom_entreprise }}"
+               [ngStyle]="{ width: '50px', height: '50px', 'object-fit': 'cover', 'border-radius': '6px' }"
+               >
+        </ng-container>
+        <ng-template #noLogoTemplate>
+          <div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded"
+               style="width: 50px; height: 50px;">
+            <i class="pi pi-building text-gray-400"></i>
+          </div>
+        </ng-template>
+      </td>
+      <td>
+        <p-tag [value]="entreprise.statut" 
+               [severity]="getStatusSeverity(entreprise.statut || '')">
+        </p-tag>
+        <div *ngIf="hasMotif(entreprise.motif_rejet)" class="mt-1">
+            <small class="text-red-500">{{ entreprise.motif_rejet }}</small>
+        </div>
+
+
+      </td>
+      <td>
+        <span *ngIf="entreprise.pays">{{ entreprise.pays.nom }}</span>
+        <span *ngIf="!entreprise.pays" class="text-gray-400">N/A</span>
+      </td>
+      <td>
+        <div class="flex gap-2">
+          <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" 
+                    severity="info" size="small" (click)="editEntreprise(entreprise)"
+                    pTooltip="Modifier" tooltipPosition="top" />
+          
+          <!-- Actions spécifiques selon le statut -->
+          <ng-container [ngSwitch]="entreprise.statut">
+            <!-- Si en attente : boutons valider/rejeter -->
+            <ng-container *ngSwitchCase="'en attente'">
+              <p-button icon="pi pi-check" [rounded]="true" [outlined]="true" 
+                        severity="success" size="small" 
+                        (click)="openValidationDialog(entreprise)"
+                        pTooltip="Valider l'entreprise" tooltipPosition="top" />
+              <p-button icon="pi pi-times" [rounded]="true" [outlined]="true" 
+                        severity="danger" size="small" 
+                        (click)="openRejectionDialog(entreprise)"
+                        pTooltip="Rejeter l'entreprise" tooltipPosition="top" />
+            </ng-container>
+            
+            <!-- Si validé : indicateur -->
+            <ng-container *ngSwitchCase="'valide'">
+              <p-button icon="pi pi-shield" [rounded]="true" [outlined]="true" 
+                        severity="success" size="small" [disabled]="true"
+                        pTooltip="Entreprise validée" tooltipPosition="top" />
+            </ng-container>
+
+            
+            <!-- Si refusé : bouton revalider -->
+            <ng-container *ngSwitchCase="'refuse'">
+              <p-button icon="pi pi-refresh" [rounded]="true" [outlined]="true" 
+                        severity="warn" size="small" 
+                        (click)="revaliderDepuisRefuse(entreprise)"
+                        pTooltip="Revalider l'entreprise" tooltipPosition="top" />
+            </ng-container>
+          </ng-container>
+          
+          <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" 
+                    size="small" (click)="deleteEntreprise(entreprise)"
+                    pTooltip="Supprimer" tooltipPosition="top" />
+        </div>
+
+      </td>
+    </tr>
+</ng-template>
+</p-table>
+
+    <p-dialog
+  [(visible)]="entrepriseDialog"
+  [modal]="true"
+  [style]="{ width: '640px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [header]="dialogHeader"
+>
+  <ng-template pTemplate="content">
+    <form class="flex flex-col gap-4">
+      <!-- Nom -->
+      <div class="field">
+        <label class="block font-medium mb-1">Nom de l'entreprise *</label>
+        <input pInputText [(ngModel)]="entreprise.nom_entreprise" name="nom_entreprise" required />
+        <small class="text-red-500" *ngIf="submitted && !entreprise.nom_entreprise">Champ requis</small>
+      </div>
+
+      <!-- Secteur -->
+      <div class="field">
+        <label class="block font-medium mb-1">Secteur d'activité *</label>
+        <p-dropdown
+          [(ngModel)]="entreprise.secteur_activite"
+          name="secteur_activite"
+          [options]="secteursActivite"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionner"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+        <small class="text-red-500" *ngIf="submitted && !entreprise.secteur_activite">Champ requis</small>
+      </div>
+
+      <!-- Site web / Email / Téléphone -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="field">
+          <label class="block font-medium mb-1">Site web</label>
+          <input pInputText [(ngModel)]="entreprise.site_web" name="site_web" placeholder="https://exemple.com" />
+        </div>
+        <div class="field">
+          <label class="block font-medium mb-1">Téléphone</label>
+          <input pInputText [(ngModel)]="entreprise.telephone" name="telephone" placeholder="+226..." />
+        </div>
+        <div class="field md:col-span-2">
+          <label class="block font-medium mb-1">Email</label>
+          <input pInputText type="email" [(ngModel)]="entreprise.email" name="email" placeholder="contact@..." />
+        </div>
+      </div>
+
+      <!-- Pays -->
+      <div class="field">
+        <label class="block font-medium mb-1">Pays</label>
+        <p-dropdown
+          [(ngModel)]="entreprise.pays_id"
+          name="pays_id"
+          [options]="pays"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionner un pays"
+          [showClear]="true"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <!-- Logo (URL) -->
+      <div class="field">
+        <label class="block font-medium mb-1">Logo (URL)</label>
+        <input
+          pInputText
+          [(ngModel)]="entreprise.logo"
+          name="logo"
+          placeholder="https://exemple.com/logo.png"
+        />
+        <small class="text-xs text-gray-500 block mt-1">
+        Ajoutez <b>soit</b> une URL, <b>soit</b> un fichier (PNG/JPG/WebP).
+        </small>
+        <div class="mt-2" *ngIf="entreprise.logo || previewLogoUrl">
+          <img
+  [src]="previewLogoUrl || getImageUrl(entreprise.logo!)"
+  alt="Aperçu logo"
+  style="width:72px;height:72px;object-fit:cover;border-radius:8px"
+/>
+
+        </div>
+        <!-- (Optionnel) Input fichier (aperçu seulement, non envoyé tant que l'API ne gère pas l'upload) -->
+        <div class="mt-2">
+          <input type="file" accept="image/*" (change)="onFileChange($event)" />
+          <small class="text-xs text-gray-500 block mt-1">
+            Ajoutez <b>soit</b> une URL, <b>soit</b> un fichier (PNG/JPG/WebP).
+        </small>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+        <label class="block font-medium mb-1">Description</label>
+        <textarea
+          pInputTextarea
+          [(ngModel)]="entreprise.description"
+          name="description"
+          rows="4"
+          placeholder="Décrivez brièvement l'entreprise"
+        ></textarea>
+      </div>
+
+      <!-- Statut (optionnel) -->
+      <div class="field">
+        <label class="block font-medium mb-1">Statut</label>
+        <p-dropdown
+          [(ngModel)]="entreprise.statut"
+          name="statut"
+          [options]="statuts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionner le statut"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+
+      <!-- Propriétaire (création uniquement) -->
+      <div class="field" *ngIf="!entreprise.id">
+        <label class="block font-medium mb-1">Utilisateur propriétaire</label>
+        <p-dropdown
+          [(ngModel)]="entreprise.user_id"
+          name="user_id"
+          [options]="users"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionner un utilisateur"
+          [style]="{ width: '100%' }"
+        ></p-dropdown>
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="hideDialog()" />
+      <p-button label="Enregistrer" icon="pi pi-check" (onClick)="saveEntreprise()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="validationDialog" [modal]="true" [style]="{width:'420px'}" [draggable]="false" [resizable]="false" header="Valider l'entreprise">
+  <ng-template pTemplate="content">
+    <p>Confirmer la validation de <b>{{ currentEntreprise?.nom_entreprise }}</b> ?</p>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="validationDialog=false" />
+      <p-button label="Valider" icon="pi pi-check" (onClick)="validateEntreprise()" />
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog rejet -->
+<p-dialog [(visible)]="rejectionDialog" [modal]="true" [style]="{width:'520px'}" [draggable]="false" [resizable]="false" header="Rejeter l'entreprise">
+  <ng-template pTemplate="content">
+    <div class="field">
+      <label class="block font-medium mb-1">Motif de rejet *</label>
+      <textarea pInputTextarea [(ngModel)]="rejectionMotif" rows="4" placeholder="Expliquez pourquoi l'entreprise est rejetée"></textarea>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    <div class="flex justify-end gap-2">
+      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="rejectionDialog=false" />
+      <p-button label="Rejeter" icon="pi pi-times" severity="danger" (onClick)="rejectEntreprise()" [disabled]="!rejectionMotif.trim()" />
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,45 +1,161 @@
 <p-toast></p-toast>
-<div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
-        <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden">
-            <div class="flex flex-col items-center justify-center">
-                <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
-                    <div class="w-full bg-surface-0 dark:bg-surface-900 py-20 px-8 sm:px-20" style="border-radius: 53px">
-                        <div class="text-center mb-8">
-                            <img src="assets/images/UJKZ.png" alt="Logo ujkz" style="max-width: 120px; margin-bottom: 0.3rem;">
-                            <h5 style="margin-top: 0.2rem; font-size: 1.5rem;">
-                                <span style="color: green;">SIG</span><span style="color: red;">RML</span>
-                            </h5>
-                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Bienvenue!</div>
-                            <span class="text-muted-color font-medium">Connectez-vous pour continuer</span>
-                        </div>
 
-                        <form (ngSubmit)="connexion()" [formGroup]="formulaireconnexion">
-                            <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                            <input pInputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" formControlName="email" />
-
-                            <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Mot de passe</label>
-                            <input pInputText id="password" type="password" placeholder="Mot de passe" class="w-full md:w-[30rem] mb-8" formControlName="password" />
-
-                            <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                                <div class="flex items-center">
-                                    <p-checkbox formControlName="rememberme" id="rememberme1" binary class="mr-2"></p-checkbox>
-                                    <label for="rememberme1">Se souvenir de moi</label>
-                                </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Mot de passe oublie?</span>
-                            </div>
-                            <div *ngIf="messageErreur" class="text-red-500 text-center mb-4">
-                                {{ messageErreur }}
-                            </div> 
-                            <p-button type="submit" label="Connexion" [disabled]="formulaireconnexion.invalid" styleClass="w-full"></p-button>  
-                            <!-- Lien vers la page de connexion -->
-                <div class="text-center mt-8">
-                    <span class="text-muted-color">Vous n'avez pas de compte?</span>
-                    <a (click)="navigateToRegister()"  class="font-medium no-underline ml-2 text-primary cursor-pointer">Créez-en un</a>
-                </div>
-                        </form>
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Card principale -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+            
+            <!-- En-tête -->
+            <div class="bg-blue-600 p-8 text-center">
+                <div class="flex justify-center mb-4">
+                    <div class="bg-white rounded-full p-4 shadow-lg">
+                        <img src="assets/images/LOGO.png" 
+                             alt="Logo AlerteEmploi" 
+                             class="w-20 h-20 object-contain"
+                             onerror="this.style.display='none'">
                     </div>
                 </div>
+                
+                <h1 class="text-3xl font-bold text-white mb-2">
+                    AlerteEmploi<span style="color: rgb(225, 120, 7);">&</span>Offres
+                </h1>
+                
+                <p class="text-white/90 text-lg">Bon retour parmi nous !</p>
             </div>
-        </div> 
+
+            <!-- Corps du formulaire -->
+            <div class="p-8">
+                <form [formGroup]="formulaireconnexion" (ngSubmit)="connexion()">
+                    
+                    <!-- Email -->
+                    <div class="mb-6 space-y-2">
+                        <label for="email1" class="block font-semibold text-gray-700">
+                            Email <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i class="pi pi-envelope absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                            <input 
+                                pInputText 
+                                id="email1" 
+                                type="email" 
+                                placeholder="exemple@email.com" 
+                                formControlName="email" 
+                                autocomplete="email"
+                                class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                                [class.border-red-500]="isFieldInvalid('email')" />
+                        </div>
+                        <small *ngIf="isFieldInvalid('email')" class="text-red-500 flex items-center">
+                            <i class="pi pi-exclamation-circle mr-2"></i> {{ getFieldError('email') }}
+                        </small>
+                    </div>
+
+                    <!-- Mot de passe -->
+                    <div class="mb-6 space-y-2">
+                        <label for="password" class="block font-semibold text-gray-700">
+                            Mot de passe <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <i class="pi pi-lock absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                            <input 
+                                pInputText 
+                                id="password" 
+                                [type]="showPasswordcon ? 'text' : 'password'" 
+                                placeholder="••••••••" 
+                                formControlName="password" 
+                                autocomplete="current-password"
+                                class="w-full pl-14 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"
+                                [class.border-red-500]="isFieldInvalid('password')" />
+                                <button
+                                    type="button"
+                                    (click)="showPasswordcon = !showPasswordcon"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10">
+                                    <i [class]="showPasswordcon  ? 'pi pi-eye-slash' : 'pi pi-eye'"></i>
+                                </button>
+                        </div>
+                        <small *ngIf="isFieldInvalid('password')" class="text-red-500 flex items-center">
+                            <i class="pi pi-exclamation-circle mr-2"></i> {{ getFieldError('password') }}
+                        </small>
+                    </div>
+
+                    <!-- Options : Se souvenir / Mot de passe oublié -->
+                    <div class="flex items-center justify-between mb-8">
+                        <div class="flex items-center">
+                            <p-checkbox 
+                                formControlName="rememberme" 
+                                id="rememberme1" 
+                                [binary]="true" 
+                                class="mr-2">
+                            </p-checkbox>
+                            <label for="rememberme1" class="cursor-pointer text-gray-700 text-sm">
+                                Se souvenir de moi
+                            </label>
+                        </div>
+                        
+                        <span 
+                            (click)="onForgotPassword()" 
+                            class="text-sm font-medium text-blue-600 cursor-pointer hover:text-blue-800 hover:underline transition-colors">
+                            Mot de passe oublié ?
+                        </span>
+                    </div>
+
+                    <!-- Bouton de connexion -->
+                    <button
+                        type="submit" 
+                        [disabled]="formulaireconnexion.invalid || isLoading"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-lg mb-6">
+                        <span *ngIf="!isLoading" class="flex items-center justify-center">
+                            <i class="pi pi-sign-in mr-3"></i>
+                            Se connecter
+                        </span>
+                        <span *ngIf="isLoading" class="flex items-center justify-center">
+                            <i class="pi pi-spin pi-spinner mr-3"></i>
+                            Connexion en cours...
+                        </span>
+                    </button>
+                    
+                    <!-- Lien vers l'inscription -->
+                    <div class="text-center">
+                        <span class="text-gray-600">Vous n'avez pas de compte ?</span>
+                        <a 
+                            (click)="navigateToRegister()" 
+                            class="text-blue-600 font-semibold ml-2 cursor-pointer hover:text-blue-800 hover:underline transition-colors">
+                            Créez-en un
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-gray-600 text-sm">
+            <p>En vous connectant, vous acceptez nos conditions d'utilisation</p>
+        </div>
     </div>
-   
+</div>
+
+<style>
+    /* Styles PrimeNG */
+    ::ng-deep .p-inputtext {
+        border-radius: 0.75rem !important;
+    }
+
+    ::ng-deep .p-inputtext:hover {
+        border-color: #3b82f6 !important;
+    }
+
+    ::ng-deep .p-inputtext:focus {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    }
+
+    /* Style pour les checkboxes */
+    ::ng-deep .p-checkbox .p-checkbox-box {
+        border-radius: 0.375rem !important;
+        border: 2px solid #e5e7eb !important;
+    }
+
+    ::ng-deep .p-checkbox .p-checkbox-box.p-highlight {
+        background: #3b82f6 !important;
+        border-color: #3b82f6 !important;
+    }
+</style>

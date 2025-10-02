@@ -1,0 +1,193 @@
+<!-- profil.component.html -->
+<p-toast/>
+<p-confirmPopup/>
+<div class="profile-container" *ngIf="user; else loading">
+    <div class="profile-card">
+        <h1>Mon Profil</h1>
+        <div class="profile-info">
+            <div class="info-item">
+                <p><strong>Nom:</strong> {{ user.nom }}</p>
+            </div>
+            <div class="info-item">
+                <p><strong>Prénom:</strong> {{ user.prenom }}</p>
+            </div>
+            <div class="info-item">
+                <p><strong>Email:</strong> {{ user.email }}</p>
+            </div>
+            <div class="info-item">
+                <p><strong>Fonctions:</strong></p>
+                <ul>
+                    <li *ngFor="let role of roles">{{ role.nom || role }}</li>
+                </ul>
+            </div>
+        </div><br>
+        <div class="button-container">
+            <button (click)="openDialog(user)">Modifier mes informations</button> <!-- Change ici -->
+        </div>
+    </div>
+</div>
+
+<ng-template #loading>
+    <p class="loading-text">Chargement des informations de profil...</p>
+</ng-template>
+
+<!-- Formulaire de modification du profil -->
+<!-- Dialog de modification de profil (remplace tout le <p-dialog> précédent) -->
+<p-dialog
+  [(visible)]="showFormulaire"
+  [modal]="true"
+  header="Modifier mon profil"
+  [style]="{ width: '680px' }"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!isLoading()"
+>
+  <form class="space-y-4" [formGroup]="userForm" (ngSubmit)="save()">
+    <!-- Bloc identité -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Nom -->
+      <div>
+        <label for="nom" class="block text-sm font-medium mb-2">Nom</label>
+        <div class="p-inputgroup">
+          <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
+          <input
+            id="nom"
+            pInputText
+            formControlName="nom"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': f.nom.invalid && (f.nom.dirty || f.nom.touched) }"
+          />
+        </div>
+        <small class="p-error" *ngIf="f.nom.errors?.['required'] && (f.nom.dirty || f.nom.touched)">
+          Le nom est obligatoire.
+        </small>
+      </div>
+
+      <!-- Prénom -->
+      <div>
+        <label for="prenom" class="block text-sm font-medium mb-2">Prénom</label>
+        <div class="p-inputgroup">
+          <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
+          <input
+            id="prenom"
+            pInputText
+            formControlName="prenom"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': f.prenom.invalid && (f.prenom.dirty || f.prenom.touched) }"
+          />
+        </div>
+        <small class="p-error" *ngIf="f.prenom.errors?.['required'] && (f.prenom.dirty || f.prenom.touched)">
+          Le prénom est obligatoire.
+        </small>
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium mb-2">Adresse e-mail</label>
+        <div class="p-inputgroup">
+          <span class="p-inputgroup-addon"><i class="pi pi-envelope"></i></span>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            class="w-full"
+            [ngClass]="{ 'ng-invalid ng-dirty': f.email.invalid && (f.email.dirty || f.email.touched) }"
+          />
+        </div>
+        <small class="p-error" *ngIf="f.email.errors?.['required'] && (f.email.dirty || f.email.touched)">
+          L’e-mail est obligatoire.
+        </small>
+        <small class="p-error" *ngIf="f.email.errors?.['email'] && (f.email.dirty || f.email.touched)">
+          E-mail invalide.
+        </small>
+      </div>
+
+      <!-- Téléphone -->
+      <div>
+        <label for="telephone" class="block text-sm font-medium mb-2">Téléphone</label>
+        <div class="p-inputgroup">
+          <span class="p-inputgroup-addon"><i class="pi pi-phone"></i></span>
+          <input id="telephone" pInputText formControlName="telephone" class="w-full" />
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Toggle : changer mot de passe -->
+    <div class="flex items-center gap-2">
+      <p-checkbox
+        binary="true"
+        [ngModel]="changePassword()"
+        (onChange)="onToggleChangePassword($event.checked)"
+      ></p-checkbox>
+      <label class="cursor-pointer select-none" (click)="onToggleChangePassword(!changePassword())">
+        Changer mon mot de passe
+      </label>
+    </div>
+
+    <!-- Bloc mot de passe -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="changePassword()">
+      <!-- Mot de passe -->
+      <div>
+        <label for="password" class="block text-sm font-medium mb-2">Mot de passe</label>
+        <p-password
+          id="password"
+          formControlName="password"
+          class="w-full"
+          [feedback]="false"
+          [toggleMask]="true"
+          [inputStyle]="{ width: '100%' }"
+          [ngClass]="{ 'ng-invalid ng-dirty': f.password.invalid && (f.password.dirty || f.password.touched) }"
+        ></p-password>
+        <small class="p-error" *ngIf="f.password.errors?.['required'] && (f.password.dirty || f.password.touched)">
+          Le mot de passe est obligatoire.
+        </small>
+        <small class="p-error" *ngIf="f.password.errors?.['minlength'] && (f.password.dirty || f.password.touched)">
+          Minimum 8 caractères.
+        </small>
+      </div>
+
+      <!-- Confirmation -->
+      <div>
+        <label for="confirmPassword" class="block text-sm font-medium mb-2">Confirmer le mot de passe</label>
+        <p-password
+          id="confirmPassword"
+          formControlName="confirmPassword"
+          class="w-full"
+          [feedback]="false"
+          [toggleMask]="true"
+          [inputStyle]="{ width: '100%' }"
+          [ngClass]="{ 'ng-invalid ng-dirty': f.confirmPassword.invalid && (f.confirmPassword.dirty || f.confirmPassword.touched) }"
+        ></p-password>
+        <small class="p-error" *ngIf="f.confirmPassword.errors?.['required'] && (f.confirmPassword.dirty || f.confirmPassword.touched)">
+          La confirmation est obligatoire.
+        </small>
+        <small class="p-error" *ngIf="userForm.errors?.['passwordMismatch']">
+          Les mots de passe ne correspondent pas.
+        </small>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="flex justify-end gap-2 pt-2">
+      <p-button
+        type="button"
+        label="Annuler"
+        severity="secondary"
+        [disabled]="isLoading()"
+        (onClick)="closeForm()"
+      />
+      <p-button
+        type="submit"
+        label="Enregistrer"
+        severity="success"
+        [loading]="isLoading()"
+        [disabled]="userForm.invalid || isLoading()"
+      />
+    </div>
+  </form>
+</p-dialog>
+
+

@@ -27,8 +27,10 @@ export class AppMenu {
         this.model = [
             {
                 label: 'Home',
+                icon: 'pi pi-fw pi-home',
+                routerLink: ['/dashboard'],
                 items: [
-                    { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/dashboard'], visible: role === 'admin' || role === 'responsable'  }, // Lien vers le tableau de bord
+                    { label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/dashboard'] }, // Lien vers le tableau de bord
                 ],
             },
             {
@@ -37,34 +39,83 @@ export class AppMenu {
                 routerLink: ['/pages'],
                 items: [
                     {
+                        label: 'Offres',
+                        icon: 'pi pi-fw pi-tags',
+                        routerLink: ['/pages/offre'],
+                        //visible: role === 'admin',
+                    },
+                    {
+                        label: 'Candidatures',
+                        icon: 'pi pi-fw pi-file',
+                        routerLink: ['/pages/candidature'],
+                        //visible: role === 'admin',
+                    },
+                    {
+                        label: 'Entreprises',
+                        icon: 'pi pi-fw pi-building',
+                        routerLink: ['/pages/entreprise'],
+                        //visible: role === 'admin',
+                    },
+                    {
+                        label: 'Catégories',
+                        icon: 'pi pi-fw pi-folder',
+                        routerLink: ['/pages/categorie'],
+                        //visible: role === 'admin',
+                    },
+
+                    {
+                        label: 'Pays',
+                        icon: 'pi pi-fw pi-globe',
+                        routerLink: ['/pages/pays'],
+                        //visible: role === 'admin',
+                    },
+
+                    {
                         label: 'Utilisateurs',
                         icon: 'pi pi-fw pi-users',
                         routerLink: ['/pages/user'],
-                        visible: role === 'admin',
+                        //visible: role === 'admin',
                     },
                     {
-                        label: 'UFR',
+                        label: 'Roles',
+                        icon: 'pi pi-fw pi-users',
+                        routerLink: ['/pages/role'],
+                        //visible: role === 'admin',
+                    },
+                    {
+                        label: 'Publicités',
                         icon: 'pi pi-fw pi-book',
-                        routerLink: ['/pages/ufr'],
-                        visible: role === 'admin',
+                        routerLink: ['/pages/publicite'],
+                        //visible: role === 'admin',
                     },
                     {
-                        label: 'Laboratoire',
+                        label: 'Conseils',
                         icon: 'pi pi-fw pi-building',
-                        routerLink: ['/pages/laboratoire'],
-                        visible: role === 'admin',
+                        routerLink: ['/pages/conseil'],
+                        //visible: role === 'admin',
                     },
                     {
-                        label: 'Equipements',
-                        icon: 'pi pi-fw pi-cog',
-                        routerLink: ['/pages/equipement'],
-                        visible: role === 'admin' || role === 'responsable' ,
+                        label: 'Notifications',
+                        icon: 'pi pi-fw pi-users',
+                        routerLink: ['/pages/notification'],
+                        //visible: role === 'admin',
                     },
                     {
-                        label: 'Reservations',
+                        label: 'Mon CV',
                         icon: 'pi pi-fw pi-calendar',
-                        routerLink: ['/pages/reservation'],
-                        visible: role === 'reservant' || role === 'admin' || role === 'responsable',
+                        routerLink: ['/pages/cv'],
+                        //visible: role === 'reservant' || role === 'admin' || role === 'responsable',
+                    },
+                    {
+                        label: 'Landing Page',
+                        icon: 'pi pi-fw pi-globe',
+                        routerLink: ['/landing'],
+                    },
+                    {
+                        label: 'Profil',
+                        icon: 'pi pi-fw pi-users',
+                        routerLink: ['/pages/profil'],
+                        //visible: role === 'admin',
                     },
                     {
                         label: 'Authentication',

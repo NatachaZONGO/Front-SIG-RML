@@ -1,0 +1,1070 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- Contenu principal -->
+<div class="bg-surface-0 dark:bg-surface-900">
+  <div class="landing-wrapper overflow-hidden">
+    <!-- Topbar unique -->
+    <topbar-widget
+    class="py-6 px-6 mx-0 md:mx-12 lg:mx-20 lg:px-20 flex items-center justify-between relative lg:static"
+    (createOffer)="createDialog.open()">
+  </topbar-widget>
+
+    <!-- Hero (pas de menu ici) -->
+    <app-accueil></app-accueil>
+
+     <!-- ===================== SECTION : OFFRES EN VEDETTE ===================== -->
+    <section id="offres-vedettes" class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">⭐ Offres en vedette</h2>
+        <p class="section-subtitle">Découvrez les opportunités premium sélectionnées spécialement pour vous</p>
+      </div>
+
+      <div class="cards-grid featured-grid">
+        <div *ngFor="let job of featuredJobs" class="featured-card">
+          <!-- Ruban vedette diagonal -->
+          <div class="card-ribbon">
+            <span>★ Vedette</span>
+          </div>
+          
+          <div class="card-header">
+            <div class="job-info">
+              <div class="job-title">{{ job.titre }}</div>
+              <div class="job-meta">
+                {{ job.entreprise }} • {{ job.ville }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Badge séparé pour éviter le conflit avec le ruban -->
+          <div class="badges-container-vedette">
+            <span class="type-badge"
+                 [ngClass]="{
+                  'cdi': job.type.toLowerCase() === 'cdi',
+                  'cdd': job.type.toLowerCase() === 'cdd', 
+                  'freelance': job.type.toLowerCase() === 'freelance',
+                  'stage': job.type.toLowerCase() === 'stage'
+                }">{{ job.type }}</span>
+          </div>
+
+          <p class="job-description">{{ job.resume }}</p>
+
+          <div class="card-footer">
+            <small class="publish-date">{{ job.publie_le | date:'mediumDate' }}</small>
+            <button pButton pRipple label="Voir plus" class="view-btn" [rounded]="true" (click)="openOffreDetails(job.id)"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ===================== SECTION : NOS PARTENAIRES ===================== -->
+    <section id="pubs" class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">🤝 Nos partenaires</h2>
+        <p class="section-subtitle">Ils nous font confiance pour leur recrutement et développement</p>
+      </div>
+
+      <div class="carousel-container">
+        <p-carousel
+          [value]="adsRow"
+          [circular]="true"
+          [autoplayInterval]="3000"
+          [numVisible]="4"
+          [numScroll]="1"
+          [showNavigators]="true"
+          [showIndicators]="false"
+          [responsiveOptions]="[
+            { breakpoint: '1200px', numVisible: 3, numScroll: 1 },
+            { breakpoint: '992px',  numVisible: 3, numScroll: 1 },
+            { breakpoint: '768px',  numVisible: 2, numScroll: 1 },
+            { breakpoint: '560px',  numVisible: 1, numScroll: 1 }
+          ]"
+        >
+          <ng-template pTemplate="item" let-ad>
+            <div class="partner-card">
+              <div class="partner-media">
+                <img *ngIf="ad.image && !ad.video" [src]="ad.image" alt="partenaire" />
+                <video *ngIf="ad.video" [src]="ad.video" muted autoplay loop playsinline></video>
+              </div>
+              <div class="partner-content">
+                <div class="partner-title">{{ ad.titre }}</div>
+                <p class="partner-description" [innerHTML]="ad.description || ''"></p>
+                <a *ngIf="ad.lien" [href]="ad.lien" target="_blank" class="partner-link">
+                  Découvrir →
+                </a>
+              </div>
+            </div>
+          </ng-template>
+        </p-carousel>
+      </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ===================== SECTION : DERNIÈRES OFFRES ===================== -->
+    <section id="offres-recents" class="section-container">
+      <div class="section-header">
+        <h2 class="section-title">🔥 Dernières offres</h2>
+        <p class="section-subtitle">Les opportunités fraîchement publiées qui n'attendent que vous</p>
+        <button pButton pRipple [text]="true" [rounded]="true" label="Voir toutes les offres →" class="see-all-btn" (click)="goAllJobs()"></button>
+      </div>
+
+      <div class="cards-grid recent-grid">
+        <div *ngFor="let o of recentOffers | slice:0:4" class="job-card">
+          <div class="card-header">
+            <div class="job-info">
+              <div class="job-title" [title]="o.titre">{{ o.titre }}</div>
+              <div class="job-meta">
+                {{ o.entreprise }} • {{ o.ville }}
+              </div>
+            </div>
+            <span class="type-badge">{{ o.type }}</span>
+          </div>
+
+          <p class="job-description">{{ o.resume }}</p>
+
+          <div class="card-footer">
+            <small class="publish-date">{{ o.publie_le | date:'mediumDate' }}</small>
+            <button pButton pRipple label="Voir plus" class="view-btn" [rounded]="true" (click)="openOffreDetails(o.id)"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ===================== SECTION : CONSEILS CARRIÈRE ===================== -->
+<section id="conseils" class="section-container">
+  <div class="section-header">
+    <h2 class="section-title">💡 Conseils carrière</h2>
+    <p class="section-subtitle">Boostez votre parcours professionnel avec nos experts</p>
+    <button pButton pRipple [text]="true" [rounded]="true" label="Voir tous les conseils →" class="see-all-btn" (click)="goAllConseils()"></button>
+  </div>
+
+  <div class="cards-grid tips-grid">
+    <div *ngFor="let t of tipsRow | slice:0:3" class="tip-card">
+      <div class="tip-header">
+        <h3 class="tip-title" [title]="t.titre">{{ t.titre }}</h3>
+        <p-tag *ngIf="t.niveau" [value]="t.niveau" severity="secondary" styleClass="tip-level"></p-tag>
+      </div>
+
+      <p class="tip-excerpt">{{ t.extrait }}</p>
+
+      <div class="tip-footer">
+        <div class="tip-meta">
+          <p-tag *ngIf="t.categorie" [value]="t.categorie" styleClass="tip-category" severity="success"></p-tag>
+          <span *ngIf="t.publie_le" class="tip-date">{{ t.publie_le | date:'mediumDate' }}</span>
+        </div>
+        <button pButton pRipple label="Lire" class="read-btn" [rounded]="true" (click)="openConseilDialog(t)"></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ... Le reste des dialogs reste identique ... -->
+<p-dialog
+  [(visible)]="detailsVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '900px', maxWidth: '95vw' }"
+  [breakpoints]="{ '960px': '95vw', '640px': '100vw' }"
+  [header]="selectedOffre?.titre || 'Détail de l\'offre'">
+
+  <ng-container *ngIf="selectedOffre as d">
+    <div class="space-y-3">
+      <div class="text-gray-600 text-sm">
+        {{ d.entreprise?.nom_entreprise || 'Entreprise' }} • {{ d.localisation || '—' }}
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <p-tag *ngIf="d.type_contrat" [value]="d.type_contrat"></p-tag>
+        <p-tag *ngIf="$any(d.categorie)?.nom || d.categorie" [value]="$any(d.categorie)?.nom ?? (typeof d.categorie === 'string' ? d.categorie : '')"></p-tag>
+        <p-tag *ngIf="d.experience" [value]="d.experience"></p-tag>
+        <p-tag *ngIf="d.salaire" [value]="d.salaire + ' CFA'"></p-tag>
+      </div>
+
+      <div class="offer-html" [innerHTML]="d.description || ''"></div>
+
+      <div class="details-footer">
+        <button pButton pRipple label="Postuler" icon="pi pi-send" (click)="postuler(d)"></button>
+      </div>
+    </div>
+  </ng-container>
+</p-dialog>
+
+<!-- ======== POSTULER (invité + connecté) ======== -->
+<p-dialog
+  [(visible)]="applyVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '760px', maxWidth: '95vw' }"
+  [breakpoints]="{ '960px': '95vw', '640px': '100vw' }"
+  [header]="'Postuler — ' + (selectedOffre?.titre || '')">
+
+  <form #applyForm="ngForm" class="apply-form" (ngSubmit)="submitApplication(applyForm)" novalidate>
+    <!-- Nom / Prénom -->
+    <div class="row two">
+      <div class="field">
+        <label>Nom *</label>
+        <input pInputText name="nom" [(ngModel)]="apply.nom" required [readonly]="isAuth" />
+      </div>
+      <div class="field">
+        <label>Prénom *</label>
+        <input pInputText name="prenom" [(ngModel)]="apply.prenom" required [readonly]="isAuth" />
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="row">
+      <div class="field">
+        <label>Email *</label>
+        <input pInputText type="email" name="email" [(ngModel)]="apply.email" required email [readonly]="isAuth" />
+        <small class="muted" *ngIf="!isAuth">
+          Vous avez déjà un compte ? <a (click)="goLogin()" style="cursor:pointer;">Se connecter</a>
+        </small>
+      </div>
+    </div>
+
+    <!-- Ville + Date de naissance (requis pour invités) -->
+    <div class="row two">
+      <div class="field">
+        <label>Ville *</label>
+        <input
+          pInputText
+          name="ville"
+          [(ngModel)]="apply.ville"
+          [required]="!isAuth"
+          autocomplete="address-level2"
+          placeholder="Ex: Ouagadougou"
+          [readonly]="isAuth"
+          #villeModel="ngModel"
+        />
+        <small class="text-red-500" *ngIf="!isAuth && villeModel.invalid && (villeModel.dirty || applyForm.submitted)">
+          La ville est obligatoire.
+        </small>
+      </div>
+
+      <div class="field" *ngIf="!isAuth">
+        <label>Date de naissance *</label>
+        <input
+          pInputText
+          type="date"
+          name="date_naissance"
+          [(ngModel)]="apply.date_naissance"
+          [required]="!isAuth"
+          [attr.max]="today"
+          #dobModel="ngModel"
+        />
+        <small class="text-red-500" *ngIf="dobModel.invalid && (dobModel.dirty || applyForm.submitted)">
+          La date de naissance est obligatoire.
+        </small>
+      </div>
+    </div>
+
+    <!-- Sexe (invité) -->
+    <div class="row" *ngIf="!isAuth">
+      <div class="field">
+        <label>Sexe</label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <p-radioButton name="sexe" inputId="sxM" value="M" [(ngModel)]="apply.sexe"></p-radioButton>
+          <label for="sxM">Homme</label>
+
+          <p-radioButton name="sexe" inputId="sxF" value="F" [(ngModel)]="apply.sexe"></p-radioButton>
+          <label for="sxF">Femme</label>
+
+          <p-radioButton name="sexe" inputId="sxX" value="X" [(ngModel)]="apply.sexe"></p-radioButton>
+          <label for="sxX">Autre / Préfère ne pas dire</label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Niveau d'étude (invité) -->
+    <div class="row" *ngIf="!isAuth">
+      <div class="field">
+        <label>Niveau d'étude</label>
+        <p-select
+          name="niveau_etude"
+          [(ngModel)]="apply.niveau_etude"
+          [options]="niveauEtudeOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionner"
+          [style]="{ width: '100%' }"
+        ></p-select>
+      </div>
+    </div>
+
+    <!-- Disponibilité (invité) -->
+    <div class="row" *ngIf="!isAuth">
+      <div class="field">
+        <label>Disponibilité</label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <p-radioButton
+            name="disponibilite"
+            inputId="dispNow"
+            value="immediate"
+            [(ngModel)]="apply.disponibilite"
+          ></p-radioButton>
+          <label for="dispNow">Immédiate</label>
+
+          <p-radioButton
+            name="disponibilite"
+            inputId="disp1w"
+            value="sous_1_semaine"
+            [(ngModel)]="apply.disponibilite"
+          ></p-radioButton>
+          <label for="disp1w">Sous 1 semaine</label>
+
+          <p-radioButton
+            name="disponibilite"
+            inputId="disp2w"
+            value="sous_2_semaines"
+            [(ngModel)]="apply.disponibilite"
+          ></p-radioButton>
+          <label for="disp2w">Sous 2 semaines</label>
+
+          <p-radioButton
+            name="disponibilite"
+            inputId="disp1m"
+            value="sous_1_mois"
+            [(ngModel)]="apply.disponibilite"
+          ></p-radioButton>
+          <label for="disp1m">Sous 1 mois</label>
+
+          <p-radioButton
+            name="disponibilite"
+            inputId="dispOther"
+            value="autre"
+            [(ngModel)]="apply.disponibilite"
+          ></p-radioButton>
+          <label for="dispOther">Autre</label>
+
+          <input
+            *ngIf="apply.disponibilite === 'autre'"
+            pInputText
+            name="disponibilite_autre"
+            [(ngModel)]="apply.disponibilite_autre"
+            placeholder="Ex: début octobre"
+            style="min-width: 220px;"
+          />
+        </div>
+        <small class="muted">Choisissez une option. Si "Autre", précisez un court texte.</small>
+      </div>
+    </div>
+
+    <!-- Téléphone -->
+    <div class="row">
+      <div class="field">
+        <label>Numéro de téléphone</label>
+        <input pInputText name="phone" [(ngModel)]="apply.phone" placeholder="+226 70 00 00 00" [readonly]="isAuth" />
+      </div>
+    </div>
+
+    <!-- Pays + Expérience -->
+    <div class="row two">
+      <div class="field">
+        <label>Pays</label>
+        <p-select
+          name="pays"
+          [(ngModel)]="apply.pays"
+          [options]="paysOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionner"
+          [filter]="true"
+          [virtualScroll]="true"
+          [virtualScrollItemSize]="38"
+          [style]="{ width: '100%' }"
+        >
+          <!-- Valeur sélectionnée -->
+          <ng-template pTemplate="selectedItem" let-opt>
+            <div class="flex items-center gap-2" *ngIf="opt">
+              <img
+                *ngIf="opt.flag"
+                [src]="opt.flag"
+                alt=""
+                width="20"
+                height="14"
+                style="border-radius: 2px; border: 1px solid #e5e7eb"
+              />
+              <span>{{ opt.label }}</span>
+              <small class="text-gray-500 ml-1">{{ opt.code }}</small>
+            </div>
+            <span *ngIf="!opt" class="text-gray-400">Sélectionner</span>
+          </ng-template>
+
+          <!-- Items de la liste -->
+          <ng-template pTemplate="item" let-opt>
+            <div class="flex items-center gap-2">
+              <img
+                *ngIf="opt.flag"
+                [src]="opt.flag"
+                alt=""
+                width="20"
+                height="14"
+                style="border-radius: 2px; border: 1px solid #e5e7eb"
+              />
+              <span>{{ opt.label }}</span>
+              <small class="text-gray-500 ml-2">{{ opt.code }}</small>
+            </div>
+          </ng-template>
+        </p-select>
+      </div>
+
+      <div class="field">
+        <label>Années d'expérience</label>
+        <p-inputNumber
+          name="experience"
+          [(ngModel)]="apply.experience"
+          [min]="0"
+          [max]="60"
+          [useGrouping]="false"
+          [style]="{ width: '100%' }"
+        ></p-inputNumber>
+      </div>
+    </div>
+
+    <!-- CV -->
+    <div class="row">
+      <label class="block font-medium mb-1">CV</label>
+      <div class="flex items-center gap-3 flex-wrap">
+        <p-radioButton name="cvChoice" inputId="cvExisting" value="existing" [(ngModel)]="apply.cvChoice" [disabled]="!isAuth"></p-radioButton>
+        <label for="cvExisting">Utiliser mon CV existant</label>
+
+        <p-radioButton name="cvChoice" inputId="cvUpload" value="upload" [(ngModel)]="apply.cvChoice"></p-radioButton>
+        <label for="cvUpload">Téléverser un CV</label>
+
+        <input *ngIf="apply.cvChoice === 'upload'" type="file" accept=".pdf,.doc,.docx" (change)="onApplyFile($event)" />
+      </div>
+      <small class="muted">PDF ou DOC, 5 Mo max.</small>
+    </div>
+
+    <!-- Lettre de motivation (texte OU fichier) -->
+    <div class="row">
+      <div class="field">
+        <label>Lettre de motivation</label>
+
+        <div class="flex items-center gap-3 flex-wrap mb-2">
+          <p-radioButton
+            name="lmChoice"
+            inputId="lmText"
+            value="text"
+            [(ngModel)]="apply.lmChoice"
+          ></p-radioButton>
+          <label for="lmText">Saisir du texte</label>
+
+          <p-radioButton
+            name="lmChoice"
+            inputId="lmUpload"
+            value="upload"
+            [(ngModel)]="apply.lmChoice"
+          ></p-radioButton>
+          <label for="lmUpload">Téléverser un fichier</label>
+        </div>
+
+        <!-- Zone de texte si 'text' -->
+        <textarea
+          *ngIf="apply.lmChoice === 'text'"
+          pTextarea
+          name="motivation"
+          [(ngModel)]="apply.motivation"
+          rows="5"
+          autoResize="true"
+          placeholder="Expliquez brièvement pourquoi vous êtes un bon candidat"
+        ></textarea>
+
+        <!-- Fichier si 'upload' -->
+        <div *ngIf="apply.lmChoice === 'upload'">
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,.txt,.odt"
+            (change)="onApplyLmFile($event)"
+          />
+          <small class="muted block mt-1">PDF, DOC, DOCX, TXT ou ODT — 5 Mo max.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revue -->
+    <div class="row">
+      <p-checkbox inputId="reviewNow" name="reviewNow" binary="true" [(ngModel)]="apply.reviewNow"></p-checkbox>
+      <label for="reviewNow" class="ml-2">Vérifier ma candidature maintenant</label>
+    </div>
+
+    <div class="footer">
+      <button pButton type="button" class="p-button-text" label="Annuler" (click)="applyVisible=false"></button>
+      <button
+        pButton
+        type="submit"
+        icon="pi pi-send"
+        label="Envoyer ma candidature"
+        [disabled]="
+          applyForm.invalid ||
+          (!isAuth && !apply.ville.trim()) ||
+          (apply.cvChoice==='upload' && !cvFile)
+        "
+      >
+      </button>
+    </div>
+  </form>
+</p-dialog>
+
+<!-- ======== DÉTAIL CONSEIL ======== -->
+<p-dialog
+  [(visible)]="conseilDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '900px', maxWidth: '95vw' }"
+  [breakpoints]="{ '960px': '95vw', '640px': '100vw' }"
+  [header]="currentConseil?.titre || 'Conseil'"
+>
+  <ng-template pTemplate="content">
+    <!-- état chargement -->
+    <div *ngIf="loadingConseil" class="flex items-center gap-2">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Chargement…</span>
+    </div>
+
+    <!-- contenu -->
+    <div *ngIf="!loadingConseil && currentConseil">
+      <div class="text-sm text-gray-600 mb-3 flex items-center gap-2 flex-wrap">
+        <p-tag *ngIf="currentConseil.categorie" [value]="currentConseil.categorie" severity="success"></p-tag>
+        <p-tag *ngIf="currentConseil.niveau" [value]="currentConseil.niveau" severity="secondary"></p-tag>
+        <span *ngIf="currentConseil.publie_le">{{ currentConseil.publie_le | date:'mediumDate' }}</span>
+      </div>
+
+      <!-- Rendu HTML nettoyé / sécurisé -->
+      <div class="conseil-body prose-base" [innerHTML]="conseilSafeHtml"></div>
+    </div>
+
+    <!-- vide / erreur -->
+    <div *ngIf="!loadingConseil && !currentConseil" class="text-gray-500">
+      Impossible d'afficher ce conseil pour le moment.
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Fermer" icon="pi pi-times" (click)="conseilDialogVisible=false"></button>
+    <button
+      *ngIf="currentConseil?.id"
+      pButton
+      type="button"
+      label="Ouvrir la page"
+      icon="pi pi-external-link"
+      class="p-button-text"
+      (click)="goToConseil(currentConseil.id)"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog réutilisable "Créer une offre" -->
+<app-offre-create-dialog
+  #createDialog
+  (created)="onOfferCreated($event)">
+</app-offre-create-dialog>
+
+<!-- Styles améliorés -->
+<style>
+  /* ===== STYLES GÉNÉRAUX ===== */
+  .section-container {
+    padding: 3rem 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    .section-container {
+      padding: 4rem 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .section-container {
+      padding: 5rem 3rem;
+    }
+  }
+
+  /* ===== EN-TÊTES DE SECTIONS ===== */
+  .section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #111d9d;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #111d9d 0%, #0a6c34 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  @media (min-width: 768px) {
+    .section-title {
+      font-size: 3rem;
+    }
+  }
+
+  .section-subtitle {
+    font-size: 1.125rem;
+    color: #64748b;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+  }
+
+  .see-all-btn {
+    color: #111d9d !important;
+    border-color: #111d9d !important;
+    margin-top: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+
+  .see-all-btn:hover {
+    background-color: #111d9d !important;
+    color: white !important;
+    transform: translateY(-2px);
+  }
+
+  /* ===== SÉPARATEURS ===== */
+  .section-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #111d9d 50%, transparent 100%);
+    margin: 2rem 0;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* ===== GRILLES DE CARTES ===== */
+  .cards-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .featured-grid {
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .recent-grid {
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .tips-grid {
+    @media (min-width: 1024px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  /* ===== CARTES OFFRES VEDETTES ===== */
+  .featured-card {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .featured-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    border-color: #111d9d;
+  }
+
+  /* Ruban diagonal vedette */
+  .card-ribbon {
+    position: absolute;
+    top: 1rem;
+    right: -2rem;
+    background: linear-gradient(45deg, #dc2626 0%, #b91c1c 100%);
+    color: white;
+    padding: 0.35rem 2.5rem;
+    font-size: 0.8rem;
+    font-weight: 800;
+    transform: rotate(45deg);
+    transform-origin: center;
+    box-shadow: 0 3px 12px rgba(220, 38, 38, 0.4);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== CARTES OFFRES RÉCENTES ===== */
+  .job-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+  }
+
+  .job-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    border-color: #0a6c34;
+  }
+
+  /* ===== EN-TÊTES DE CARTES ===== */
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .job-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .job-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .job-meta {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ===== BADGES ET PUCES ===== */
+  .badges-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+  }
+
+  /* Badges pour les cartes vedettes - positionnés plus bas pour éviter le ruban */
+  .badges-container-vedette {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    background-color: #dcfce7;
+    color: #166534;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .featured-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #92400e;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ===== DESCRIPTIONS ===== */
+  .job-description {
+    font-size: 0.875rem;
+    color: #4b5563;
+    line-height: 1.5;
+    margin: 1rem 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+
+  /* ===== PIEDS DE CARTES ===== */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+  }
+
+  .publish-date {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .view-btn {
+    font-size: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+    background-color: #111d9d !important;
+    border-color: #111d9d !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .view-btn:hover {
+    background-color: #0d1784 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(17, 29, 157, 0.3) !important;
+  }
+
+  /* ===== CARROUSEL PARTENAIRES ===== */
+  .carousel-container {
+    margin: 2rem 0;
+  }
+
+  .partner-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin: 0 0.75rem;
+    transition: all 0.3s ease;
+  }
+
+  .partner-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .partner-media {
+    position: relative;
+    width: 100%;
+    padding-top: 45%;
+    background: #f8fafc;
+  }
+
+  .partner-media img,
+  .partner-media video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .partner-content {
+    padding: 1rem;
+  }
+
+  .partner-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .partner-description {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
+
+  .partner-link {
+    color: #0a6c34 !important;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.3s ease;
+  }
+
+  .partner-link:hover {
+    color: #166534 !important;
+  }
+
+  /* ===== CARTES CONSEILS ===== */
+  .tip-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+  }
+
+  .tip-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+    border-color: #ff7104;
+  }
+
+  .tip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .tip-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .tip-excerpt {
+    font-size: 0.875rem;
+    color: #4b5563;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .tip-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .tip-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .tip-date {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+
+  .read-btn {
+    font-size: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+    background-color: #ff7104 !important;
+    border-color: #ff7104 !important;
+  }
+
+  .read-btn:hover {
+    background-color: #ea580c !important;
+    transform: translateY(-2px) !important;
+  }
+
+  /* ===== STYLES TAGS PRIMENG ===== */
+  .tip-level {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .tip-category {
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  /* ===== PERSONNALISATION CAROUSEL ===== */
+  :host ::ng-deep .p-carousel .p-carousel-content .p-carousel-container {
+    margin: 0 -0.75rem;
+  }
+
+  :host ::ng-deep .p-carousel .p-carousel-prev,
+  :host ::ng-deep .p-carousel .p-carousel-next {
+    background-color: #111d9d;
+    color: white;
+    border: none;
+    width: 3rem;
+    height: 3rem;
+    margin: 0.5rem;
+  }
+
+  :host ::ng-deep .p-carousel .p-carousel-prev:hover,
+  :host ::ng-deep .p-carousel .p-carousel-next:hover {
+    background-color: #0d1784;
+  }
+
+  /* ===== ANIMATIONS POUR L'ENGAGEMENT ===== */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .section-container {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  /* ===== STYLES EXISTANTS POUR LES DIALOGS ===== */
+  .offer-html p { margin: .5rem 0; line-height: 1.6; }
+  .offer-html ul, .offer-html ol { margin: .5rem 1.25rem; }
+  .offer-html h1, .offer-html h2, .offer-html h3 { margin: .75rem 0 .25rem; }
+  .details-footer { position: sticky; bottom: 0; padding-top: 1rem; background: #fff; display: flex; justify-content: flex-end; }
+
+  .apply-form .row { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+  .apply-form .row.two > .field { flex: 1 1 0; min-width: 220px; }
+  .apply-form .field { display: flex; flex-direction: column; gap: .35rem; flex: 1 1 100%; }
+  .apply-form .footer { display:flex; justify-content:flex-end; gap:.5rem; margin-top:.5rem; }
+  .muted { color:#6b7280; font-size:.85rem; }
+  .conseil-body {
+    max-height: 60vh;
+    overflow: auto;
+    line-height: 1.6;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  .prose-base h1,.prose-base h2,.prose-base h3 { margin: .6rem 0 .3rem; font-weight: 700; }
+  .prose-base p { margin: .5rem 0; }
+  .prose-base ul,.prose-base ol { margin: .5rem 1.25rem; }
+  .prose-base blockquote { margin: .6rem 0; padding-left: .8rem; border-left: 3px solid #e5e7eb; color:#374151; }
+  .prose-base code { background:#f3f4f6; padding: .1rem .3rem; border-radius: 4px; }
+</style>

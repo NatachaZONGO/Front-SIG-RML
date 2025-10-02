@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
@@ -15,172 +15,500 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DropdownModule } from 'primeng/dropdown';
+
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+
 import { UserService } from './user.service';
 import { User } from './user.model';
+import { RoleService } from '../role/role.service'; // Ajustez le chemin selon votre structure
+import { Role } from '../role/role.model'; // Ajustez le chemin selon votre structure
+import { imageUrl } from '../../../const';
 
-interface Column {
-    field: string;
-    header: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
+type UiUser = User & { roleLabel?: string; roleId?: number }; // Changé en number
 
 @Component({
-    selector: 'app-crud',
-    standalone: true,
-    imports: [
-        CommonModule,
-        TableModule,
-        FormsModule,
-        ButtonModule,
-        RippleModule,
-        ToastModule,
-        ToolbarModule,
-        InputTextModule,
-        TextareaModule,
-        DialogModule,
-        TagModule,
-        ConfirmDialogModule,
-        IconFieldModule,
-        InputIconModule,
-        DropdownModule
-    ],
-    providers: [MessageService, UserService, ConfirmationService],
-    templateUrl: `./user.component.html`,
+  selector: 'app-user',
+  standalone: true,
+  imports: [
+    CommonModule,
+    TableModule,
+    FormsModule,
+    ButtonModule,
+    RippleModule,
+    ToastModule,
+    ToolbarModule,
+    InputTextModule,
+    TextareaModule,
+    DialogModule,
+    TagModule,
+    ConfirmDialogModule,
+    IconFieldModule,
+    InputIconModule,
+    DropdownModule
+  ],
+  providers: [MessageService, UserService, ConfirmationService, RoleService],
+  templateUrl: './user.component.html',
 })
-export class Userr implements OnInit {
-    userDialog: boolean = false;
-    users = signal<User[]>([]);
-    user: User = {role: 'admin'};
-    selectedUsers: User[] = [];
-    submitted: boolean = false;
+export class UserComponent implements OnInit { // Corrigé le nom de la classe (était "Userr")
+  userDialog = false;
+  users = signal<UiUser[]>([]);
+  user: Partial<UiUser> = { statut: 'actif' }; // Retiré role par défaut
+  selectedUsers: UiUser[] = [];
+  submitted = false;
+  previewPhotoUrl?: string;
 
-    @ViewChild('dt') dt!: Table;
-    cols!: Column[];
-    exportColumns!: ExportColumn[];
+  @ViewChild('dt') dt!: Table;
 
-    constructor(
-        private userService: UserService,
-        private messageService: MessageService,
-        private confirmationService: ConfirmationService
-    ) {}
+  statuts = [
+    { label: 'Actif', value: 'actif' },
+    { label: 'Inactif', value: 'inactif' }
+  ];
 
-    ngOnInit() {
-        this.loadUsers();
-        this.cols = [
-            { field: 'lastname', header: 'Nom' },
-            { field: 'firstname', header: 'Prenom' },
-            { field: 'role', header: 'Role' },
-            { field: 'phone', header: 'Telephone' },
-            { field: 'email', header: 'Email' },
+  // Rôles chargés dynamiquement depuis l'API
+  roles: { label: string; value: number }[] = []; // Changé en number
+  
+  // Options pour le filtre par rôle
+  roleFilterOptions: { label: string; value: string | null }[] = [];
+  selectedRoleFilter: string | null = null;
+
+  constructor(
+    private userService: UserService,
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService,
+    private cdRef: ChangeDetectorRef,
+    private roleService: RoleService
+  ) {}
+
+  ngOnInit() {
+    this.loadRoles(); // Charger les rôles d'abord
+    this.loadUsers();
+  }
+
+  /** Charger les rôles depuis l'API */
+  loadRoles() {
+    this.roleService.getRoles().subscribe({
+      next: (roles: Role[]) => {
+        console.log('Rôles chargés:', roles);
+        // Convertir pour le dropdown PrimeNG avec conversion explicite
+        this.roles = roles.map(role => ({
+          label: role.nom || '',
+          value: Number(role.id) || 0 // Conversion explicite en number
+        }));
+        
+        // Créer les options pour le filtre par rôle
+        this.roleFilterOptions = [
+          { label: 'Tous les rôles', value: null },
+          ...roles.map(role => ({
+            label: role.nom || '',
+            value: role.nom || ''
+          }))
         ];
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
-    }
-
-    loadUsers() {
-        this.userService.getUsers().subscribe({
-            next: (data) => this.users.set(data),
-            error: (err) => console.error('Erreur lors du chargement des utilisateurs', err),
+        
+        console.log('Rôles formatés pour dropdown:', this.roles);
+        console.log('Options de filtre:', this.roleFilterOptions);
+        this.cdRef.detectChanges();
+      },
+      error: err => {
+        console.error('Erreur lors du chargement des rôles:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger les rôles',
+          life: 3000
         });
-    }
+      }
+    });
+  }
 
-    openNew() {
-        this.user = {role: 'admin'}; 
-        this.submitted = false;
-        this.userDialog = true;
-    }
-
-    editUser(user: User) {
-        this.user = { ...user };
-        this.userDialog = true;
-    }
-
-    deleteSelectedUsers() {
-        this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir supprimer les utilisateurs sélectionnés ?',
-            header: 'Confirmation',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                if (this.selectedUsers) {
-                    this.selectedUsers.forEach((user) => {
-                        if (user.id) {
-                            this.userService.deleteUser(user.id).subscribe({
-                                next: () => {
-                                    this.users.set(this.users().filter((val) => val.id !== user.id));
-                                },
-                                error: (err) => console.error('Erreur lors de la suppression de l\'utilisateur', err),
-                            });
-                        }
-                    });
-                    this.selectedUsers = [];
-                    this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateurs supprimés', life: 3000 });
-                }
-            },
-        });
-    }
-
-    deleteUser(user: User) {
-        this.confirmationService.confirm({
-            message: 'Êtes-vous sûr de vouloir supprimer ' + user.firstname + ' ?',
-            header: 'Confirmation',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                if (user.id) {
-                    this.userService.deleteUser(user.id).subscribe({
-                        next: () => {
-                            this.users.set(this.users().filter((val) => val.id !== user.id));
-                            this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur supprimé', life: 3000 });
-                        },
-                        error: (err) => console.error('Erreur lors de la suppression de l\'utilisateur', err),
-                    });
-                }
-            },
-        });
-    }
-
-    saveUser() {
-        this.submitted = true;
-        if (this.user.firstname?.trim() && this.user.lastname?.trim() && this.user.email?.trim() && this.user.password?.trim()) {
-            if (this.user.id) {
-                this.userService.updateUser(this.user).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur mis à jour', life: 3000 });
-                        this.loadUsers();
-                    },
-                    error: (err) => console.error('Erreur lors de la mise à jour de l\'utilisateur', err),
-                });
-            } else {
-                this.userService.createUser(this.user).subscribe({
-                    next: () => {
-                        this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Utilisateur créé', life: 3000 });
-                        this.loadUsers();
-                    },
-                    error: (err) => console.error('Erreur lors de la création de l\'utilisateur', err),
-                });
-            }
-            this.userDialog = false;
-            this.user = {role: 'admin'};
+  /** Récupération users depuis l'API (réponse paginée Laravel) */
+  loadUsers() {
+    this.userService.getUsers().subscribe({
+      next: (response: any) => {
+        console.log('Réponse complète de l\'API:', response);
+        
+        // Vérifier la structure de la réponse
+        if (response && response.success && response.data && response.data.data) {
+          const users: any[] = response.data.data;
+          
+          const mapped: UiUser[] = users.map((u: any) => ({
+            ...u,
+            // Extraire le premier rôle pour l'affichage
+            roleLabel: Array.isArray(u.roles) && u.roles.length > 0 
+              ? u.roles[0].nom 
+              : 'Aucun rôle',
+            // Stocker l'ID du rôle pour la modification (number)
+            roleId: Array.isArray(u.roles) && u.roles.length > 0 
+              ? u.roles[0].id 
+              : undefined
+          }));
+          
+          console.log('Utilisateurs mappés:', mapped);
+          this.users.set(mapped);
+          
+          // Forcer la détection des changements
+          this.cdRef.detectChanges();
+        } else {
+          console.error('Structure de réponse inattendue:', response);
         }
+      },
+      error: err => {
+        console.error('Erreur lors du chargement des utilisateurs:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger les utilisateurs',
+          life: 3000
+        });
+      },
+    });
+  }
+
+  openNew() {
+    this.user = { statut: 'actif' }; // Pas de rôle par défaut
+    this.previewPhotoUrl = undefined;
+    this.submitted = false;
+    this.userDialog = true;
+  }
+
+  editUser(user: UiUser) {
+    this.user = { 
+      ...user,
+      roleId: user.roleId, // Utiliser l'ID du rôle pour le dropdown
+      // IMPORTANT: Convertir la photo en string pour éviter les problèmes
+      photo: typeof user.photo === 'string' ? user.photo : undefined
+    };
+    this.previewPhotoUrl = undefined;
+    this.userDialog = true;
+  }
+
+  deleteSelectedUsers() {
+    this.confirmationService.confirm({
+      message: 'Êtes-vous sûr de vouloir supprimer les utilisateurs sélectionnés ?',
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const toDelete = [...this.selectedUsers];
+        toDelete.forEach(u => {
+          if (u.id) {
+            this.userService.deleteUser(u.id).subscribe({
+              next: () => this.users.set(this.users().filter(x => x.id !== u.id)),
+              error: err => console.error('Erreur suppression utilisateur', err),
+            });
+          }
+        });
+        this.selectedUsers = [];
+        this.messageService.add({ 
+          severity: 'success', 
+          summary: 'Succès', 
+          detail: 'Utilisateurs supprimés', 
+          life: 3000 
+        });
+      },
+    });
+  }
+
+  deleteUser(user: UiUser) {
+    this.confirmationService.confirm({
+      message: `Êtes-vous sûr de vouloir supprimer ${user.nom} ${user.prenom} ?`,
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        if (user.id) {
+          this.userService.deleteUser(user.id).subscribe({
+            next: () => {
+              this.users.set(this.users().filter(x => x.id !== user.id));
+              this.messageService.add({ 
+                severity: 'success', 
+                summary: 'Succès', 
+                detail: 'Utilisateur supprimé', 
+                life: 3000 
+              });
+            },
+            error: err => {
+              console.error('Erreur suppression utilisateur', err);
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Erreur',
+                detail: 'Impossible de supprimer l\'utilisateur',
+                life: 3000
+              });
+            },
+          });
+        }
+      },
+    });
+  }
+
+  saveUser() {
+    this.submitted = true;
+
+    // Validation différente pour création vs modification
+    const isCreation = !this.user.id;
+    const isValidForCreation = this.user.nom?.trim() && this.user.prenom?.trim() && 
+        this.user.email?.trim() && this.user.password?.trim() && this.user.roleId;
+    const isValidForUpdate = this.user.nom?.trim() && this.user.prenom?.trim() && 
+        this.user.email?.trim() && this.user.roleId;
+
+    if ((isCreation && isValidForCreation) || (!isCreation && isValidForUpdate)) {
+      
+      console.log('Données utilisateur à sauvegarder:', this.user);
+      console.log('Type de photo:', typeof this.user.photo);
+      console.log('Photo est File:', this.user.photo instanceof File);
+      
+      const payload = {
+        ...this.user,
+        role_id: this.user.roleId // Envoyer role_id au backend
+      };
+      
+      // Supprimer roleId du payload pour éviter la confusion
+      delete (payload as any).roleId;
+      
+      // Pour la modification, ne pas envoyer le mot de passe s'il est vide
+      if (!isCreation && !this.user.password?.trim()) {
+        delete (payload as any).password;
+      }
+      
+      console.log('Payload final:', payload);
+      
+      const req$ = this.user.id
+        ? this.userService.updateUser(payload)
+        : this.userService.createUser(payload);
+
+      req$.subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Succès',
+            detail: this.user.id ? 'Utilisateur mis à jour' : 'Utilisateur créé',
+            life: 3000
+          });
+          this.loadUsers();
+          this.userDialog = false;
+          this.user = { statut: 'actif' };
+          this.previewPhotoUrl = undefined;
+        },
+        error: err => {
+          console.error('Erreur saveUser', err);
+          console.error('Détails erreur:', err.error?.errors);
+          
+          if (err.error?.errors) {
+            const errorMessages = Object.entries(err.error.errors)
+              .map(([field, messages]: [string, any]) => 
+                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+              .join('\n');
+            
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreurs de validation',
+              detail: errorMessages,
+              life: 5000
+            });
+          } else {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Erreur',
+              detail: 'Impossible de sauvegarder l\'utilisateur',
+              life: 3000
+            });
+          }
+        },
+      });
+    } else {
+      console.error('Validation échouée:', {
+        nom: this.user.nom,
+        prenom: this.user.prenom,
+        email: this.user.email,
+        password: this.user.password,
+        roleId: this.user.roleId,
+        isCreation,
+        isValidForCreation,
+        isValidForUpdate
+      });
+    }
+  }
+
+  /** Nettoyer l'URL de prévisualisation lors de la fermeture du dialog */
+  hideDialog() {
+    this.userDialog = false;
+    this.submitted = false;
+    // Nettoyer l'URL de prévisualisation pour éviter les fuites mémoire
+    if (this.previewPhotoUrl) {
+      URL.revokeObjectURL(this.previewPhotoUrl);
+      this.previewPhotoUrl = undefined;
+    }
+  }
+
+  onGlobalFilter(table: Table, event: Event) {
+    table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+  }
+
+  exportCSV() {
+    this.dt.exportCSV();
+  }
+
+  /** Filtrer par rôle */
+  onRoleFilterChange(event: any) {
+    const selectedRole = event.value;
+    console.log('Filtre par rôle sélectionné:', selectedRole);
+    
+    if (selectedRole === null || selectedRole === '') {
+      // Afficher tous les utilisateurs
+      this.dt.filter(null, 'roleLabel', 'equals');
+    } else {
+      // Filtrer par le rôle sélectionné
+      this.dt.filter(selectedRole, 'roleLabel', 'equals');
+    }
+  }
+
+  /** Export PDF simplifié avec jsPDF */
+  exportPDF() {
+    // Obtenir les données filtrées du tableau
+    const filteredUsers = this.dt.filteredValue || this.users();
+    
+    if (filteredUsers.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Attention',
+        detail: 'Aucune donnée à exporter',
+        life: 3000
+      });
+      return;
     }
 
-    hideDialog() {
-        this.userDialog = false;
-        this.submitted = false;
-    }
+    try {
+      const doc = new jsPDF();
+      
+      // Titre
+      doc.setFontSize(16);
+      doc.text('Liste des Utilisateurs', 14, 15);
+      
+      // Date de génération
+      doc.setFontSize(10);
+      const now = new Date();
+      doc.text(`Généré le ${now.toLocaleDateString('fr-FR')} à ${now.toLocaleTimeString('fr-FR')}`, 14, 25);
 
-    onGlobalFilter(table: Table, event: Event) {
-        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
-    }
+      // En-têtes du tableau
+      const head = [['Nom', 'Prénom', 'Email', 'Téléphone', 'Rôle', 'Statut']];
+      
+      // Données du tableau
+      const body = filteredUsers.map((user: UiUser) => [
+        user.nom || '—',
+        user.prenom || '—',
+        user.email || '—',
+        user.telephone || '—',
+        user.roleLabel || '—',
+        user.statut || '—'
+      ]);
 
-    exportCSV() {
-        this.dt.exportCSV();
+      // Générer le tableau
+      autoTable(doc, {
+        head,
+        body,
+        startY: 35,
+        styles: {
+          fontSize: 9,
+          cellPadding: 3
+        },
+        headStyles: {
+          fillColor: [52, 152, 219], // Bleu
+          textColor: 255,
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245] // Gris clair alternatif
+        }
+      });
+
+      // Télécharger le PDF
+      doc.save(`utilisateurs_${new Date().getTime()}.pdf`);
+      
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Succès',
+        detail: 'PDF exporté avec succès',
+        life: 3000
+      });
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'export PDF:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Impossible d\'exporter le PDF',
+        life: 5000
+      });
     }
-    roles = [
-        { label: 'Admin', value: 'admin' },
-        { label: 'Responsable', value: 'responsable' },
-        { label: 'Reservant', value: 'reservant' },
-    ];
+  }
+
+  getImageUrl(photoPath: unknown): string {
+    if (!photoPath) return '';
+    
+    if (typeof photoPath === 'string') {
+      // Si c'est déjà une URL complète
+      if (photoPath.startsWith('http://') || photoPath.startsWith('https://')) {
+        return photoPath;
+      }
+      // Sinon construire l'URL complète
+      return `${imageUrl}/${photoPath}`;
+    }
+    
+    if (photoPath instanceof File) {
+      return this.previewPhotoUrl ?? '';
+    }
+    
+    return '';
+  }
+
+  onImageError(event: any) {
+    console.error('Erreur de chargement de l\'image:', event.target.src);
+    // Remplacer par une image par défaut ou masquer
+    event.target.style.display = 'none';
+    // Optionnel: afficher un placeholder
+    const placeholder = event.target.parentElement?.querySelector('.image-placeholder');
+    if (placeholder) {
+      placeholder.style.display = 'flex';
+    }
+  }
+
+  onFileChange(event: any) {
+    const file: File | undefined = event.target.files?.[0];
+    if (file) {
+      // Vérifier le type de fichier
+      if (file.type.startsWith('image/')) {
+        (this.user as any).photo = file;
+        this.previewPhotoUrl = URL.createObjectURL(file);
+        console.log('Nouveau fichier sélectionné:', file.name, file.type);
+      } else {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Veuillez sélectionner un fichier image valide',
+          life: 3000
+        });
+        // Reset l'input
+        event.target.value = '';
+      }
+    } else {
+      // Si l'input est vidé, nettoyer la prévisualisation
+      // mais garder la photo existante si on est en modification
+      if (this.previewPhotoUrl) {
+        URL.revokeObjectURL(this.previewPhotoUrl);
+        this.previewPhotoUrl = undefined;
+      }
+      
+      // Si on était en train de modifier et qu'on supprime la sélection,
+      // remettre la photo originale (string)
+      if (this.user.id && typeof this.user.photo !== 'string') {
+        // Récupérer la photo originale depuis la liste des users
+        const originalUser = this.users().find(u => u.id === this.user.id);
+        if (originalUser && typeof originalUser.photo === 'string') {
+          this.user.photo = originalUser.photo;
+        } else {
+          // Pas de photo originale
+          this.user.photo = undefined;
+        }
+      }
+    }
+  }
 }

@@ -1,0 +1,449 @@
+<p-toast />
+<p-confirmDialog />
+
+<!-- Barre d'outils -->
+<!-- Toolbar -->
+<p-toolbar styleClass="mb-6">
+  <ng-template pTemplate="start">
+    <p-button 
+      label="Nouveau conseil" 
+      icon="pi pi-plus" 
+      severity="secondary" 
+      class="mr-2" 
+      (onClick)="openNew()" />
+    <p-button 
+      severity="secondary" 
+      label="Supprimer sélection" 
+      icon="pi pi-trash" 
+      outlined 
+      (onClick)="deleteSelectedConseils()" 
+      [disabled]="!hasSelectedConseils" />
+  </ng-template>
+
+  <ng-template pTemplate="end">
+    <p-button 
+      label="Exporter CSV" 
+      icon="pi pi-download" 
+      severity="secondary" 
+      (onClick)="exportCSV()" />
+  </ng-template>
+</p-toolbar>
+
+<!-- Table -->
+<p-table
+  #dt
+  [value]="conseils()"
+  [rows]="10"
+  [paginator]="true"
+  [globalFilterFields]="['titre','categorie','type_conseil','niveau','statut','auteur']"
+  [tableStyle]="{ 'min-width': '85rem' }"
+  [(selection)]="selectedConseils"
+  [rowHover]="true"
+  dataKey="id"
+  currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} conseils"
+  [showCurrentPageReport]="true"
+  [rowsPerPageOptions]="[10, 25, 50]"
+  [sortMode]="'multiple'">
+
+  <ng-template pTemplate="caption">
+    <div class="flex items-center justify-between">
+      <h2 class="m-0 text-xl font-semibold">Gestion des Conseils</h2>
+      <p-iconField>
+        <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
+        <input 
+          pInputText 
+          type="text" 
+          (input)="onGlobalFilter(dt, $event)" 
+          placeholder="Rechercher un conseil..." 
+          class="w-full" />
+      </p-iconField>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 4rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
+      <th pSortableColumn="titre" style="min-width: 250px">
+        Titre <p-sortIcon field="titre"></p-sortIcon>
+      </th>
+      <th pSortableColumn="categorie" style="min-width: 180px">
+        Catégorie <p-sortIcon field="categorie"></p-sortIcon>
+      </th>
+      <th pSortableColumn="type_conseil" style="min-width: 140px">
+        Type <p-sortIcon field="type_conseil"></p-sortIcon>
+      </th>
+      <th pSortableColumn="niveau" style="min-width: 120px">
+        Niveau <p-sortIcon field="niveau"></p-sortIcon>
+      </th>
+      <th pSortableColumn="statut" style="min-width: 120px">
+        Statut <p-sortIcon field="statut"></p-sortIcon>
+      </th>
+      <th pSortableColumn="vues" style="min-width: 100px">
+        Vues <p-sortIcon field="vues"></p-sortIcon>
+      </th>
+      <th pSortableColumn="date_publication" style="min-width: 160px">
+        Publication <p-sortIcon field="date_publication"></p-sortIcon>
+      </th>
+      <th style="min-width: 180px">Actions</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-conseil>
+    <tr>
+      <td><p-tableCheckbox [value]="conseil"></p-tableCheckbox></td>
+
+      <td style="min-width:250px">
+        <div class="flex flex-col">
+          <span class="font-semibold text-primary">{{ conseil.titre || '-' }}</span>
+          <small class="text-gray-500" *ngIf="conseil.contenu"
+                 pTooltip="{{ getApercuFrom(conseil.contenu) }}"
+                 tooltipPosition="top">
+            Aperçu : {{ getApercuFrom(conseil.contenu) }}
+          </small>
+        </div>
+      </td>
+
+      <td style="min-width:180px">
+        <span class="text-sm">{{ getCategorieLabel(conseil.categorie || '') }}</span>
+      </td>
+
+      <td style="min-width:140px">
+        <span class="text-sm">{{ getTypeLabel(conseil.type_conseil || '') }}</span>
+      </td>
+
+      <td style="min-width:120px">
+        <p-tag [value]="getNiveauLabel(conseil.niveau || '')"
+               [severity]="conseil.niveau === 'debutant' ? 'success' : conseil.niveau === 'intermediaire' ? 'info' : conseil.niveau === 'avance' ? 'warn' : 'secondary'"
+               styleClass="text-xs"></p-tag>
+      </td>
+
+      <td style="min-width:120px">
+        <p-tag [value]="getStatutLabel(conseil.statut || '')"
+               [severity]="getStatutSeverity(conseil.statut || '')"
+               styleClass="text-xs"></p-tag>
+      </td>
+
+      <td style="min-width:100px">
+        <div class="flex items-center gap-1">
+          <i class="pi pi-eye text-gray-500"></i>
+          <span class="text-sm">{{ conseil.vues ?? 0 }}</span>
+        </div>
+      </td>
+
+      <td style="min-width:160px">
+        <span class="text-sm" *ngIf="conseil.date_publication">
+          {{ conseil.date_publication | date:'dd/MM/yyyy' }}
+        </span>
+        <span class="text-gray-400 text-sm" *ngIf="!conseil.date_publication">Non publié</span>
+      </td>
+
+      <td>
+        <div class="flex gap-1">
+          <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" size="small"
+                    (onClick)="editConseil(conseil)" pTooltip="Modifier"></p-button>
+
+          <p-button icon="pi pi-send" [rounded]="true" [outlined]="true" size="small"
+                    severity="success" (onClick)="publierConseil(conseil)"
+                    *ngIf="(conseil.statut || 'brouillon') === 'brouillon'" pTooltip="Publier"></p-button>
+
+          <p-button icon="pi pi-archive" [rounded]="true" [outlined]="true" size="small"
+                    severity="secondary" (onClick)="archiverConseil(conseil)"
+                    *ngIf="conseil.statut === 'publie'" pTooltip="Archiver"></p-button>
+
+          <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" size="small"
+                    (onClick)="deleteConseil(conseil)" pTooltip="Supprimer"></p-button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="9" class="text-center py-8">
+        <div class="flex flex-col items-center gap-2">
+          <i class="pi pi-lightbulb text-4xl text-gray-400"></i>
+          <p class="text-gray-500">Aucun conseil trouvé</p>
+          <p-button label="Créer le premier conseil" icon="pi pi-plus" (onClick)="openNew()" size="small"></p-button>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<!-- Dialogue pour créer/modifier un conseil -->
+<p-dialog 
+    [(visible)]="conseilDialog" 
+    [style]="{ width: '900px', height: '80vh' }" 
+    [header]="dialogHeader" 
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="true"
+    styleClass="conseil-dialog">
+    
+    <ng-template #content>
+        <form class="flex flex-col gap-4 h-full">
+            <!-- Titre -->
+            <div class="field">
+                <label for="titre" class="block font-semibold mb-2 required">
+                    Titre du conseil *
+                </label>
+                <input 
+                    type="text" 
+                    pInputText 
+                    id="titre" 
+                    [(ngModel)]="conseil.titre" 
+                    name="titre"
+                    required 
+                    autofocus 
+                    class="w-full"
+                    [class.ng-invalid]="isFieldInvalid('titre')"
+                    placeholder="Ex: 10 conseils pour réussir son entretien d'embauche" />
+                <small class="text-red-500" *ngIf="isFieldInvalid('titre')">
+                    Le titre est obligatoire (5-255 caractères).
+                </small>
+            </div>
+
+            <!-- Métadonnées en ligne -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Catégorie -->
+                <div class="field">
+                    <label for="categorie" class="block font-semibold mb-2 required">
+                        Catégorie *
+                    </label>
+                    <p-select 
+                        id="categorie" 
+                        [(ngModel)]="conseil.categorie" 
+                        name="categorie"
+                        [options]="categorieOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Sélectionnez"
+                        class="w-full"
+                        [class.ng-invalid]="isFieldInvalid('categorie')" />
+                    <small class="text-red-500" *ngIf="isFieldInvalid('categorie')">
+                        Catégorie obligatoire.
+                    </small>
+                </div>
+
+                <!-- Type -->
+                <div class="field">
+                    <label for="type_conseil" class="block font-semibold mb-2 required">
+                        Type *
+                    </label>
+                    <p-select 
+                        id="type_conseil" 
+                        [(ngModel)]="conseil.type_conseil" 
+                        name="type_conseil"
+                        [options]="typeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Sélectionnez"
+                        class="w-full"
+                        [class.ng-invalid]="isFieldInvalid('type_conseil')" />
+                    <small class="text-red-500" *ngIf="isFieldInvalid('type_conseil')">
+                        Type obligatoire.
+                    </small>
+                </div>
+
+                <!-- Niveau -->
+                <div class="field">
+                    <label for="niveau" class="block font-semibold mb-2 required">
+                        Niveau *
+                    </label>
+                    <p-select 
+                        id="niveau" 
+                        [(ngModel)]="conseil.niveau" 
+                        name="niveau"
+                        [options]="niveauOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Sélectionnez"
+                        class="w-full"
+                        [class.ng-invalid]="isFieldInvalid('niveau')" />
+                    <small class="text-red-500" *ngIf="isFieldInvalid('niveau')">
+                        Niveau obligatoire.
+                    </small>
+                </div>
+
+                <!-- Statut -->
+                <div class="field">
+                    <label for="statut" class="block font-semibold mb-2 required">
+                        Statut *
+                    </label>
+                    <p-select 
+                        id="statut" 
+                        [(ngModel)]="conseil.statut" 
+                        name="statut"
+                        [options]="statutOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Sélectionnez"
+                        class="w-full"
+                        [class.ng-invalid]="isFieldInvalid('statut')" />
+                    <small class="text-red-500" *ngIf="isFieldInvalid('statut')">
+                        Statut obligatoire.
+                    </small>
+                </div>
+            </div>
+
+            <!-- Tags et Auteur -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="field">
+                    <label for="tags" class="block font-semibold mb-2">
+                        Tags
+                    </label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="tags" 
+                        [(ngModel)]="conseil.tags" 
+                        name="tags"
+                        class="w-full"
+                        placeholder="cv, entretien, conseils" />
+                    <small class="text-gray-500 text-xs">
+                        Séparez les tags par des virgules
+                    </small>
+                </div>
+
+                <div class="field">
+                    <label for="auteur" class="block font-semibold mb-2">
+                        Auteur
+                    </label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="auteur" 
+                        [(ngModel)]="conseil.auteur" 
+                        name="auteur"
+                        class="w-full"
+                        placeholder="Nom de l'auteur" />
+                </div>
+            </div>
+
+            <!-- Contenu principal -->
+            <div class="field flex-1">
+                <label for="contenu" class="block font-semibold mb-2 required">
+                    Contenu du conseil *
+                </label>
+                <p-editor 
+                    [(ngModel)]="conseil.contenu" 
+                    name="contenu"
+                    [style]="{ height: '300px' }"
+                    [class.ng-invalid]="isFieldInvalid('contenu')"
+                    (ngModelChange)="conseil.contenu = normalizeEditorHtml($event)">
+                    <ng-template #toolbar>
+                        <span class="ql-formats">
+                            <button class="ql-bold" aria-label="Bold"></button>
+                            <button class="ql-italic" aria-label="Italic"></button>
+                            <button class="ql-underline" aria-label="Underline"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <select class="ql-header">
+                                <option selected></option>
+                                <option value="1"></option>
+                                <option value="2"></option>
+                                <option value="3"></option>
+                            </select>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-list" value="ordered"></button>
+                            <button class="ql-list" value="bullet"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-link"></button>
+                            <button class="ql-image"></button>
+                        </span>
+                        <span class="ql-formats">
+                            <button class="ql-clean"></button>
+                        </span>
+                    </ng-template>
+                </p-editor>
+                <small class="text-red-500" *ngIf="isFieldInvalid('contenu')">
+                    Le contenu est obligatoire (minimum 10 caractères).
+                </small>
+            </div>
+        </form>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="flex justify-between items-center">
+            <div class="text-sm text-gray-500" *ngIf="conseil.contenu">
+                📖 Temps de lecture estimé : {{ getTempsLecture() }} min
+            </div>
+            <div class="flex gap-2">
+                <p-button 
+                    label="Annuler" 
+                    icon="pi pi-times" 
+                    severity="secondary"
+                    outlined
+                    (click)="hideDialog()" />
+                <p-button 
+                    label="Sauvegarder" 
+                    icon="pi pi-save" 
+                    severity="secondary"
+                    outlined
+                    (click)="saveConseil()"
+                    *ngIf="!isEditMode || conseil.statut === 'brouillon'" />
+                <p-button 
+                    label="Publier" 
+                    icon="pi pi-send" 
+                    severity="success"
+                    (click)="saveConseil()" />
+            </div>
+        </div>
+    </ng-template>
+</p-dialog>
+
+<style>
+.required::after {
+    content: ' *';
+    color: red;
+}
+
+.field {
+    margin-bottom: 1rem;
+}
+
+.conseil-dialog .p-dialog-content {
+    padding: 1.5rem;
+    height: calc(80vh - 140px);
+    overflow-y: auto;
+}
+
+.conseil-dialog .p-editor {
+    height: 300px;
+}
+
+.conseil-dialog .p-editor .ql-editor {
+    min-height: 250px;
+}
+
+/* Styles pour les tags dans le tableau */
+.p-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 768px) {
+    .conseil-dialog {
+        width: 95vw !important;
+        height: 95vh !important;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+  .conseil-dialog .p-editor .ql-editor {
+    white-space: pre-wrap;   /* gère bien les retours à la ligne */
+    word-break: break-word;  /* évite les débordements */
+  }
+
+  .p-tooltip .p-tooltip-text {
+    white-space: normal !important;
+  }
+
+}
+</style>

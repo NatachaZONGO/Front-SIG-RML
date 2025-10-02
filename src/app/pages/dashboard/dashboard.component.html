@@ -1,140 +1,144 @@
+<!-- src/app/pages/dashboard/dashboard.component.html -->
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-  <!-- Nombre d'utilisateurs -->
+
+  <!-- Utilisateurs -->
   <div class="card">
     <div class="flex justify-between items-center">
-        <div>
-            <span class="block text-muted-color font-medium mb-2">Nombre d'utilisateurs</span>
-            <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalUsers }}</div>
-        </div>
-        <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-full w-12 h-12">
-            <i class="pi pi-users text-purple-500 !text-xl"></i>
-        </div>
-    </div>
-</div>
-<div class="card">
-  <div class="flex justify-between items-center">
       <div>
-          <span class="block text-muted-color font-medium mb-2">Nombre d'utilisateurs connectés actuellement</span>
-          <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ users_now }}</div>
+        <span class="block text-muted-color font-medium mb-2">Utilisateurs</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalUsers }}</div>
       </div>
       <div class="flex items-center justify-center bg-purple-100 dark:bg-purple-400/10 rounded-full w-12 h-12">
-          <i class="pi pi-users text-purple-500 !text-xl"></i>
+        <i class="pi pi-users text-purple-500 !text-xl"></i>
       </div>
-  </div>
-</div>
-
-<!-- Nombre d'équipements -->
-<div class="card">
-  <div class="flex justify-between items-center">
-      <div>
-          <span class="block text-muted-color font-medium mb-2">Équipements</span>
-          <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalEquipements }}</div>
-      </div>
-      <div class="flex items-center justify-center bg-green-100 dark:bg-green-400/10 rounded-full w-12 h-12">
-          <i class="pi pi-box text-green-500 !text-xl"></i>
-      </div>
-  </div>
-</div>
-  <!-- Nombre total de réservations -->
-  <div class="card">
-      <div class="flex justify-between items-center">
-          <div>
-              <span class="block text-muted-color font-medium mb-2">Total Réservations</span>
-              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalReservations }}</div>
-          </div>
-          <div class="flex items-center justify-center bg-blue-100 dark:bg-blue-400/10 rounded-full w-12 h-12">
-              <i class="pi pi-calendar text-blue-500 !text-xl"></i>
-          </div>
-      </div>
+    </div>
   </div>
 
+  <!-- Utilisateurs en ligne -->
   <div class="card">
     <div class="flex justify-between items-center">
-        <div>
-            <span class="block text-muted-color font-medium mb-2">Réservations en Attente</span>
-            <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ reservationsEnAttente }}</div>
-        </div>
-        <div class="flex items-center justify-center bg-red-100 dark:bg-red-400/10 rounded-full w-12 h-12">
-            <i class="pi pi-clock text-red-500 !text-xl"></i>
-        </div>
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Connectés maintenant</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ usersOnline }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-emerald-100 dark:bg-emerald-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-bolt text-emerald-500 !text-xl"></i>
+      </div>
     </div>
+  </div>
+
+  <!-- Entreprises -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Entreprises</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalEntreprises }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-cyan-100 dark:bg-cyan-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-building text-cyan-500 !text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offres totales -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Total Offres</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalOffres }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-blue-100 dark:bg-blue-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-briefcase text-blue-500 !text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offres publiées -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Offres publiées</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ offresPubliees }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-green-100 dark:bg-green-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-check-circle text-green-500 !text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offres en attente -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Offres en attente</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ offresEnAttente }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-amber-100 dark:bg-amber-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-clock text-amber-500 !text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Brouillons -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Brouillons</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ offresBrouillon }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-slate-100 dark:bg-slate-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-file text-slate-500 !text-xl"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Candidatures -->
+  <div class="card">
+    <div class="flex justify-between items-center">
+      <div>
+        <span class="block text-muted-color font-medium mb-2">Candidatures</span>
+        <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalCandidatures }}</div>
+      </div>
+      <div class="flex items-center justify-center bg-fuchsia-100 dark:bg-fuchsia-400/10 rounded-full w-12 h-12">
+        <i class="pi pi-send text-fuchsia-500 !text-xl"></i>
+      </div>
+    </div>
+  </div>
 </div>
-  <!-- Réservations du mois -->
-  <div class="card">
-      <div class="flex justify-between items-center">
-          <div>
-              <span class="block text-muted-color font-medium mb-2">Réservations (Mois)</span>
-              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ monthlyReservations }}</div>
-          </div>
-          <div class="flex items-center justify-center bg-orange-100 dark:bg-orange-400/10 rounded-full w-12 h-12">
-              <i class="pi pi-chart-bar text-orange-500 !text-xl"></i>
-          </div>
-      </div>
-  </div>
 
-  <!-- Nombre de Prochaines Réservations -->
-  <div class="card">
-      <div class="flex justify-between items-center">
-          <div>
-              <span class="block text-muted-color font-medium mb-2">Prochaines Réservations</span>
-              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ prochainesReservations }}</div>
-          </div>
-          <div class="flex items-center justify-center bg-yellow-100 dark:bg-yellow-400/10 rounded-full w-12 h-12">
-              <i class="pi pi-clock text-yellow-500 !text-xl"></i>
-          </div>
-      </div>
-  </div>
-
-  <!-- Nombre d'UFRs -->
-  <div class="card">
-      <div class="flex justify-between items-center">
-          <div>
-              <span class="block text-muted-color font-medium mb-2">UFRs</span>
-              <div class="text-surface-900 dark:text-surface-0 font-medium text-2xl">{{ totalUFRs }}</div>
-          </div>
-          <div class="flex items-center justify-center bg-teal-100 dark:bg-teal-400/10 rounded-full w-12 h-12">
-              <i class="pi pi-building text-teal-500 !text-xl"></i>
-          </div>
-      </div>
-  </div>
-
-  <!-- Nombre de Réservations en Attente -->
-  
-</div>
-
-
-<!-- Graphiques et Tableaux -->
+<!-- Graphiques -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-  <!-- Pourcentage d'équipements utilisés -->
   <div class="card">
-      <div class="font-semibold text-xl mb-4">Équipements Utilisés</div>
-      <p-chart type="doughnut" [data]="equipementUsageChartData" [options]="chartOptions" class="h-80"></p-chart>
+    <div class="font-semibold text-xl mb-4">Répartition des offres</div>
+    <p-chart type="doughnut" [data]="offersChartData" [options]="chartOptions" class="h-80"></p-chart>
   </div>
 
-  <!-- Pourcentage d'équipements susceptibles d'être en panne -->
   <div class="card">
-      <div class="font-semibold text-xl mb-4">Équipements à Risque</div>
-      <p-chart type="doughnut" [data]="equipementRiskChartData" [options]="chartOptions" class="h-80"></p-chart>
+    <div class="font-semibold text-xl mb-4">Statut des candidatures</div>
+    <p-chart type="doughnut" [data]="candidaturesChartData" [options]="chartOptions" class="h-80"></p-chart>
   </div>
 
-  <!-- Prochaines réservations -->
+  <!-- Offres récentes -->
   <div class="card col-span-2">
-    <div class="font-semibold text-xl mb-4">Les équipements les plus utilisés</div>
-    <p-table [value]="mostUsedEquipments" [paginator]="true" [rows]="5" responsiveLayout="scroll">
-        <ng-template pTemplate="header">
-            <tr>
-                <th>Nom</th>
-                <th>Laboratoire</th>
-                <th>Nombre de réservations</th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-equipement>
-            <tr>
-                <td>{{ equipement.nom }}</td>
-                <td>{{ equipement.laboratoire }}</td>
-                <td>{{ equipement.nombreReservations }}</td>
-            </tr>
-        </ng-template>
+    <div class="font-semibold text-xl mb-4">Offres récentes</div>
+    <p-table [value]="recentOffres" [paginator]="true" [rows]="5" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Titre</th>
+          <th>Entreprise</th>
+          <th>Statut</th>
+          <th>Publiée le</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-o>
+        <tr>
+          <td>{{ o.titre }}</td>
+          <td>{{ o.entreprise }}</td>
+          <td>{{ o.statut }}</td>
+          <td>{{ o.date_publication | date:'shortDate' }}</td>
+        </tr>
+      </ng-template>
     </p-table>
-</div>
+  </div>
 </div>
