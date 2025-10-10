@@ -18,6 +18,8 @@ import { CandidaturesComponent } from './crud/candidature/candidature';
 import { UserService } from './crud/user/user.service';
 import { UserComponent } from './crud/user/user';
 import { ProfilComponent } from './crud/profil/profil.component';
+import { CanSeeDirective } from '../Share/can_see/can_see.directive';
+
 
 
 
@@ -29,8 +31,7 @@ export default [
   { path: 'entreprise', component: EntrepriseComponent },
   { path: 'role', component: RoleComponent },
   { path: 'pays', component: PaysComponent },
-  { path: 'offre', component: OffreComponent },
-  //{ path: 'candidature', component: CandidatureComponent },
+  { path: 'offre', component: OffreComponent , canSee: ['recruteur','administrateur'] },
   { path : 'categorie', component: CategorieComponent },
   { path: 'publicite', component: PubliciteComponent }, 
   { path: 'conseil', component: ConseilComponent },
@@ -39,10 +40,7 @@ export default [
   { path: 'user', component: UserComponent}, 
   { path: 'profil', component: ProfilComponent},
   //{ path: 'ufr', component: Ufrr, canActivate: [authGuard], data: { roles: ['admin'] } }, // Seul l'admin peut accéder
-  //{ path: 'equipement', component: Equipementt, canActivate: [authGuard], data: { roles: ['responsable' ,'admin'] } }, 
-  //{ path: 'laboratoire', component: Laboratoiree, canActivate: [authGuard], data: { roles: [, 'admin', 'responsable'] } }, // Seul le responsable peut accéder
-  //{ path: 'reservation', component: ReservationComponent, canActivate: [authGuard], data: { roles: ['reservant', 'admin', 'responsable'] } }, 
-  { path: 'empty', component: Empty },
+   { path: 'empty', component: Empty },
   { path: '**', redirectTo: '/notfound' },
 ] as Routes;
 ;

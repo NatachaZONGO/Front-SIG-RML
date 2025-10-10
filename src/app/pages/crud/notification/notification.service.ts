@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 import { ApiListResponse, UserNotification } from './notification.model';
 
 @Injectable({ providedIn: 'root' })

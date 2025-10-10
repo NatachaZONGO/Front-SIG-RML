@@ -58,7 +58,7 @@ import { RippleModule } from 'primeng/ripple';
               [outlined]="true"
               label="Publier une offre"
               class="btn-secondary"
-              (click)="router.navigate(['/recruteur/offres/nouvelle'])">
+              (click)="router.navigate(['/publier-offre'])">
             </button>
           </div>
         </div>

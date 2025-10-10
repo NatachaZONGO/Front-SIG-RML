@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BackendURL } from '../../const';
+import { BackendURL } from '../../Share/const';
 
 @Injectable({ providedIn: 'root' })
 export class DashboardService {

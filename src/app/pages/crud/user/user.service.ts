@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, map, tap } from 'rxjs';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 import { User } from './user.model';
 
 @Injectable({ providedIn: 'root' })
@@ -212,4 +212,27 @@ export class UserService {
     console.log('Payload JSON créé (sans photo file):', payload);
     return payload;
   }
+
+  // Méthode pour changer le statut
+  updateUserStatus(userId: number, status: string): Observable<any> {
+    return this.http.put(`${this.usersUrl}/${userId}/status`, { statut: status });
+  }
+
+  // Méthode pour réinitialiser le mot de passe
+  resetUserPassword(userId: number): Observable<any> {
+    return this.http.post(`${this.usersUrl}/${userId}/reset-password`, {});
+  }
+
+  getProfile(): Observable<User> {
+  return this.http.get<any>(`${this.authUrl}/me`).pipe(
+    map(response => response.data || response),
+    tap(user => {
+      // Mettre à jour le localStorage avec les données fraîches
+      localStorage.setItem('user', JSON.stringify(user));
+      this.currentUserSubject.next(user);
+      console.log('Profil récupéré depuis l\'API:', user);
+      console.log('Statut:', user.statut);
+    })
+  );
+}
 }

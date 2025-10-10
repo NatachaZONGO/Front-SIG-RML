@@ -10,6 +10,7 @@ export interface User {
   role_id?: number; // Pour l'envoi au backend (number aussi)
   statut?: 'actif' | 'inactif';
   photo?: string | File;
+  last_login?: string | Date;
   roles?: Array<{
     id: number; // Changé en number pour correspondre à votre API
     nom: string;

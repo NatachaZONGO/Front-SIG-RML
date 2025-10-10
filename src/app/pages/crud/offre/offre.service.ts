@@ -1,9 +1,10 @@
 // offre.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { map, Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { map, Observable, of } from 'rxjs';
 import { Offre } from './offre.model';
-import { BackendURL } from '../../../const'; // <= TA constante: "http://127.0.0.1:8000/api/"
+import { BackendURL } from '../../../Share/const'; // <= TA constante: "http://127.0.0.1:8000/api/"
+import { AuthService } from '../../auth/auth.service';
 
 interface ApiResponse<T> { success: boolean; data: T; message?: string; }
 interface Pagination<T> {
@@ -17,7 +18,7 @@ export class OffreService {
   private api = BackendURL + 'offres'.replace(/\/$/, ''); // "http://127.0.0.1:8000/api"
   private json = { headers: { Accept: 'application/json' } }; // force JSON
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   /** ADMIN – lister toutes les offres (paginées) */
   getAdminOffres(): Observable<Offre[]> {
@@ -100,5 +101,24 @@ getMesOffres(): Observable<Offre[]> {
       .get<{ success: boolean; data: any }>(`${this.api}/featured`, { headers: { Accept: 'application/json' } })
       .pipe(map(r => r?.data ?? []));
   }
+
+  getOffresByRole(): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+    });
+
+    if (this.authService.hasRole('Administrateur')) {
+        // Admin voit toutes les offres
+        return this.http.get(`${BackendURL}offres`, { headers });
+    } else if (this.authService.hasRole('Recruteur')) {
+        // Recruteur voit uniquement ses offres
+        return this.http.get(`${BackendURL}mes-offres`, { headers });
+    }
+
+    // Aucun rôle autorisé
+    return of({ success: false, data: [], message: 'Accès non autorisé' });
+}
 
 }

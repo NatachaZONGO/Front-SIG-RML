@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { BackendURL } from '../../../const';
 import { Cateorie } from './categorie.model';
+import { BackendURL } from '../../../Share/const';
 
 
 @Injectable({

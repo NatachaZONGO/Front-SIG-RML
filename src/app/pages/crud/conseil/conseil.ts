@@ -24,6 +24,7 @@ import { CalendarIcon } from 'primeng/icons';
 import { ConseilService } from './conseil.service';
 import { Conseil } from './conseil.model';
 import { TooltipModule } from 'primeng/tooltip';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 interface Column {
     field: string;
@@ -72,6 +73,8 @@ export class ConseilComponent implements OnInit {
     selectedConseils: Conseil[] | null = null;
     submitted: boolean = false;
     isEditMode: boolean = false;
+    detailConseilDialog = false;
+    conseilDetail: any | null = null;
 
     @ViewChild('dt') dt!: Table;
 
@@ -118,7 +121,8 @@ export class ConseilComponent implements OnInit {
     constructor(
         private conseilService: ConseilService,
         private messageService: MessageService,
-        private confirmationService: ConfirmationService
+        private confirmationService: ConfirmationService,
+        private sanitizer: DomSanitizer
     ) {}
 
     ngOnInit() {
@@ -287,6 +291,33 @@ export class ConseilComponent implements OnInit {
                 this.showErrorMessage(message);
             }
         });
+    }
+
+        // ouvre le dialog
+    openConseilDetail(c: any) {
+    this.conseilDetail = c;
+    this.detailConseilDialog = true;
+    }
+
+    // sécurise l’HTML du contenu
+    safeHtml(html: string | undefined | null): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(this.normalizeForView(html));
+    }
+
+    // split des tags "a,b,c" -> ['a','b','c']
+    splitTags(tags: string): string[] {
+    return (tags || '')
+        .split(',')
+        .map(t => t.trim())
+        .filter(Boolean);
+    }
+
+    // temps de lecture (≈200 mots/min)
+    getTempsLectureFrom(html?: string | null): number {
+    if (!html) return 1;
+    const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    const words = text ? text.split(' ').length : 0;
+    return Math.max(1, Math.round(words / 200));
     }
 
     private isFormValid(): boolean {
@@ -462,7 +493,7 @@ export class ConseilComponent implements OnInit {
         return texteSeul.trim().split(/\s+/).filter(mot => mot.length > 0).length;
     }
 
-    getApercuFrom(html: string): string {
+    getApercuFrom(html: string, maxLength: number, additionalText?: string): string {
         if (!html) return '';
         // On normalise d'abord (supprimer &nbsp; et \u00A0)
         const normalized = this.normalizeEditorHtml(html);
@@ -489,8 +520,22 @@ export class ConseilComponent implements OnInit {
         return (doc.body.textContent || '').replace(/\u00A0/g, ' ');
     }
 
+    private normalizeForView(html: string | undefined | null): string {
+    if (!html) return '';
+    let out = String(html);
 
-    /** Construit un court aperçu propre pour tooltips / listes */
-    
+    // vire les width/height inline trop contraignants
+    out = out.replace(/style="[^"]*(width|height)\s*:\s*[^";]+;?[^"]*"/gi, match => {
+        // on garde d'autres styles éventuels en supprimant uniquement width/height
+        return match
+        .replace(/width\s*:\s*[^;"]+;?/gi, '')
+        .replace(/height\s*:\s*[^;"]+;?/gi, '')
+        .replace(/style="\s*"/, '');
+    });
 
+    // remplace nbspaces en excès
+    out = out.replace(/(&nbsp;){2,}/g, ' ');
+
+    return out;
+    }
 }

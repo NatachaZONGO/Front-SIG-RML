@@ -2,7 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 import { Pays } from './pays.model';
 
 @Injectable({

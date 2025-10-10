@@ -22,7 +22,9 @@ import { AuthService } from '../../auth/auth.service';
 import { UserService } from '../user/user.service';
 import { User } from '../user/user.model';
 import { Divider } from "primeng/divider";
-
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { imageUrl } from '../../../Share/const';
+import { ProgressBar, ProgressBarModule } from "primeng/progressbar";
 @Component({
   selector: 'app-profil',
   standalone: true,
@@ -40,7 +42,11 @@ import { Divider } from "primeng/divider";
     ConfirmPopupModule,
     PasswordModule,
     CheckboxModule,
-    Divider
+    Divider,
+    ConfirmPopupModule,
+    ProgressSpinnerModule,
+    ProgressBarModule
+  
 ]
 })
 export class ProfilComponent implements OnInit {
@@ -295,5 +301,132 @@ export class ProfilComponent implements OnInit {
 
     // recheck le validator global
     this.userForm.updateValueAndValidity();
+  }
+
+  // Gestion d’erreur de chargement de l’image
+  /**
+   * Obtenir l'URL complète de l'image
+   */
+  getImageUrl(photoPath: string | File | undefined): string {
+    if (!photoPath) {
+      return '';
+    }
+    
+    // Si c'est un objet File (nouvelle image uploadée)
+    if (photoPath instanceof File) {
+      return URL.createObjectURL(photoPath);
+    }
+    
+    // Si c'est un chemin string
+    if (typeof photoPath === 'string') {
+      // Si l'URL est déjà complète
+      if (photoPath.startsWith('http')) {
+        return photoPath;
+      }
+      // Utiliser la constante imageUrl existante
+      return `${imageUrl}${photoPath}`;
+    }
+    
+    return '';
+  }
+
+  /**
+   * Gérer les erreurs de chargement d'image
+   */
+  onImageError(event: any): void {
+    // Cacher l'image et le parent pourra afficher le placeholder
+    event.target.style.display = 'none';
+    // OU remplacer par une image par défaut si vous en avez une
+    // event.target.src = 'assets/images/default-avatar.png';
+  }
+
+  /**
+   * Gérer le changement de fichier (upload photo)
+   */
+  onFileChange(event: any): void {
+    const file = event.target.files[0];
+    
+    if (file) {
+      // Vérifier le type de fichier
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!validTypes.includes(file.type)) {
+        this.messages.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Format de fichier non valide. Utilisez JPG, PNG ou GIF.'
+        });
+        return;
+      }
+
+      // Vérifier la taille (5MB max)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        this.messages.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Le fichier est trop volumineux. Maximum 5MB.'
+        });
+        return;
+      }
+
+      // Stocker le fichier dans l'objet user
+      if (this.user) {
+        this.user.photo = file;
+      }
+
+      this.messages.add({
+        severity: 'success',
+        summary: 'Succès',
+        detail: 'Photo sélectionnée avec succès.'
+      });
+    }
+  }
+
+  **
+   * Charger le profil depuis l'API (données fraîches)
+   */
+  loadUserProfile(): void {
+    this.userService.getProfile().subscribe({
+      next: (data) => {
+        this.user = data;
+        
+        // Debug
+        console.log('User chargé:', this.user);
+        console.log('Statut:', this.user.statut);
+        console.log('Type du statut:', typeof this.user.statut);
+        
+        // Peupler le formulaire
+        if (this.user) {
+          this.userForm.patchValue({
+            nom: this.user.nom,
+            prenom: this.user.prenom,
+            email: this.user.email,
+            telephone: this.user.telephone
+          });
+          
+          this.loadUserRoles();
+        }
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement du profil:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Erreur',
+          detail: 'Impossible de charger le profil'
+        });
+      }
+    });
+  }
+
+  /**
+   * Charger les rôles de l'utilisateur
+   */
+  loadUserRoles(): void {
+    // Si vous avez les rôles directement dans l'objet user
+    if (this.user.roles) {
+      this.roles = Array.isArray(this.user.roles) ? this.user.roles : [this.user.roles];
+    } else if (this.user.role) {
+      this.roles = [this.user.role];
+    }
   }
 }

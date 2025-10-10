@@ -23,7 +23,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PaysService } from './pays.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FileUploadModule } from 'primeng/fileupload';
-import { imageUrl } from '../../../const';
+import { imageUrl } from '../../../Share/const';
 
 
 interface Column {

@@ -14,7 +14,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { AuthService } from '../auth.service';
 import { CompteType } from './user.model';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 
 interface Cat { id: number; nom: string; }
 interface Pays { id: number; nom: string; }

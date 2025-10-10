@@ -118,6 +118,9 @@
         </p-tag>
       </td>
       <td>
+        <p-button icon="pi pi-eye" class="mr-2" [rounded]="true" [outlined]="true" 
+            severity="secondary" (click)="viewUserDetails(user)" 
+            pTooltip="Voir les détails" tooltipPosition="top" />
         <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" 
                   severity="info" (click)="editUser(user)" />
         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" 
@@ -247,4 +250,367 @@
     <p-button label="Enregistrer" icon="pi pi-check" (click)="saveUser()" />
   </ng-template>
 </p-dialog>
-<p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>*/
+<p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+
+<!-- Dialog de détails utilisateur -->
+<p-dialog
+  [(visible)]="userDetailsDialog"
+  [style]="{width: '750px', maxWidth: '90vw'}"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="user-details-dialog">
+
+  <!-- En-tête personnalisé -->
+  <ng-template pTemplate="header">
+    <div class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-xl">
+      <div class="px-6 py-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="bg-white/20 rounded-full p-3 mr-4">
+              <i class="pi pi-user text-2xl"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">Profil utilisateur</h2>
+              <p class="text-white/80 text-sm mt-0.5">
+                {{ selectedUserForDetails?.prenom }} {{ selectedUserForDetails?.nom }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-white/60 text-sm">#{{ selectedUserForDetails?.id }}</span>
+            <p-tag 
+              [value]="selectedUserForDetails?.statut || 'Inactif'" 
+              [severity]="selectedUserForDetails?.statut === 'actif' ? 'success' : 'danger'"
+              styleClass="text-sm font-semibold">
+            </p-tag>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <div class="space-y-5" *ngIf="selectedUserForDetails">
+      
+      <!-- Section Photo et Identité -->
+      <div class="flex flex-col md:flex-row gap-5">
+        <!-- Photo de profil -->
+        <div class="flex-shrink-0">
+          <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 text-center">
+            <div class="relative inline-block">
+              <!-- Photo -->
+              <ng-container *ngIf="selectedUserForDetails.photo; else noPhotoDetail">
+                <img [src]="getImageUrl(selectedUserForDetails.photo)"
+                     alt="Photo de {{ selectedUserForDetails.nom }}"
+                     class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                     (error)="onImageError($event)">
+              </ng-container>
+              <ng-template #noPhotoDetail>
+                <div class="w-32 h-32 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center border-4 border-white shadow-lg">
+                  <i class="pi pi-user text-4xl text-white"></i>
+                </div>
+              </ng-template>
+              
+              <!-- Badge de statut -->
+              <div class="absolute bottom-0 right-0">
+                <div [class]="'w-6 h-6 rounded-full border-3 border-white ' + 
+                            (selectedUserForDetails.statut === 'actif' ? 'bg-green-500' : 'bg-red-500')">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Nom complet sous la photo -->
+            <h3 class="mt-4 text-lg font-bold text-gray-800">
+              {{ selectedUserForDetails.prenom }} {{ selectedUserForDetails.nom }}
+            </h3>
+            <p class="text-sm text-gray-600 mt-1">
+              <i class="pi pi-id-card mr-1 text-xs"></i>
+              {{ selectedUserForDetails.roleLabel || 'Rôle non défini' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Informations principales -->
+        <div class="flex-grow">
+          <div class="bg-gray-50 rounded-xl p-5">
+            <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center">
+              <i class="pi pi-info-circle text-indigo-600 mr-2"></i>
+              Informations personnelles
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Nom -->
+              <div class="space-y-1">
+                <label class="text-xs text-gray-500 uppercase tracking-wider">Nom</label>
+                <p class="font-semibold text-gray-800 flex items-center">
+                  <i class="pi pi-user mr-2 text-gray-400 text-sm"></i>
+                  {{ selectedUserForDetails.nom || 'Non renseigné' }}
+                </p>
+              </div>
+
+              <!-- Prénom -->
+              <div class="space-y-1">
+                <label class="text-xs text-gray-500 uppercase tracking-wider">Prénom</label>
+                <p class="font-semibold text-gray-800 flex items-center">
+                  <i class="pi pi-user mr-2 text-gray-400 text-sm"></i>
+                  {{ selectedUserForDetails.prenom || 'Non renseigné' }}
+                </p>
+              </div>
+
+              <!-- Email -->
+              <div class="space-y-1">
+                <label class="text-xs text-gray-500 uppercase tracking-wider">Email</label>
+                <p class="font-semibold text-gray-800 flex items-center">
+                  <i class="pi pi-envelope mr-2 text-gray-400 text-sm"></i>
+                  <a [href]="'mailto:' + selectedUserForDetails.email" 
+                     class="text-indigo-600 hover:underline">
+                    {{ selectedUserForDetails.email || 'Non renseigné' }}
+                  </a>
+                </p>
+              </div>
+
+              <!-- Téléphone -->
+              <div class="space-y-1">
+                <label class="text-xs text-gray-500 uppercase tracking-wider">Téléphone</label>
+                <p class="font-semibold text-gray-800 flex items-center">
+                  <i class="pi pi-phone mr-2 text-gray-400 text-sm"></i>
+                  <a [href]="'tel:' + selectedUserForDetails.telephone" 
+                     class="text-indigo-600 hover:underline">
+                    {{ selectedUserForDetails.telephone || 'Non renseigné' }}
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Rôle et Permissions -->
+      <div class="bg-purple-50 rounded-xl p-5">
+        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center">
+          <i class="pi pi-shield text-purple-600 mr-2"></i>
+          Rôle et permissions
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-white rounded-lg p-4 border border-purple-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm text-gray-600">Rôle actuel</span>
+              <i class="pi pi-crown text-purple-600"></i>
+            </div>
+            <p class="font-bold text-lg text-gray-800">{{ selectedUserForDetails.roleLabel || 'Non défini' }}</p>
+          </div>
+          
+          <div class="bg-white rounded-lg p-4 border border-purple-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm text-gray-600">Statut du compte</span>
+              <i class="pi pi-check-circle text-green-600" *ngIf="selectedUserForDetails.statut === 'actif'"></i>
+              <i class="pi pi-times-circle text-red-600" *ngIf="selectedUserForDetails.statut !== 'actif'"></i>
+            </div>
+            <p class="font-bold text-lg text-gray-800">
+              {{ selectedUserForDetails.statut === 'actif' ? 'Actif' : 'Inactif' }}
+            </p>
+          </div>
+          
+          <div class="bg-white rounded-lg p-4 border border-purple-200">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm text-gray-600">ID Utilisateur</span>
+              <i class="pi pi-hashtag text-purple-600"></i>
+            </div>
+            <p class="font-bold text-lg text-gray-800">{{ selectedUserForDetails.id }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Dates et activité -->
+      <div class="bg-blue-50 rounded-xl p-5">
+        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center">
+          <i class="pi pi-calendar text-blue-600 mr-2"></i>
+          Activité et historique
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-blue-100">
+              <span class="text-sm text-gray-600">
+                <i class="pi pi-calendar-plus mr-1 text-xs"></i>
+                Date de création
+              </span>
+              <span class="font-medium text-gray-800">
+                {{ selectedUserForDetails.created_at ? (selectedUserForDetails.created_at | date:'dd/MM/yyyy') : 'Non disponible' }}
+              </span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2 border-b border-blue-100">
+              <span class="text-sm text-gray-600">
+                <i class="pi pi-clock mr-1 text-xs"></i>
+                Heure de création
+              </span>
+              <span class="font-medium text-gray-800">
+                {{ selectedUserForDetails.created_at ? (selectedUserForDetails.created_at | date:'HH:mm') : 'Non disponible' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="space-y-3">
+            <div class="flex justify-between items-center py-2 border-b border-blue-100">
+              <span class="text-sm text-gray-600">
+                <i class="pi pi-refresh mr-1 text-xs"></i>
+                Dernière mise à jour
+              </span>
+              <span class="font-medium text-gray-800">
+                {{ selectedUserForDetails.updated_at ? (selectedUserForDetails.updated_at | date:'dd/MM/yyyy') : 'Jamais' }}
+              </span>
+            </div>
+            
+            <div class="flex justify-between items-center py-2 border-b border-blue-100">
+              <span class="text-sm text-gray-600">
+                <i class="pi pi-sign-in mr-1 text-xs"></i>
+                Dernière connexion
+              </span>
+              <span class="font-medium text-gray-800">
+                {{ selectedUserForDetails.last_login ? (selectedUserForDetails.last_login | date:'dd/MM/yyyy HH:mm') : 'Jamais' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions rapides -->
+      <div class="bg-yellow-50 rounded-xl p-5">
+        <h3 class="text-base font-bold text-gray-800 mb-4 flex items-center">
+          <i class="pi pi-bolt text-yellow-600 mr-2"></i>
+          Actions rapides
+        </h3>
+        
+        <div class="flex flex-wrap gap-3">
+          <button pButton
+                  label="Envoyer un email"
+                  icon="pi pi-envelope"
+                  class="p-button-sm p-button-outlined"
+                  [disabled]="!selectedUserForDetails.email"
+                  (click)="sendEmail(selectedUserForDetails)">
+          </button>
+          
+          <button pButton
+                  label="Appeler"
+                  icon="pi pi-phone"
+                  class="p-button-sm p-button-outlined"
+                  [disabled]="!selectedUserForDetails.telephone"
+                  (click)="callUser(selectedUserForDetails)">
+          </button>
+          
+          <button pButton
+                  [label]="selectedUserForDetails.statut === 'actif' ? 'Désactiver' : 'Activer'"
+                  [icon]="selectedUserForDetails.statut === 'actif' ? 'pi pi-lock' : 'pi pi-unlock'"
+                  [class]="'p-button-sm p-button-' + (selectedUserForDetails.statut === 'actif' ? 'warning' : 'success')"
+                  (click)="toggleUserStatus(selectedUserForDetails)">
+          </button>
+          
+          <button pButton
+                  label="Réinitialiser le mot de passe"
+                  icon="pi pi-key"
+                  class="p-button-sm p-button-info"
+                  (click)="resetPassword(selectedUserForDetails)">
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between items-center w-full">
+      <div class="flex gap-2">
+        <button pButton
+                label="Modifier"
+                icon="pi pi-pencil"
+                class="p-button-sm p-button-outlined"
+                (click)="editFromDetails()">
+        </button>
+        
+        <button pButton
+                label="Supprimer"
+                icon="pi pi-trash"
+                class="p-button-sm p-button-danger p-button-outlined"
+                (click)="deleteFromDetails()">
+        </button>
+      </div>
+      
+      <button pButton
+              label="Fermer"
+              icon="pi pi-times"
+              class="p-button-sm p-button-secondary"
+              (click)="hideDetailsDialog()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<style>
+  /* Dialog de détails utilisateur */
+::ng-deep .user-details-dialog .p-dialog {
+  border-radius: 0.875rem !important;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+::ng-deep .user-details-dialog .p-dialog-header {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+::ng-deep .user-details-dialog .p-dialog-content {
+  padding: 1.5rem !important;
+  max-height: calc(85vh - 140px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+::ng-deep .user-details-dialog .p-dialog-footer {
+  padding: 1rem 1.5rem !important;
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Scrollbar personnalisée */
+::ng-deep .user-details-dialog .p-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+::ng-deep .user-details-dialog .p-dialog-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+::ng-deep .user-details-dialog .p-dialog-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #6366f1, #a855f7);
+  border-radius: 3px;
+}
+
+/* Tags et badges */
+::ng-deep .user-details-dialog .p-tag {
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 9999px !important;
+  font-size: 0.875rem !important;
+}
+
+/* Animations */
+::ng-deep .user-details-dialog .rounded-xl {
+  transition: all 0.3s ease;
+}
+
+::ng-deep .user-details-dialog .rounded-xl:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  ::ng-deep .user-details-dialog .p-dialog {
+    margin: 0.5rem !important;
+    width: calc(100% - 1rem) !important;
+  }
+}
+</style>

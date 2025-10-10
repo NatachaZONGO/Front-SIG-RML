@@ -32,6 +32,7 @@ import { AuthService } from '../../auth/auth.service';
 import { Offre, TypeOffre, TypeContrat, enrichOffreForUi } from './offre.model';
 import { EditorModule } from 'primeng/editor';
 import { OffreCreateDialogComponent } from './offre-create-dialog.component';
+import { CanSeeDirective } from '../../../Share/can_see/can_see.directive';
 
 interface Column {
   field: string;
@@ -69,6 +70,7 @@ interface ExportColumn {
     ProgressBarModule,
     ReactiveFormsModule,
     EditorModule,
+    CanSeeDirective,
   ],
   templateUrl: './offre.component.html',
   providers: [MessageService, ConfirmationService, OffreService]
@@ -897,6 +899,18 @@ private get currentUserId(): number | undefined {
   return this.authService.getCurrentUser()?.id;
 }
 
+// Ajouter dans votre composant
+setExpirationDays(days: number): void {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  this.offre.date_expiration = date;
+}
+
+// Méthode pour sauvegarder en brouillon
+saveAsDraft(): void {
+  this.offre.statut = 'brouillon';
+  this.saveOffre();
+}
 
 
 canEdit(_offre: Offre): boolean { return this.ALLOW_ALL; }

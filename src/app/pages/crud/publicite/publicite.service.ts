@@ -1,9 +1,10 @@
 // publicite.service.ts
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
-import { BackendURL, imageUrl } from '../../../const';
+import { map, Observable, of } from 'rxjs';
+import { BackendURL, imageUrl } from '../../../Share/const';
 import { Publicite } from './publicite.model';
+import { AuthService } from '../../auth/auth.service';
 
 export interface ActivationRequest {
   publicite_id: number;
@@ -65,7 +66,7 @@ export class Publiciteservice {
   return imageUrl + u.replace(/^\/+/, '');
 }
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
  
   // ===============================
   // MÉTHODES CRUD
@@ -275,29 +276,42 @@ export class Publiciteservice {
     return this.http.get(`${this.activationUrl}/stats/revenue`);
   }
 
-  getPublicitesByStatus(status: string): Observable<Publicite[]> {
-  return this.http.get<any>(`${this.apiUrl}?status=${status}`).pipe(
-    map(res => Array.isArray(res?.data?.data) ? res.data.data
-          : Array.isArray(res?.data) ? res.data
-          : Array.isArray(res) ? res : []),
-    map((rows: any[]) => rows.map(p => ({
-      ...p,
-      image: this.resolveMedia(p.image_url || p.image),
-      video: this.resolveMedia(p.video_url || p.video),
-    })))
-  );
-}
+    getPublicitesByStatus(status: string): Observable<Publicite[]> {
+    return this.http.get<any>(`${this.apiUrl}?status=${status}`).pipe(
+      map(res => Array.isArray(res?.data?.data) ? res.data.data
+            : Array.isArray(res?.data) ? res.data
+            : Array.isArray(res) ? res : []),
+      map((rows: any[]) => rows.map(p => ({
+        ...p,
+        image: this.resolveMedia(p.image_url || p.image),
+        video: this.resolveMedia(p.video_url || p.video),
+      })))
+    );
+  }
 
- activatePubliciteV2(id: number, duree: string, dateDebut: Date | string) {
-  const date_ymd = dateDebut instanceof Date
-    ? dateDebut.toISOString().slice(0,10)
-    : dateDebut;
+  activatePubliciteV2(id: number, duree: string, dateDebut: Date | string) {
+    const date_ymd = dateDebut instanceof Date
+      ? dateDebut.toISOString().slice(0,10)
+      : dateDebut;
 
-  return this.http.put(`${this.apiUrl}/${id}/activer`, {
-    duree,
-    date_debut: date_ymd,
-    payment_status: 'paid'
-  });
-}
+    return this.http.put(`${this.apiUrl}/${id}/activer`, {
+      duree,
+      date_debut: date_ymd,
+      payment_status: 'paid'
+    });
+  }
+  getPublicitesByRole(): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders({
+        'Authorization': `Bearer ${token}`,          'Content-Type': 'application/json'
+      });
 
+    if (this.authService.hasRole('Administrateur')) {
+        return this.http.get(`${BackendURL}publicites`, { headers });
+    } else if (this.authService.hasRole('Recruteur')) {
+        return this.http.get(`${BackendURL}mes-publicites`, { headers });
+    }
+
+    return of({ success: false, data: [], message: 'Accès non autorisé' });
+  }
 }

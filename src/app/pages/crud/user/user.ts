@@ -23,7 +23,7 @@ import { UserService } from './user.service';
 import { User } from './user.model';
 import { RoleService } from '../role/role.service'; // Ajustez le chemin selon votre structure
 import { Role } from '../role/role.model'; // Ajustez le chemin selon votre structure
-import { imageUrl } from '../../../const';
+import { imageUrl } from '../../../Share/const';
 
 type UiUser = User & { roleLabel?: string; roleId?: number }; // Changé en number
 
@@ -57,6 +57,9 @@ export class UserComponent implements OnInit { // Corrigé le nom de la classe (
   selectedUsers: UiUser[] = [];
   submitted = false;
   previewPhotoUrl?: string;
+  userDetailsDialog = false;
+  selectedUserForDetails: any = null;
+  loading = signal(false);
 
   @ViewChild('dt') dt!: Table;
 
@@ -511,4 +514,119 @@ export class UserComponent implements OnInit { // Corrigé le nom de la classe (
       }
     }
   }
+
+  viewUserDetails(user: any): void {
+  this.selectedUserForDetails = { ...user };
+  this.userDetailsDialog = true;
+}
+
+hideDetailsDialog(): void {
+  this.userDetailsDialog = false;
+  this.selectedUserForDetails = null;
+}
+
+// Actions depuis le dialog
+editFromDetails(): void {
+  if (this.selectedUserForDetails) {
+    this.hideDetailsDialog();
+    this.editUser(this.selectedUserForDetails);
+  }
+}
+
+deleteFromDetails(): void {
+  if (this.selectedUserForDetails) {
+    this.hideDetailsDialog();
+    this.deleteUser(this.selectedUserForDetails);
+  }
+}
+
+// Actions rapides
+sendEmail(user: any): void {
+  if (user.email) {
+    window.location.href = `mailto:${user.email}`;
+  }
+}
+
+callUser(user: any): void {
+  if (user.telephone) {
+    window.location.href = `tel:${user.telephone}`;
+  }
+}
+
+// Méthode pour activer/désactiver l'utilisateur
+toggleUserStatus(user: any): void {
+  const newStatus = user.statut === 'actif' ? 'inactif' : 'actif';
+  
+  this.confirmationService.confirm({
+    message: `Êtes-vous sûr de vouloir ${newStatus === 'actif' ? 'activer' : 'désactiver'} cet utilisateur ?`,
+    header: 'Confirmation',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Oui',
+    rejectLabel: 'Non',
+    accept: () => {
+      // Appel API pour changer le statut
+      this.loading.set(true);
+      
+      // Remplacez ceci par votre appel API réel
+      this.userService.updateUserStatus(user.id, newStatus).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Succès',
+            detail: `Utilisateur ${newStatus === 'actif' ? 'activé' : 'désactivé'} avec succès`
+          });
+          this.loadUsers(); // Recharger la liste
+          if (this.selectedUserForDetails) {
+            this.selectedUserForDetails.statut = newStatus;
+          }
+        },
+        error: (error: any) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Impossible de modifier le statut'
+          });
+        },
+        complete: () => {
+          this.loading.set(false);
+        }
+      });
+    }
+  });
+}
+
+// Méthode pour réinitialiser le mot de passe
+resetPassword(user: any): void {
+  this.confirmationService.confirm({
+    message: `Êtes-vous sûr de vouloir réinitialiser le mot de passe de ${user.prenom} ${user.nom} ?`,
+    header: 'Réinitialisation du mot de passe',
+    icon: 'pi pi-key',
+    acceptLabel: 'Confirmer',
+    rejectLabel: 'Annuler',
+    accept: () => {
+      this.loading.set(true);
+      
+      // Remplacez ceci par votre appel API réel
+      this.userService.resetUserPassword(user.id).subscribe({
+        next: () => {
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Mot de passe réinitialisé',
+            detail: 'Un email de réinitialisation a été envoyé à l\'utilisateur'
+          });
+        },
+        error: (error: any) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Erreur',
+            detail: 'Impossible de réinitialiser le mot de passe'
+          });
+        },
+        complete: () => {
+          this.loading.set(false);
+        }
+      });
+    }
+  });
+}
 }

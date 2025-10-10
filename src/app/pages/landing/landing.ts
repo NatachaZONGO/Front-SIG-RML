@@ -38,7 +38,7 @@ import { Pays } from '../crud/pays/pays.model';
 import { PaysService } from '../crud/pays/pays.service';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { BackendURL } from '../../const';
+import { BackendURL } from '../../Share/const';
 import { OffreCreateDialogComponent } from "../crud/offre/offre-create-dialog.component";
 import { OffresListComponent } from './components/offres_list/offres-list.component';
 

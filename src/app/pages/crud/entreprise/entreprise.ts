@@ -23,7 +23,7 @@ import { CommonModule } from '@angular/common';
 import { TagModule } from 'primeng/tag';
 import { PRIME_NG_CONFIG, PrimeNG } from 'primeng/config';
 import { DropdownModule } from 'primeng/dropdown';
-import { imageUrl } from '../../../const';
+import { imageUrl } from '../../../Share/const';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -68,11 +68,13 @@ export class EntrepriseComponent implements OnInit {
   selectedEntreprises: Entreprise[] = [];
   currentEntreprise: Entreprise | null = null;
   rejectionMotif = '';
+  detailEntrepriseDialog = false;
   
   // Données pour les formulaires
   entreprise: Entreprise = this.getEmptyEntreprise();
   selectedFile: File | null = null;
   previewLogoUrl: string | null = null;
+  
   
   // Options pour les dropdowns
   statuts = [
@@ -344,7 +346,11 @@ sanitizeMotif(val: unknown): string | undefined {
     }
   }
 
-  
+  // ouvre le dialog
+openEntrepriseDetail(e: any) {
+  this.currentEntreprise = e;
+  this.detailEntrepriseDialog = true;
+}
   
   hideDialog() {
     this.entrepriseDialog = false;

@@ -8,7 +8,7 @@ import {
   ApiResponse, 
   PaginatedResponse 
 } from './entreprise.model';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 
 @Injectable({
   providedIn: 'root'

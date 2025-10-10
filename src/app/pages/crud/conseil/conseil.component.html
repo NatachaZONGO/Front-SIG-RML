@@ -96,9 +96,9 @@
         <div class="flex flex-col">
           <span class="font-semibold text-primary">{{ conseil.titre || '-' }}</span>
           <small class="text-gray-500" *ngIf="conseil.contenu"
-                 pTooltip="{{ getApercuFrom(conseil.contenu) }}"
+                 pTooltip="{{ getApercuFrom(conseil.contenu, 250) }}"
                  tooltipPosition="top">
-            Aperçu : {{ getApercuFrom(conseil.contenu) }}
+            Aperçu : {{ getApercuFrom(conseil.contenu, 250) }}
           </small>
         </div>
       </td>
@@ -139,6 +139,8 @@
 
       <td>
         <div class="flex gap-1">
+          <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" size="small"
+                    severity="info" (onClick)="openConseilDetail(conseil)" pTooltip="Voir les détails"></p-button>
           <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" size="small"
                     (onClick)="editConseil(conseil)" pTooltip="Modifier"></p-button>
 
@@ -146,7 +148,7 @@
                     severity="success" (onClick)="publierConseil(conseil)"
                     *ngIf="(conseil.statut || 'brouillon') === 'brouillon'" pTooltip="Publier"></p-button>
 
-          <p-button icon="pi pi-archive" [rounded]="true" [outlined]="true" size="small"
+          <p-button icon="pi pi-envelope" [rounded]="true" [outlined]="true" size="small"
                     severity="secondary" (onClick)="archiverConseil(conseil)"
                     *ngIf="conseil.statut === 'publie'" pTooltip="Archiver"></p-button>
 
@@ -394,6 +396,145 @@
         </div>
     </ng-template>
 </p-dialog>
+<!-- Dialogue pour voir les détails d'un conseil -->
+<p-dialog
+  [(visible)]="detailConseilDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  styleClass="conseil-detail-dialog"
+  [style]="{ width: '980px', maxWidth: '95vw' }">
+
+  <!-- HEADER -->
+  <ng-template pTemplate="header">
+    <div class="cd-header">
+      <div class="cd-header-left">
+        <div class="cd-icon">
+          <i class="pi pi-lightbulb"></i>
+        </div>
+        <div>
+          <h2 class="cd-title">{{ conseilDetail?.titre || 'Conseil' }}</h2>
+          <div class="cd-sub">
+            <span *ngIf="conseilDetail?.categorie" class="mr-3">
+              <i class="pi pi-folder mr-1"></i>{{ getCategorieLabel(conseilDetail?.categorie || '') }}
+            </span>
+            <span *ngIf="conseilDetail?.type_conseil" class="mr-3">
+              <i class="pi pi-tag mr-1"></i>{{ getTypeLabel(conseilDetail?.type_conseil || '') }}
+            </span>
+            <span *ngIf="conseilDetail?.date_publication">
+              <i class="pi pi-calendar mr-1"></i>{{ conseilDetail?.date_publication | date:'dd/MM/yyyy' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p-tag
+        [value]="getStatutLabel(conseilDetail?.statut || '')"
+        [severity]="getStatutSeverity(conseilDetail?.statut || '')"
+        styleClass="px-3 py-2">
+      </p-tag>
+    </div>
+  </ng-template>
+
+  <!-- CONTENT -->
+  <ng-template pTemplate="content">
+    <div *ngIf="conseilDetail" class="cd-content">
+
+      <!-- Méta & stats -->
+      <div class="cd-card grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="cd-meta">
+          <div class="cd-meta-label">Niveau</div>
+          <p-tag
+            [value]="getNiveauLabel(conseilDetail.niveau || '')"
+            [severity]="conseilDetail.niveau === 'debutant' ? 'success' : conseilDetail.niveau === 'intermediaire' ? 'info' : conseilDetail.niveau === 'avance' ? 'warn' : 'secondary'">
+          </p-tag>
+        </div>
+
+        <div class="cd-meta">
+          <div class="cd-meta-label">Vues</div>
+          <div class="cd-meta-value"><i class="pi pi-eye mr-1"></i>{{ conseilDetail.vues ?? 0 }}</div>
+        </div>
+
+        <div class="cd-meta">
+          <div class="cd-meta-label">Auteur</div>
+          <div class="cd-meta-value">{{ conseilDetail.auteur || '—' }}</div>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div *ngIf="conseilDetail.tags" class="cd-card">
+        <div class="cd-section-title">
+          <i class="pi pi-hashtag mr-2"></i> Tags
+        </div>
+        <div class="cd-tags">
+          <span class="cd-tag" *ngFor="let t of splitTags(conseilDetail.tags)">{{ t }}</span>
+        </div>
+      </div>
+
+      <!-- Aperçu (extrait) -->
+      <div class="cd-card" *ngIf="conseilDetail.contenu">
+        <div class="cd-section-title">
+          <i class="pi pi-align-left mr-2"></i> Aperçu
+        </div>
+        <div class="cd-excerpt">
+          {{ getApercuFrom(conseilDetail.contenu, 250) }}
+        </div>
+      </div>
+
+      <!-- Contenu complet (HTML sécurisé) -->
+      <div class="cd-card">
+        <div class="cd-section-title">
+          <i class="pi pi-book mr-2"></i> Contenu
+          <span class="cd-reading ml-2">• Temps de lecture estimé : {{ getTempsLectureFrom(conseilDetail?.contenu) }} min</span>
+        </div>
+        <div class="cd-content-html" [innerHTML]="safeHtml(conseilDetail.contenu)"></div>
+      </div>
+
+    </div>
+  </ng-template>
+
+  <!-- FOOTER -->
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between w-full items-center">
+      <div class="text-sm text-gray-500">
+        ID: {{ conseilDetail?.id }} • Statut: {{ getStatutLabel(conseilDetail?.statut || '') }}
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Modifier"
+          icon="pi pi-pencil"
+          severity="info"
+          (onClick)="editConseil(conseilDetail!)">
+        </p-button>
+
+        <p-button
+          *ngIf="(conseilDetail?.statut || 'brouillon') === 'brouillon'"
+          label="Publier"
+          icon="pi pi-send"
+          severity="success"
+          (onClick)="publierConseil(conseilDetail!)">
+        </p-button>
+
+        <p-button
+          *ngIf="conseilDetail?.statut === 'publie'"
+          label="Archiver"
+          icon="pi pi-archive"
+          severity="secondary"
+          (onClick)="archiverConseil(conseilDetail!)">
+        </p-button>
+
+        <p-button
+          label="Fermer"
+          icon="pi pi-times"
+          class="p-button-secondary"
+          (onClick)="detailConseilDialog=false">
+        </p-button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
 
 <style>
 .required::after {
@@ -446,4 +587,110 @@
   }
 
 }
+/* En-tête du dialog */
+::ng-deep .conseil-detail-dialog .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+}
+.cd-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 18px 24px;
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+  color:#fff;
+}
+.cd-header-left { display:flex; gap:14px; align-items:center; }
+.cd-icon {
+  width:48px; height:48px; border-radius:12px; background:#ffffff22;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.cd-title { margin:0; font-size:20px; font-weight:700; }
+.cd-sub { opacity:.95; font-size:12px; margin-top:2px; }
+
+/* Contenu */
+::ng-deep .conseil-detail-dialog .p-dialog-content { padding: 16px 24px 8px; }
+.cd-content { display:flex; flex-direction:column; gap:16px; }
+.cd-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
+.cd-meta { display:flex; flex-direction:column; gap:6px; }
+.cd-meta-label { font-size:12px; color:#6b7280; }
+.cd-meta-value { font-weight:600; color:#111827; }
+
+.cd-section-title { font-weight:700; color:#111827; margin-bottom:8px; display:flex; align-items:center; }
+.cd-reading { color:#6b7280; font-weight:500; font-size:12px; }
+.cd-excerpt { color:#374151; line-height:1.6; }
+
+.cd-tags { display:flex; gap:8px; flex-wrap:wrap; }
+.cd-tag {
+  background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0;
+  padding:4px 8px; border-radius:9999px; font-size:12px; font-weight:600;
+}
+
+/* Contenu HTML (éditeur) */
+.cd-content-html { color:#111827; line-height:1.7; }
+.cd-content-html h1,.cd-content-html h2,.cd-content-html h3 { margin:12px 0 6px; }
+.cd-content-html p { margin: 0 0 10px; }
+.cd-content-html ul { padding-left: 20px; margin: 8px 0; }
+.cd-content-html a { color:#2563eb; text-decoration:none; }
+.cd-content-html a:hover { text-decoration:underline; }
+
+@media (max-width: 768px) {
+  .cd-header { padding:14px 16px; }
+  ::ng-deep .conseil-detail-dialog .p-dialog-content { padding: 12px 16px; }
+}
+
+/* Limite la zone scrollable du contenu du dialog */
+::ng-deep .conseil-detail-dialog .p-dialog-content {
+  max-height: 72vh;             /* adapte la hauteur visible */
+  overflow: auto;               /* scroll interne propre */
+}
+
+/* Contenu HTML rendu (innerHTML) */
+.cd-content-html {
+  white-space: normal !important;   /* pas de ligne unique */
+  overflow-wrap: anywhere;          /* casse les très longs mots/URLs */
+  word-break: break-word;           /* fallback vieux navigateurs */
+  line-height: 1.7;
+}
+
+/* Empêche les éléments médias de déborder */
+.cd-content-html img,
+.cd-content-html video,
+.cd-content-html iframe,
+.cd-content-html svg,
+.cd-content-html canvas {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* Blocs de code / <pre> scrollent à l’horizontale si besoin */
+.cd-content-html pre,
+.cd-content-html code,
+.cd-content-html .ql-code-block {
+  white-space: pre-wrap;        /* retour à la ligne si possible */
+  overflow-x: auto;             /* sinon scrollbar horizontale */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Listes & paragraphes : marges raisonnables */
+.cd-content-html p { margin: 0 0 10px; }
+.cd-content-html ul,
+.cd-content-html ol { padding-left: 1.25rem; margin: 8px 0; }
+
+/* Tableaux responsives */
+.cd-content-html table {
+  width: 100%;
+  border-collapse: collapse;
+  display: block;               /* pour permettre le scroll x */
+  overflow-x: auto;
+}
+.cd-content-html th,
+.cd-content-html td {
+  border: 1px solid #e5e7eb;
+  padding: .5rem;
+}
+
+/* Liens */
+.cd-content-html a { color:#2563eb; text-decoration:none; }
+.cd-content-html a:hover { text-decoration:underline; }
+
 </style>

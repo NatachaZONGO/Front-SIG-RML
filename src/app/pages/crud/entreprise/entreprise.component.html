@@ -176,8 +176,13 @@
       </td>
       <td>
         <div class="flex gap-2">
+          <!-- Bouton détails -->
+          <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" 
+                    severity="info" size="small" (click)="openEntrepriseDetail(entreprise)"
+                    pTooltip="Voir les détails" tooltipPosition="top" />
+          <!-- Bouton modifier -->
           <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" 
-                    severity="info" size="small" (click)="editEntreprise(entreprise)"
+                    severity="secondary" size="small" (click)="editEntreprise(entreprise)"
                     pTooltip="Modifier" tooltipPosition="top" />
           
           <!-- Actions spécifiques selon le statut -->
@@ -221,173 +226,193 @@
 </ng-template>
 </p-table>
 
-    <p-dialog
-  [(visible)]="entrepriseDialog"
+<p-dialog
+  [(visible)]="detailEntrepriseDialog"
   [modal]="true"
-  [style]="{ width: '640px' }"
   [draggable]="false"
   [resizable]="false"
   [dismissableMask]="true"
-  [header]="dialogHeader"
->
+  styleClass="entreprise-detail-dialog"
+  [style]="{ width: '920px', maxWidth: '95vw' }">
+
+  <!-- Header custom -->
+  <ng-template pTemplate="header">
+    <div class="ed-header">
+      <div class="ed-title">
+        <div class="ed-logo-wrap">
+          <ng-container *ngIf="currentEntreprise?.logo; else noLogoLarge">
+            <img [src]="getImageUrl(currentEntreprise!.logo!)" alt="Logo"
+                 class="ed-logo" />
+          </ng-container>
+          <ng-template #noLogoLarge>
+            <div class="ed-logo ed-logo-fallback">
+              <i class="pi pi-building"></i>
+            </div>
+          </ng-template>
+        </div>
+        <div>
+          <h2 class="ed-name">{{ currentEntreprise?.nom_entreprise || 'Entreprise' }}</h2>
+          <div class="ed-sub">
+            <span *ngIf="currentEntreprise?.secteur_activite" class="mr-2">
+              <i class="pi pi-briefcase mr-1"></i>{{ currentEntreprise?.secteur_activite }}
+            </span>
+            <span *ngIf="currentEntreprise?.pays?.nom">
+              <i class="pi pi-globe mr-1"></i>{{ currentEntreprise?.pays?.nom }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <p-tag
+        [value]="currentEntreprise?.statut || '—'"
+        [severity]="getStatusSeverity(currentEntreprise?.statut || '')"
+        styleClass="px-3 py-2">
+      </p-tag>
+    </div>
+  </ng-template>
+
   <ng-template pTemplate="content">
-    <form class="flex flex-col gap-4">
-      <!-- Nom -->
-      <div class="field">
-        <label class="block font-medium mb-1">Nom de l'entreprise *</label>
-        <input pInputText [(ngModel)]="entreprise.nom_entreprise" name="nom_entreprise" required />
-        <small class="text-red-500" *ngIf="submitted && !entreprise.nom_entreprise">Champ requis</small>
-      </div>
+    <div *ngIf="currentEntreprise" class="ed-content">
 
-      <!-- Secteur -->
-      <div class="field">
-        <label class="block font-medium mb-1">Secteur d'activité *</label>
-        <p-dropdown
-          [(ngModel)]="entreprise.secteur_activite"
-          name="secteur_activite"
-          [options]="secteursActivite"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Sélectionner"
-          [style]="{ width: '100%' }"
-        ></p-dropdown>
-        <small class="text-red-500" *ngIf="submitted && !entreprise.secteur_activite">Champ requis</small>
-      </div>
-
-      <!-- Site web / Email / Téléphone -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="field">
-          <label class="block font-medium mb-1">Site web</label>
-          <input pInputText [(ngModel)]="entreprise.site_web" name="site_web" placeholder="https://exemple.com" />
+      <!-- Carte infos principales -->
+      <div class="ed-card grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="ed-item">
+          <div class="ed-item-icon"><i class="pi pi-user"></i></div>
+          <div>
+            <div class="ed-item-label">Propriétaire</div>
+            <div class="ed-item-value">
+              <ng-container *ngIf="currentEntreprise.user; else noOwner">
+                {{ currentEntreprise.user.nom }} {{ currentEntreprise.user.prenom }}
+                <div class="text-sm text-gray-500">{{ currentEntreprise.user.email }}</div>
+              </ng-container>
+              <ng-template #noOwner>—</ng-template>
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <label class="block font-medium mb-1">Téléphone</label>
-          <input pInputText [(ngModel)]="entreprise.telephone" name="telephone" placeholder="+226..." />
-        </div>
-        <div class="field md:col-span-2">
-          <label class="block font-medium mb-1">Email</label>
-          <input pInputText type="email" [(ngModel)]="entreprise.email" name="email" placeholder="contact@..." />
-        </div>
-      </div>
 
-      <!-- Pays -->
-      <div class="field">
-        <label class="block font-medium mb-1">Pays</label>
-        <p-dropdown
-          [(ngModel)]="entreprise.pays_id"
-          name="pays_id"
-          [options]="pays"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Sélectionner un pays"
-          [showClear]="true"
-          [style]="{ width: '100%' }"
-        ></p-dropdown>
-      </div>
-
-      <!-- Logo (URL) -->
-      <div class="field">
-        <label class="block font-medium mb-1">Logo (URL)</label>
-        <input
-          pInputText
-          [(ngModel)]="entreprise.logo"
-          name="logo"
-          placeholder="https://exemple.com/logo.png"
-        />
-        <small class="text-xs text-gray-500 block mt-1">
-        Ajoutez <b>soit</b> une URL, <b>soit</b> un fichier (PNG/JPG/WebP).
-        </small>
-        <div class="mt-2" *ngIf="entreprise.logo || previewLogoUrl">
-          <img
-  [src]="previewLogoUrl || getImageUrl(entreprise.logo!)"
-  alt="Aperçu logo"
-  style="width:72px;height:72px;object-fit:cover;border-radius:8px"
-/>
-
+        <div class="ed-item">
+          <div class="ed-item-icon"><i class="pi pi-envelope"></i></div>
+          <div>
+            <div class="ed-item-label">Email</div>
+            <div class="ed-item-value">
+              <a *ngIf="currentEntreprise.email"
+                 [href]="'mailto:' + currentEntreprise.email"
+                 class="text-blue-600 hover:underline">
+                {{ currentEntreprise.email }}
+              </a>
+              <span *ngIf="!currentEntreprise.email">—</span>
+            </div>
+          </div>
         </div>
-        <!-- (Optionnel) Input fichier (aperçu seulement, non envoyé tant que l'API ne gère pas l'upload) -->
-        <div class="mt-2">
-          <input type="file" accept="image/*" (change)="onFileChange($event)" />
-          <small class="text-xs text-gray-500 block mt-1">
-            Ajoutez <b>soit</b> une URL, <b>soit</b> un fichier (PNG/JPG/WebP).
-        </small>
+
+        <div class="ed-item">
+          <div class="ed-item-icon"><i class="pi pi-phone"></i></div>
+          <div>
+            <div class="ed-item-label">Téléphone</div>
+            <div class="ed-item-value">{{ currentEntreprise.telephone || '—' }}</div>
+          </div>
+        </div>
+
+        <div class="ed-item">
+          <div class="ed-item-icon"><i class="pi pi-globe"></i></div>
+          <div>
+            <div class="ed-item-label">Site web</div>
+            <div class="ed-item-value">
+              <a *ngIf="currentEntreprise.site_web"
+                 [href]="currentEntreprise.site_web" target="_blank"
+                 class="text-blue-600 hover:underline">
+                {{ currentEntreprise.site_web }}
+              </a>
+              <span *ngIf="!currentEntreprise.site_web">—</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Description -->
-      <div class="field">
-        <label class="block font-medium mb-1">Description</label>
-        <textarea
-          pInputTextarea
-          [(ngModel)]="entreprise.description"
-          name="description"
-          rows="4"
-          placeholder="Décrivez brièvement l'entreprise"
-        ></textarea>
+      <div class="ed-card">
+        <div class="ed-section-title">
+          <i class="pi pi-align-left mr-2"></i> Description
+        </div>
+        <div class="ed-desc">
+          {{ currentEntreprise.description || 'Aucune description fournie.' }}
+        </div>
       </div>
 
-      <!-- Statut (optionnel) -->
-      <div class="field">
-        <label class="block font-medium mb-1">Statut</label>
-        <p-dropdown
-          [(ngModel)]="entreprise.statut"
-          name="statut"
-          [options]="statuts"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Sélectionner le statut"
-          [style]="{ width: '100%' }"
-        ></p-dropdown>
+      <!-- Bandeau “motif de rejet” si présent -->
+      <div *ngIf="hasMotif(currentEntreprise.motif_rejet)" class="ed-banner-error">
+        <i class="pi pi-exclamation-triangle mr-2"></i>
+        {{ currentEntreprise.motif_rejet }}
       </div>
 
-      <!-- Propriétaire (création uniquement) -->
-      <div class="field" *ngIf="!entreprise.id">
-        <label class="block font-medium mb-1">Utilisateur propriétaire</label>
-        <p-dropdown
-          [(ngModel)]="entreprise.user_id"
-          name="user_id"
-          [options]="users"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Sélectionner un utilisateur"
-          [style]="{ width: '100%' }"
-        ></p-dropdown>
-      </div>
-    </form>
+    </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-end gap-2">
-      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="hideDialog()" />
-      <p-button label="Enregistrer" icon="pi pi-check" (onClick)="saveEntreprise()" />
+    <div class="flex justify-between w-full items-center">
+      <div class="text-sm text-gray-500">
+        ID: {{ currentEntreprise?.id }} • Statut: {{ currentEntreprise?.statut || '—' }}
+      </div>
+      <div class="flex gap-2">
+        <p-button
+          label="Modifier"
+          icon="pi pi-pencil"
+          severity="info"
+          (onClick)="editEntreprise(currentEntreprise!)">
+        </p-button>
+        <p-button
+          label="Fermer"
+          icon="pi pi-times"
+          class="p-button-secondary"
+          (onClick)="detailEntrepriseDialog=false">
+        </p-button>
+      </div>
     </div>
   </ng-template>
 </p-dialog>
+<style>
+  /* Dialog header */
+::ng-deep .entreprise-detail-dialog .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+}
+.ed-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 18px 24px;
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  color: #fff;
+}
+.ed-title { display:flex; gap:14px; align-items:center; }
+.ed-logo-wrap { width:56px; height:56px; }
+.ed-logo {
+  width:56px; height:56px; object-fit:cover; border-radius:10px;
+  background:#fff;
+}
+.ed-logo-fallback {
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; color:#94a3b8; background:#fff;
+}
+.ed-name { margin:0; font-size:20px; font-weight:700; }
+.ed-sub { opacity:.9; font-size:12px; margin-top:2px; }
 
-<p-dialog [(visible)]="validationDialog" [modal]="true" [style]="{width:'420px'}" [draggable]="false" [resizable]="false" header="Valider l'entreprise">
-  <ng-template pTemplate="content">
-    <p>Confirmer la validation de <b>{{ currentEntreprise?.nom_entreprise }}</b> ?</p>
-  </ng-template>
-  <ng-template pTemplate="footer">
-    <div class="flex justify-end gap-2">
-      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="validationDialog=false" />
-      <p-button label="Valider" icon="pi pi-check" (onClick)="validateEntreprise()" />
-    </div>
-  </ng-template>
-</p-dialog>
+/* Content */
+::ng-deep .entreprise-detail-dialog .p-dialog-content { padding: 16px 24px 8px; }
+.ed-content { display:flex; flex-direction:column; gap:16px; }
+.ed-card {
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px;
+}
+.ed-item { display:flex; gap:12px; align-items:flex-start; }
+.ed-item-icon {
+  width:36px; height:36px; border-radius:9999px;
+  display:flex; align-items:center; justify-content:center;
+  background:#eff6ff; color:#2563eb;
+}
+.ed-item-label { font-size:12px; color:#6b7280; }
+.ed-item-value { font-weight:600; color:#111827; }
+.ed-section-title { font-weight:700; color:#111827; margin-bottom:8px; }
+.ed-desc { color:#374151; line-height:1.6; white-space:pre-wrap; }
+.ed-banner-error {
+  background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;
+  border-radius:10px; padding:10px 12px; display:flex; align-items:center;
+}
 
-<!-- Dialog rejet -->
-<p-dialog [(visible)]="rejectionDialog" [modal]="true" [style]="{width:'520px'}" [draggable]="false" [resizable]="false" header="Rejeter l'entreprise">
-  <ng-template pTemplate="content">
-    <div class="field">
-      <label class="block font-medium mb-1">Motif de rejet *</label>
-      <textarea pInputTextarea [(ngModel)]="rejectionMotif" rows="4" placeholder="Expliquez pourquoi l'entreprise est rejetée"></textarea>
-    </div>
-  </ng-template>
-  <ng-template pTemplate="footer">
-    <div class="flex justify-end gap-2">
-      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="rejectionDialog=false" />
-      <p-button label="Rejeter" icon="pi pi-times" severity="danger" (onClick)="rejectEntreprise()" [disabled]="!rejectionMotif.trim()" />
-    </div>
-  </ng-template>
-</p-dialog>
+</style>

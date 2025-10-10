@@ -2,7 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 
 export interface Role {
   id?: number; // Changé en number selon votre réponse API

@@ -26,8 +26,9 @@ import { CandidatureService } from './candidature.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { RouterModule } from '@angular/router';
-import { BackendURL } from '../../../const';
+import { BackendURL } from '../../../Share/const';
 import { TextareaModule } from 'primeng/textarea';
+import { CanSeeDirective } from '../../../Share/can_see/can_see.directive';
 
 interface Column { field: string; header: string; }
 
@@ -54,7 +55,8 @@ interface Column { field: string; header: string; }
     InputIconModule,
     IconFieldModule,
     RouterModule,
-    TextareaModule
+    TextareaModule,
+    CanSeeDirective
   ],
   providers: [MessageService, ConfirmationService]
 })
@@ -108,43 +110,56 @@ export class CandidaturesComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
 
   // ---------- Load ----------
-  private loadOffresAndData(): void {
-    this.loading.set(true);
+ private loadOffresAndData(): void {
+  this.loading.set(true);
 
-    this.candService.getOffresLight()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (offres: any) => {
-          const offresList = Array.isArray(offres) ? offres : (offres?.data || []);
-          this.offresOptions = offresList.map((o: any) => ({ label: o.titre, value: o.id }));
-          this.loadCandidatures();
-        },
-        error: () => {
-          this.loadCandidatures();
-        }
-      });
-  }
-
-  loadCandidatures(): void {
-    this.loading.set(true);
-
-    const obs = this.selectedOffreId
-      ? this.candService.getByOffre(this.selectedOffreId)
-      : this.candService.getAll();
-
-    obs.pipe(
-      takeUntil(this.destroy$),
-      finalize(() => this.loading.set(false))
-    ).subscribe({
-      next: (response: any) => {
-        const list = Array.isArray(response) ? response : (response?.data || []);
-        this.candidatures.set(this.mapForView(list));
+  this.candService.getOffresLight()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (offres: any) => {
+        const offresList = Array.isArray(offres) ? offres : (offres?.data || []);
+        this.offresOptions = offresList.map((o: any) => ({ label: o.titre, value: o.id }));
+        this.loadCandidatures(); // charge ensuite
       },
       error: () => {
-        this.toastError('Erreur lors du chargement des candidatures');
+        this.loadCandidatures(); // essaie quand même
       }
     });
-  }
+}
+
+
+
+  loadCandidatures(): void {
+  this.loading.set(true);
+
+  const source$ = this.selectedOffreId
+    ? this.candService.getByOffre(this.selectedOffreId)
+    : this.candService.getCandidaturesByRole(); // <- renvoie Observable<any[]>
+
+  source$
+    .pipe(
+      takeUntil(this.destroy$),
+      finalize(() => this.loading.set(false))
+    )
+    .subscribe({
+      next: (rows: any[]) => {
+        // rows est déjà un tableau
+        this.candidatures.set(this.mapForView(rows));
+      },
+      error: (e) => {
+        console.error('loadCandidatures error:', e);
+        const msg =
+          e?.status === 401 ? 'Non authentifié (merci de vous reconnecter)' :
+          e?.status === 403 ? 'Accès refusé' :
+          'Erreur lors du chargement des candidatures';
+        this.toastError(msg);
+        this.candidatures.set([]);
+      }
+    });
+}
+
+
+
 
   // Helper: garantit un URL absolu vers /api/candidatures/{id}/download/{type}
 private buildApiDownload(id: number, type: 'cv' | 'lm'): string {

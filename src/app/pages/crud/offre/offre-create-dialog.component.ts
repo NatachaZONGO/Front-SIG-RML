@@ -1,4 +1,3 @@
-// src/app/pages/crud/offre/offre-create-dialog.component.ts
 import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';

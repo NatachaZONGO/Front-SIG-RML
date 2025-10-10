@@ -224,7 +224,7 @@
       <td style="min-width: 200px">
         <div class="flex flex-wrap gap-1">
           <!-- Bouton Détails -->
-          <p-button
+          <p-button 
             icon="pi pi-eye"
             [rounded]="true"
             [outlined]="true"
@@ -358,19 +358,425 @@
   </ng-template>
 </p-table>
 
+<!-- Dialog de création/modification d'offre -->
+
+<p-dialog
+  [(visible)]="offreDialog"
+  [style]="{width: '850px', maxWidth: '95vw'}"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="offre-dialog-enhanced">
+
+  <!-- En-tête personnalisé -->
+  <ng-template pTemplate="header">
+    <div class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-t-xl">
+      <div class="px-6 py-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="bg-white/20 rounded-full p-3 mr-4">
+              <i [class]="(offre.id ? 'pi pi-pencil' : 'pi pi-plus-circle') + ' text-2xl'"></i>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold">
+                {{ offre.id ? 'Modifier l\'offre' : 'Créer une nouvelle offre' }}
+              </h2>
+              <p class="text-white/80 text-sm mt-0.5">
+                {{ offre.id ? 'Offre #' + offre.id + ' - ' + offre.titre : 'Complétez le formulaire pour publier votre offre' }}
+              </p>
+            </div>
+          </div>
+          <!-- Progress indicator -->
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-white rounded-full"></div>
+            <div class="w-2 h-2 bg-white/50 rounded-full"></div>
+            <div class="w-2 h-2 bg-white/50 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <form class="space-y-6">
+      
+      <!-- Section 1: Informations principales -->
+      <div class="bg-blue-50/30 rounded-xl p-5 border border-blue-100">
+        <div class="flex items-center mb-4">
+          <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+            1
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 ml-3">Informations principales</h3>
+          <div class="ml-auto">
+            <span class="text-xs text-gray-500 bg-blue-100 px-2 py-1 rounded-full">Obligatoire</span>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Titre -->
+          <div>
+            <label for="titre" class="block text-sm font-medium text-gray-700 mb-1.5">
+              Titre du poste <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              pInputText
+              id="titre"
+              [(ngModel)]="offre.titre"
+              name="titre"
+              required
+              autofocus
+              placeholder="Ex: Développeur Full Stack Angular/Node.js"
+              class="w-full"
+              [class.ng-invalid]="submitted && !offre.titre"
+              [disabled]="loading()" />
+            <small class="text-red-500 text-xs" *ngIf="submitted && !offre.titre">
+              <i class="pi pi-exclamation-circle mr-1"></i>Le titre est obligatoire
+            </small>
+          </div>
+
+          <!-- Type offre et Type contrat -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="type_offre" class="block text-sm font-medium text-gray-700 mb-1.5">
+                Type d'offre <span class="text-red-500">*</span>
+              </label>
+              <p-dropdown
+                id="type_offre"
+                [options]="typeOffreOptions"
+                [(ngModel)]="offre.type_offre"
+                name="type_offre"
+                placeholder="Sélectionner le type"
+                [showClear]="true"
+                styleClass="w-full"
+                [class.ng-invalid]="submitted && !offre.type_offre"
+                [disabled]="loading()">
+                <ng-template let-option pTemplate="item">
+                  <div class="flex items-center">
+                    <i [class]="option.value === 'stage' ? 'pi pi-book' : 'pi pi-briefcase'" 
+                       class="mr-2 text-sm"></i>
+                    <span>{{ option.label }}</span>
+                  </div>
+                </ng-template>
+              </p-dropdown>
+              <small class="text-red-500 text-xs" *ngIf="submitted && !offre.type_offre">
+                <i class="pi pi-exclamation-circle mr-1"></i>Requis
+              </small>
+            </div>
+
+            <div>
+              <label for="type_contrat" class="block text-sm font-medium text-gray-700 mb-1.5">
+                Type de contrat <span class="text-red-500">*</span>
+              </label>
+              <p-dropdown
+                id="type_contrat"
+                [options]="typeContratOptions"
+                [(ngModel)]="offre.type_contrat"
+                name="type_contrat"
+                placeholder="Sélectionner le contrat"
+                [showClear]="true"
+                styleClass="w-full"
+                [class.ng-invalid]="submitted && !offre.type_contrat"
+                [disabled]="loading()">
+              </p-dropdown>
+              <small class="text-red-500 text-xs" *ngIf="submitted && !offre.type_contrat">
+                <i class="pi pi-exclamation-circle mr-1"></i>Requis
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Détails du poste -->
+      <div class="bg-green-50/30 rounded-xl p-5 border border-green-100">
+        <div class="flex items-center mb-4">
+          <div class="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+            2
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 ml-3">Détails du poste</h3>
+          <div class="ml-auto">
+            <span class="text-xs text-gray-500 bg-green-100 px-2 py-1 rounded-full">Recommandé</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Localisation -->
+          <div>
+            <label for="localisation" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-map-marker mr-1 text-xs"></i>Localisation
+            </label>
+            <input
+              type="text"
+              pInputText
+              id="localisation"
+              [(ngModel)]="offre.localisation"
+              name="localisation"
+              placeholder="Ville, région ou télétravail"
+              class="w-full"
+              [disabled]="loading()" />
+            <small class="text-gray-400 text-xs">Précisez le lieu de travail</small>
+          </div>
+
+          <!-- Salaire -->
+          <div>
+            <label for="salaire" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-dollar mr-1 text-xs"></i>Salaire mensuel
+            </label>
+            <p-inputNumber
+              id="salaire"
+              [(ngModel)]="offre.salaire"
+              name="salaire"
+              mode="decimal"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="0"
+              suffix=" FCFA"
+              placeholder="0"
+              styleClass="w-full"
+              [disabled]="loading()">
+            </p-inputNumber>
+            <small class="text-gray-400 text-xs">Laissez vide si confidentiel</small>
+          </div>
+
+          <!-- Expérience -->
+          <div>
+            <label for="experience" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-star mr-1 text-xs"></i>Expérience requise
+            </label>
+            <input
+              type="text"
+              pInputText
+              id="experience"
+              [(ngModel)]="offre.experience"
+              name="experience"
+              placeholder="Ex: 2-5 ans, Junior, Senior..."
+              class="w-full"
+              [disabled]="loading()" />
+            <small class="text-gray-400 text-xs">Niveau d'expérience attendu</small>
+          </div>
+
+          <!-- Catégorie -->
+          <div>
+            <label for="categorie_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-tag mr-1 text-xs"></i>Catégorie
+            </label>
+            <p-dropdown
+              id="categorie_id"
+              [options]="categories"
+              [(ngModel)]="offre.categorie_id"
+              name="categorie_id"
+              optionLabel="nom"
+              optionValue="id"
+              placeholder="Choisir une catégorie"
+              [filter]="true"
+              [showClear]="true"
+              styleClass="w-full"
+              [disabled]="loading()">
+            </p-dropdown>
+            <small class="text-gray-400 text-xs">Pour un meilleur référencement</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Description et publication -->
+      <div class="bg-purple-50/30 rounded-xl p-5 border border-purple-100">
+        <div class="flex items-center mb-4">
+          <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+            3
+          </div>
+          <h3 class="text-lg font-semibold text-gray-800 ml-3">Description et publication</h3>
+          <div class="ml-auto">
+            <span class="text-xs text-gray-500 bg-purple-100 px-2 py-1 rounded-full">Finalisation</span>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Date d'expiration -->
+          <div>
+            <label for="date_expiration" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-calendar-times mr-1 text-xs"></i>Date d'expiration <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <p-calendar
+                id="date_expiration"
+                [(ngModel)]="offre.date_expiration"
+                name="date_expiration"
+                dateFormat="dd/mm/yy"
+                [showIcon]="true"
+                styleClass="w-full sm:col-span-2"
+                [minDate]="minDate"
+                placeholder="Sélectionner une date"
+                [class.ng-invalid]="submitted && !offre.date_expiration"
+                [disabled]="loading()">
+              </p-calendar>
+              <div class="flex items-center space-x-2">
+                <button type="button" 
+                        pButton 
+                        label="+30j" 
+                        class="p-button-sm p-button-outlined"
+                        (click)="setExpirationDays(30)"
+                        [disabled]="loading()">
+                </button>
+                <button type="button" 
+                        pButton 
+                        label="+60j" 
+                        class="p-button-sm p-button-outlined"
+                        (click)="setExpirationDays(60)"
+                        [disabled]="loading()">
+                </button>
+              </div>
+            </div>
+            <small class="text-red-500 text-xs" *ngIf="submitted && !offre.date_expiration">
+              <i class="pi pi-exclamation-circle mr-1"></i>La date d'expiration est obligatoire
+            </small>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-align-left mr-1 text-xs"></i>Description complète <span class="text-red-500">*</span>
+            </label>
+            <p-editor
+              id="description"
+              [(ngModel)]="offre.description"
+              name="description"
+              [style]="{ height: '280px' }"
+              styleClass="w-full"
+              placeholder="Décrivez le poste, les missions, le profil recherché..."
+              [class.ng-invalid]="submitted && !offre.description"
+              [disabled]="loading()">
+              <ng-template pTemplate="header">
+                <span class="ql-formats">
+                  <button class="ql-bold" aria-label="Bold"></button>
+                  <button class="ql-italic" aria-label="Italic"></button>
+                  <button class="ql-underline" aria-label="Underline"></button>
+                </span>
+                <span class="ql-formats">
+                  <button class="ql-list" value="ordered" aria-label="Ordered List"></button>
+                  <button class="ql-list" value="bullet" aria-label="Unordered List"></button>
+                </span>
+                <span class="ql-formats">
+                  <button class="ql-link" aria-label="Insert Link"></button>
+                </span>
+              </ng-template>
+            </p-editor>
+            <small class="text-red-500 text-xs" *ngIf="submitted && !offre.description">
+              <i class="pi pi-exclamation-circle mr-1"></i>La description est obligatoire
+            </small>
+          </div>
+
+          <!-- Statut (admin seulement) -->
+          <div *canSee="['Administrateur']" class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+            <label for="statut" class="block text-sm font-medium text-gray-700 mb-1.5">
+              <i class="pi pi-flag mr-1 text-xs"></i>Statut de publication (Admin)
+            </label>
+            <p-dropdown
+              id="statut"
+              [options]="statutOptions"
+              [(ngModel)]="offre.statut"
+              name="statut"
+              placeholder="Définir le statut"
+              styleClass="w-full"
+              [disabled]="loading()">
+              <ng-template let-option pTemplate="item">
+                <div class="flex items-center">
+                  <p-tag [value]="option.label" 
+                         [severity]="getStatutSeverity(option.value)"
+                         styleClass="text-xs">
+                  </p-tag>
+                </div>
+              </ng-template>
+            </p-dropdown>
+          </div>
+        </div>
+      </div>
+
+      <!-- Résumé des champs obligatoires -->
+      <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 flex items-center">
+        <i class="pi pi-info-circle mr-2 text-sm"></i>
+        Les champs marqués d'un <span class="text-red-500 font-bold mx-1">*</span> sont obligatoires pour enregistrer l'offre.
+      </div>
+    </form>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between items-center">
+      <!-- Indicateur de progression -->
+      <div class="hidden sm:flex items-center space-x-2">
+        <div class="flex space-x-1">
+          <div class="w-8 h-1 bg-blue-600 rounded"></div>
+          <div class="w-8 h-1 bg-green-600 rounded"></div>
+          <div class="w-8 h-1 bg-purple-600 rounded"></div>
+        </div>
+        <span class="text-xs text-gray-500 ml-2">Formulaire complété</span>
+      </div>
+
+      <!-- Boutons d'action -->
+      <div class="flex gap-2 ml-auto">
+        <button pButton
+                label="Annuler"
+                icon="pi pi-times"
+                class="p-button-outlined p-button-sm"
+                (click)="hideDialog()"
+                [disabled]="loading()">
+        </button>
+        <button pButton
+                label="Enregistrer en brouillon"
+                icon="pi pi-save"
+                class="p-button-secondary p-button-sm"
+                *ngIf="!offre?.id"
+                (click)="saveAsDraft()"
+                [loading]="loading()">
+        </button>
+        <button pButton
+                [label]="offre.id ? 'Mettre à jour' : 'Créer l\'offre'"
+                [icon]="offre.id ? 'pi pi-check' : 'pi pi-plus'"
+                class="p-button-success p-button-sm"
+                (click)="saveOffre()"
+                [loading]="loading()">
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
 <!-- Dialog de rejet -->
 <p-dialog
   [(visible)]="rejetDialog"
-  [style]="{ width: '500px' }"
-  header="Rejeter l'offre"
-  [modal]="true">
+  [style]="{width: '500px', maxWidth: '90vw'}"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="reject-dialog">
 
-  <ng-template #content>
-    <div class="flex flex-col gap-4">
-      <p>Vous êtes sur le point de rejeter l'offre <strong>"{{ offre.titre }}"</strong></p>
-      
-      <div class="field">
-        <label for="motifRejet" class="block font-semibold mb-2">Motif de rejet *</label>
+  <ng-template pTemplate="header">
+    <div class="w-full bg-gradient-to-r from-red-600 to-red-500 text-white rounded-t-xl">
+      <div class="px-6 py-5">
+        <div class="flex items-center">
+          <div class="bg-white/20 rounded-full p-2.5 mr-3">
+            <i class="pi pi-times-circle text-2xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold">Rejeter l'offre</h2>
+            <p class="text-white/80 text-sm mt-0.5 truncate">{{ offre.titre || '' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <div class="space-y-4">
+      <div class="bg-red-50 border-l-4 border-red-400 p-3">
+        <p class="text-sm text-red-700">
+          <i class="pi pi-info-circle mr-2"></i>
+          Cette action est irréversible. L'offre devra être modifiée avant d'être soumise à nouveau.
+        </p>
+      </div>
+
+      <div>
+        <label for="motifRejet" class="block text-sm font-medium text-gray-700 mb-1">
+          Motif de rejet <span class="text-red-500">*</span>
+        </label>
         <textarea
           id="motifRejet"
           pInputTextarea
@@ -380,368 +786,578 @@
           placeholder="Expliquez pourquoi cette offre est rejetée..."
           [disabled]="loading()">
         </textarea>
+        <small class="text-gray-500 text-xs">
+          Ce message sera envoyé au recruteur pour l'aider à améliorer son offre
+        </small>
       </div>
     </div>
   </ng-template>
 
-  <ng-template #footer>
+  <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button
-        label="Annuler"
-        icon="pi pi-times"
-        severity="secondary"
-        outlined
-        (onClick)="rejetDialog = false"
-        [disabled]="loading()" />
-      <p-button
-        label="Rejeter"
-        icon="pi pi-times"
-        severity="danger"
-        (onClick)="rejeterOffre()"
-        [loading]="loading()"
-        [disabled]="!motifRejet || !motifRejet.trim()" />
+      <button pButton
+              label="Annuler"
+              icon="pi pi-times"
+              class="p-button-secondary p-button-sm"
+              (click)="rejetDialog = false"
+              [disabled]="loading()">
+      </button>
+      <button pButton
+              label="Confirmer le rejet"
+              icon="pi pi-times"
+              class="p-button-danger p-button-sm"
+              (click)="rejeterOffre()"
+              [loading]="loading()"
+              [disabled]="!motifRejet.trim()">
+      </button>
     </div>
   </ng-template>
 </p-dialog>
 
-<!-- Dialogue créer/modifier une offre (gardez votre dialog existant) -->
-<!-- ... votre dialog existant ... -->
-
-<style>
-.required::after { content: ' *'; color: red; }
-.field { margin-bottom: 1rem; }
-.truncate { 
-  white-space: nowrap; 
-  overflow: hidden; 
-  text-overflow: ellipsis; 
-  max-width: 200px;
-}
-</style>
-
-<!-- Dialogue créer/modifier une offre -->
-<p-dialog
-  [(visible)]="offreDialog"
-  [style]="{ width: '700px' }"
-  [header]="(offre && offre.id) ? 'Modifier une offre' : 'Créer une nouvelle offre'"
-  [modal]="true"
-  [closable]="!loading()">
-
-  <ng-template #content>
-    <form class="flex flex-col gap-4">
-      <!-- Titre -->
-      <div class="field">
-        <label for="titre" class="block font-semibold mb-2 required">Titre *</label>
-        <input
-          type="text"
-          pInputText
-          id="titre"
-          [(ngModel)]="offre.titre"
-          name="titre"
-          required
-          autofocus
-          class="w-full"
-          [class.ng-invalid]="submitted && !offre.titre"
-          [disabled]="loading()" />
-        <small class="text-red-500" *ngIf="submitted && !offre.titre">Le titre est obligatoire.</small>
-      </div>
-
-      <!-- Type offre et Type contrat -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="field">
-          <label for="type_offre" class="block font-semibold mb-2 required">Type d'offre *</label>
-          <p-dropdown
-            id="type_offre"
-            [options]="typeOffreOptions"
-            [(ngModel)]="offre.type_offre"
-            name="type_offre"
-            placeholder="Sélectionner un type"
-            [showClear]="true"
-            class="w-full"
-            [class.ng-invalid]="submitted && !offre.type_offre"
-            [disabled]="loading()">
-          </p-dropdown>
-          <small class="text-red-500" *ngIf="submitted && !offre.type_offre">Le type d'offre est obligatoire.</small>
-        </div>
-
-        <div class="field">
-          <label for="type_contrat" class="block font-semibold mb-2 required">Type de contrat *</label>
-          <p-dropdown
-            id="type_contrat"
-            [options]="typeContratOptions"
-            [(ngModel)]="offre.type_contrat"
-            name="type_contrat"
-            placeholder="Sélectionner un contrat"
-            [showClear]="true"
-            class="w-full"
-            [class.ng-invalid]="submitted && !offre.type_contrat"
-            [disabled]="loading()">
-          </p-dropdown>
-          <small class="text-red-500" *ngIf="submitted && !offre.type_contrat">Le type de contrat est obligatoire.</small>
-        </div>
-      </div>
-
-      <!-- Localisation et Salaire -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="field">
-          <label for="localisation" class="block font-semibold mb-2">Localisation</label>
-          <input
-            type="text"
-            pInputText
-            id="localisation"
-            [(ngModel)]="offre.localisation"
-            name="localisation"
-            class="w-full"
-            [disabled]="loading()" />
-        </div>
-
-        <div class="field">
-          <label for="salaire" class="block font-semibold mb-2">Salaire (FCFA)</label>
-          <p-inputNumber
-            id="salaire"
-            [(ngModel)]="offre.salaire"
-            name="salaire"
-            mode="decimal"
-            [minFractionDigits]="0"
-            [maxFractionDigits]="0"
-            suffix=" FCFA"
-            class="w-full"
-            [disabled]="loading()">
-          </p-inputNumber>
-        </div>
-      </div>
-
-      <!-- Expérience -->
-      <div class="field">
-        <label for="experience" class="block font-semibold mb-2">Expérience requise</label>
-        <input
-          type="text"
-          pInputText
-          id="experience"
-          [(ngModel)]="offre.experience"
-          name="experience"
-          placeholder="Ex: 2-5 ans, Débutant accepté, Senior..."
-          class="w-full"
-          [disabled]="loading()" />
-      </div>
-
-      <!-- Catégorie et Date d'expiration -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="field">
-          <label for="categorie_id" class="block font-semibold mb-2">Catégorie</label>
-          <p-dropdown
-            id="categorie_id"
-            [options]="categories"
-            [(ngModel)]="offre.categorie_id"
-            name="categorie_id"
-            optionLabel="nom"
-            optionValue="id"
-            placeholder="Sélectionner une catégorie"
-            [showClear]="true"
-            class="w-full"
-            [disabled]="loading()">
-          </p-dropdown>
-        </div>
-
-        <div class="field">
-          <label for="date_expiration" class="block font-semibold mb-2 required">Date d'expiration *</label>
-          <p-calendar
-            id="date_expiration"
-            [(ngModel)]="offre.date_expiration"
-            name="date_expiration"
-            dateFormat="dd/mm/yy"
-            [showIcon]="true"
-            class="w-full"
-            [minDate]="minDate"
-            [class.ng-invalid]="submitted && !offre.date_expiration"
-            [disabled]="loading()">
-          </p-calendar>
-          <small class="text-red-500" *ngIf="submitted && !offre.date_expiration">La date d'expiration est obligatoire.</small>
-        </div>
-      </div>
-        <!-- Description -->
-    <div class="field">
-      <label for="description" class="block font-semibold mb-2 required">Description *</label>
-      <p-editor
-        id="description"
-        [(ngModel)]="offre.description"
-        name="description"
-        [style]="{ height: '320px' }"
-        class="w-full"
-        [class.ng-invalid]="submitted && !offre.description"
-        [disabled]="loading()">
-      </p-editor>
-      <small class="text-red-500" *ngIf="submitted && !offre.description">La description est obligatoire.</small>
-    </div>
-      <!-- Statut (admin seulement) -->
-      <div class="field">
-        <label for="statut" class="block font-semibold mb-2">Statut</label>
-        <p-dropdown
-          id="statut"
-          [options]="statutOptions"
-          [(ngModel)]="offre.statut"
-          name="statut"
-          placeholder="Sélectionner un statut"
-          class="w-full"
-          [disabled]="loading()">
-        </p-dropdown>
-      </div>
-
-    </form>
-  </ng-template>
-
-  <ng-template #footer>
-    <div class="flex justify-end gap-2">
-      <p-button
-        label="Annuler"
-        icon="pi pi-times"
-        severity="secondary"
-        [outlined]="true"
-        (onClick)="hideDialog()"
-        [disabled]="loading()" />
-      <p-button
-        label="Enregistrer"
-        icon="pi pi-check"
-        (onClick)="saveOffre()"
-        [loading]="loading()" />
-    </div>
-  </ng-template>
-</p-dialog>
 <!-- Dialog de détails -->
 <p-dialog
   [(visible)]="detailsDialog"
-  [style]="{ width: '800px' }"
-  header="Détails de l'offre"
-  [modal]="true">
+  [style]="{width: '800px', maxWidth: '90vw'}"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="details-dialog">
 
-  <ng-template #content>
-    <div class="flex flex-col gap-6" *ngIf="selectedOffreForDetails">
-      <!-- En-tête -->
-      <div class="flex justify-between items-start border-b pb-4">
-        <div>
-          <h3 class="mt-0 mb-2 text-xl font-bold">{{ selectedOffreForDetails.titre }}</h3>
-          <p-tag [value]="selectedOffreForDetails.statut" [severity]="getStatutSeverity(selectedOffreForDetails.statut)"></p-tag>
+  <ng-template pTemplate="header">
+    <div class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-t-xl">
+      <div class="px-6 py-5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center min-w-0">
+            <div class="bg-white/20 rounded-full p-2.5 mr-3 flex-shrink-0">
+              <i class="pi pi-eye text-2xl"></i>
+            </div>
+            <div class="min-w-0">
+              <h2 class="text-xl font-bold">Détails de l'offre</h2>
+              <p class="text-white/80 text-sm mt-0.5 truncate">
+                {{ selectedOffreForDetails?.titre || '' }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-white/60 text-sm">#{{ selectedOffreForDetails?.id }}</span>
+            <p-tag 
+              [value]="selectedOffreForDetails?.statut || ''" 
+              [severity]="getStatutSeverity(selectedOffreForDetails?.statut || '')"
+              styleClass="text-sm">
+            </p-tag>
+          </div>
         </div>
-        <span class="text-sm text-gray-500">#{{ selectedOffreForDetails.id }}</span>
       </div>
+    </div>
+  </ng-template>
 
-      <!-- Informations principales -->
+  <ng-template pTemplate="content">
+    <div class="space-y-5" *ngIf="selectedOffreForDetails">
+      
+      <!-- Informations générales -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h4 class="font-semibold mb-3">Informations générales</h4>
-          <div class="space-y-2">
-            <div><strong>Entreprise:</strong> {{ selectedOffreForDetails.entreprise?.nom_entreprise || '-' }}</div>
-            <div><strong>Catégorie:</strong> {{ selectedOffreForDetails.categorie?.nom || '-' }}</div>
-            <div><strong>Type d'offre:</strong> {{ selectedOffreForDetails.type_offre || '-' }}</div>
-            <div><strong>Type de contrat:</strong> {{ selectedOffreForDetails.type_contrat || '-' }}</div>
-            <div><strong>Localisation:</strong> {{ selectedOffreForDetails.localisation || '-' }}</div>
-            <div><strong>Expérience:</strong> {{ selectedOffreForDetails.experience || '-' }}</div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+            <i class="pi pi-info-circle text-indigo-600 mr-2"></i>
+            Informations générales
+          </h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Entreprise:</span>
+              <span class="font-medium text-gray-800">{{ selectedOffreForDetails.entreprise?.nom_entreprise || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Catégorie:</span>
+              <span class="font-medium text-gray-800">{{ selectedOffreForDetails.categorie?.nom || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Type d'offre:</span>
+              <span class="font-medium text-gray-800">{{ selectedOffreForDetails.type_offre || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Type de contrat:</span>
+              <span class="font-medium text-gray-800">{{ selectedOffreForDetails.type_contrat || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Localisation:</span>
+              <span class="font-medium text-gray-800">{{ selectedOffreForDetails.localisation || '-' }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Expérience:</span>
+              <span class="font-medium text-gray-800">{{ selectedOffreForDetails.experience || '-' }}</span>
+            </div>
           </div>
         </div>
 
-        <div>
-          <h4 class="font-semibold mb-3">Détails financiers et dates</h4>
-          <div class="space-y-2">
-            <div><strong>Salaire:</strong> {{ (selectedOffreForDetails.salaire | number:'1.0-0') || 'Non précisé' }} FCFA</div>
-            <div><strong>Date de publication:</strong> 
-              <span *ngIf="selectedOffreForDetails.date_publication">{{ selectedOffreForDetails.date_publication | date:'dd/MM/yyyy' }}</span>
-              <span *ngIf="!selectedOffreForDetails.date_publication" class="text-gray-500">Non publiée</span>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+            <i class="pi pi-calendar text-indigo-600 mr-2"></i>
+            Dates et salaire
+          </h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Salaire:</span>
+              <span class="font-medium text-gray-800">
+                {{ selectedOffreForDetails.salaire ? (selectedOffreForDetails.salaire | number:'1.0-0') + ' FCFA' : 'Non précisé' }}
+              </span>
             </div>
-            <div><strong>Date d'expiration:</strong> {{ selectedOffreForDetails.date_expiration | date:'dd/MM/yyyy' }}</div>
-            <div><strong>Créée le:</strong> {{ selectedOffreForDetails.created_at | date:'dd/MM/yyyy à HH:mm' }}</div>
-            <div *ngIf="selectedOffreForDetails.date_validation">
-              <strong>Validée le:</strong> {{ selectedOffreForDetails.date_validation | date:'dd/MM/yyyy à HH:mm' }}
+            <div class="flex justify-between">
+              <span class="text-gray-600">Publication:</span>
+              <span class="font-medium text-gray-800">
+                {{ selectedOffreForDetails.date_publication ? (selectedOffreForDetails.date_publication | date:'dd/MM/yyyy') : 'Non publiée' }}
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Expiration:</span>
+              <span class="font-medium text-gray-800">
+                {{ selectedOffreForDetails.date_expiration | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Créée le:</span>
+              <span class="font-medium text-gray-800">
+                {{ selectedOffreForDetails.created_at | date:'dd/MM/yyyy à HH:mm' }}
+              </span>
+            </div>
+            <div *ngIf="selectedOffreForDetails.date_validation" class="flex justify-between">
+              <span class="text-gray-600">Validée le:</span>
+              <span class="font-medium text-gray-800">
+                {{ selectedOffreForDetails.date_validation | date:'dd/MM/yyyy à HH:mm' }}
+              </span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Description -->
-      <div>
-        <h4 class="font-semibold mb-3">Description</h4>
-        <div class="p-4 bg-gray-50 rounded border">
-          <div [innerHTML]="selectedOffreForDetails.description || 'Aucune description'"></div>
+      <div class="bg-gray-50 rounded-xl p-4">
+        <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
+          <i class="pi pi-align-left text-indigo-600 mr-2"></i>
+          Description du poste
+        </h3>
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div [innerHTML]="selectedOffreForDetails.description || 'Aucune description'" 
+               class="prose prose-sm max-w-none text-gray-700"></div>
         </div>
       </div>
 
       <!-- Motif de rejet si applicable -->
-      <div *ngIf="selectedOffreForDetails.motif_rejet" class="p-4 bg-red-50 border-l-4 border-red-500">
-        <h4 class="font-semibold text-red-700 mb-2">Motif de rejet</h4>
-        <p class="text-red-600">{{ selectedOffreForDetails.motif_rejet }}</p>
+      <div *ngIf="selectedOffreForDetails.motif_rejet" 
+           class="bg-red-50 rounded-xl p-4 border-l-4 border-red-500">
+        <h3 class="text-base font-bold text-red-700 mb-2 flex items-center">
+          <i class="pi pi-exclamation-triangle mr-2"></i>
+          Motif de rejet
+        </h3>
+        <p class="text-red-600 text-sm">{{ selectedOffreForDetails.motif_rejet }}</p>
       </div>
     </div>
   </ng-template>
 
-  <ng-template #footer>
-    <div class="flex justify-between">
+  <ng-template pTemplate="footer">
+    <div class="flex justify-between gap-2">
       <div class="flex gap-2">
-        <p-button
-          *ngIf="canEdit(selectedOffreForDetails!)"
-          label="Modifier"
-          icon="pi pi-pencil"
-          severity="secondary"
-          [outlined]="true"
-          (onClick)="editFromDetails()" />
-        <p-button
-          *ngIf="canValidate(selectedOffreForDetails!)"
-          label="Valider"
-          icon="pi pi-check"
-          severity="success"
-          (onClick)="validerFromDetails()" />
+        <button pButton
+                *ngIf="canEdit(selectedOffreForDetails!)"
+                label="Modifier"
+                icon="pi pi-pencil"
+                class="p-button-outlined p-button-sm"
+                (click)="editFromDetails()">
+        </button>
+        <button pButton
+                *ngIf="canValidate(selectedOffreForDetails!)"
+                label="Valider"
+                icon="pi pi-check"
+                class="p-button-success p-button-sm"
+                (click)="validerFromDetails()">
+        </button>
       </div>
-      <p-button label="Fermer" icon="pi pi-times" (onClick)="hideDetailsDialog()" />
+      <button pButton
+              label="Fermer"
+              icon="pi pi-times"
+              class="p-button-secondary p-button-sm"
+              (click)="hideDetailsDialog()">
+      </button>
     </div>
   </ng-template>
 </p-dialog>
 
-<!-- Dialogue de mise en avant -->
- <p-dialog
+<!-- Dialog de mise en vedette -->
+<p-dialog
   [(visible)]="featureDialogVisible"
-  [style]="{ width: '520px' }"
-  header="Passer l’offre en vedette"
-  [modal]="true">
-  <ng-template #content>
-    <div class="flex flex-col gap-4">
-      <div class="text-sm text-gray-600">
-        <div><strong>Offre :</strong> {{ selectedOffreForFeature?.titre }}</div>
-        <div><strong>Entreprise :</strong> {{ selectedOffreForFeature?.entreprise?.nom_entreprise || '-' }}</div>
-      </div>
+  [style]="{width: '500px', maxWidth: '90vw'}"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="feature-dialog">
 
-      <div class="field">
-        <label class="block font-semibold mb-2">Niveau de mise en avant</label>
-        <p-dropdown
-          [options]="[{label:'Niveau 1',value:1},{label:'Niveau 2',value:2},{label:'Niveau 3',value:3}]"
-          [(ngModel)]="featureForm.sponsored_level"
-          [style]="{width:'100%'}">
-        </p-dropdown>
-        <small class="text-gray-500">Plus le niveau est élevé, plus la mise en avant est forte.</small>
-      </div>
-
-      <div class="field">
-        <label class="block font-semibold mb-2">Durée / fin</label>
-        <div class="flex items-center gap-3 flex-wrap">
-          <p-radioButton name="featMode" inputId="featDuration" value="duration" [(ngModel)]="featureForm.mode"></p-radioButton>
-          <label for="featDuration">Pendant (jours)</label>
-
-          <p-radioButton name="featMode" inputId="featUntil" value="until" [(ngModel)]="featureForm.mode"></p-radioButton>
-          <label for="featUntil">Jusqu’à une date</label>
-        </div>
-
-        <div *ngIf="featureForm.mode==='duration'" class="mt-2">
-          <p-inputNumber [(ngModel)]="featureForm.duration_days" [min]="1" [max]="365"></p-inputNumber>
-          <small class="text-gray-500 ml-2">jours</small>
-        </div>
-
-        <div *ngIf="featureForm.mode==='until'" class="mt-2">
-          <p-calendar [(ngModel)]="featureForm.featured_until" [minDate]="minDate" dateFormat="dd/mm/yy" [showIcon]="true"></p-calendar>
+  <ng-template pTemplate="header">
+    <div class="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white rounded-t-xl">
+      <div class="px-6 py-5">
+        <div class="flex items-center">
+          <div class="bg-white/20 rounded-full p-2.5 mr-3">
+            <i class="pi pi-star-fill text-2xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold">Mettre en vedette</h2>
+            <p class="text-white/80 text-sm mt-0.5 truncate">
+              {{ selectedOffreForFeature?.titre || '' }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
   </ng-template>
 
-  <ng-template #footer>
+  <ng-template pTemplate="content">
+    <div class="space-y-4">
+      <!-- Info offre -->
+      <div class="bg-amber-50 rounded-lg p-3">
+        <div class="text-sm space-y-1">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Entreprise:</span>
+            <span class="font-medium text-gray-800">{{ selectedOffreForFeature?.entreprise?.nom_entreprise || '-' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Statut actuel:</span>
+            <p-tag [value]="selectedOffreForFeature?.statut || ''" 
+                   [severity]="getStatutSeverity(selectedOffreForFeature?.statut|| '')"
+                   styleClass="text-xs">
+            </p-tag>
+          </div>
+        </div>
+      </div>
+
+      <!-- Niveau de mise en avant -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Niveau de mise en avant
+        </label>
+        <p-dropdown
+          [options]="[
+            {label:'⭐ Niveau 1 - Standard', value:1},
+            {label:'⭐⭐ Niveau 2 - Premium', value:2},
+            {label:'⭐⭐⭐ Niveau 3 - Exclusif', value:3}
+          ]"
+          [(ngModel)]="featureForm.sponsored_level"
+          styleClass="w-full">
+        </p-dropdown>
+        <small class="text-gray-500 text-xs mt-1">
+          Plus le niveau est élevé, plus la visibilité est importante
+        </small>
+      </div>
+
+      <!-- Mode de durée -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Durée de mise en avant
+        </label>
+        
+        <div class="space-y-3">
+          <div class="flex items-center">
+            <p-radioButton name="featMode" 
+                          inputId="featDuration" 
+                          value="duration" 
+                          [(ngModel)]="featureForm.mode">
+            </p-radioButton>
+            <label for="featDuration" class="ml-2 text-sm">
+              Pendant un nombre de jours
+            </label>
+          </div>
+          
+          <div *ngIf="featureForm.mode === 'duration'" class="ml-6">
+            <div class="flex items-center gap-2">
+              <p-inputNumber [(ngModel)]="featureForm.duration_days" 
+                            [min]="1" 
+                            [max]="365"
+                            styleClass="w-24">
+              </p-inputNumber>
+              <span class="text-sm text-gray-600">jours</span>
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <p-radioButton name="featMode" 
+                          inputId="featUntil" 
+                          value="until" 
+                          [(ngModel)]="featureForm.mode">
+            </p-radioButton>
+            <label for="featUntil" class="ml-2 text-sm">
+              Jusqu'à une date précise
+            </label>
+          </div>
+          
+          <div *ngIf="featureForm.mode === 'until'" class="ml-6">
+            <p-calendar [(ngModel)]="featureForm.featured_until" 
+                       [minDate]="minDate" 
+                       dateFormat="dd/mm/yy" 
+                       [showIcon]="true"
+                       styleClass="w-full">
+            </p-calendar>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
     <div class="flex justify-end gap-2">
-      <p-button label="Annuler" icon="pi pi-times" severity="secondary" outlined (onClick)="featureDialogVisible=false"/>
-      <p-button label="Valider" icon="pi pi-check" (onClick)="submitFeature()" [loading]="loading()"/>
+      <button pButton
+              label="Annuler"
+              icon="pi pi-times"
+              class="p-button-secondary p-button-sm"
+              (click)="featureDialogVisible = false">
+      </button>
+      <button pButton
+              label="Activer la vedette"
+              icon="pi pi-star"
+              class="p-button-warning p-button-sm"
+              (click)="submitFeature()"
+              [loading]="loading()">
+      </button>
     </div>
   </ng-template>
 </p-dialog>
+
+<!-- Styles CSS unifiés pour tous les dialogs -->
+<style>
+/* Base pour tous les dialogs */
+::ng-deep .offre-dialog .p-dialog,
+::ng-deep .reject-dialog .p-dialog,
+::ng-deep .details-dialog .p-dialog,
+::ng-deep .feature-dialog .p-dialog {
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Headers personnalisés */
+::ng-deep .offre-dialog .p-dialog-header,
+::ng-deep .reject-dialog .p-dialog-header,
+::ng-deep .details-dialog .p-dialog-header,
+::ng-deep .feature-dialog .p-dialog-header {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Content avec padding cohérent */
+::ng-deep .offre-dialog .p-dialog-content,
+::ng-deep .reject-dialog .p-dialog-content,
+::ng-deep .details-dialog .p-dialog-content,
+::ng-deep .feature-dialog .p-dialog-content {
+  padding: 1.25rem !important;
+  max-height: calc(80vh - 120px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Footer unifié */
+::ng-deep .offre-dialog .p-dialog-footer,
+::ng-deep .reject-dialog .p-dialog-footer,
+::ng-deep .details-dialog .p-dialog-footer,
+::ng-deep .feature-dialog .p-dialog-footer {
+  padding: 1rem 1.25rem !important;
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Scrollbar personnalisée */
+::ng-deep .p-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+::ng-deep .p-dialog-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+::ng-deep .p-dialog-content::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::ng-deep .p-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Tags */
+::ng-deep .p-tag {
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 9999px !important;
+  font-size: 0.875rem !important;
+}
+
+/* Boutons */
+::ng-deep .p-button-sm {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Dropdowns */
+::ng-deep .p-dropdown {
+  border-radius: 0.5rem !important;
+}
+
+/* Calendar */
+::ng-deep .p-calendar .p-inputtext {
+  border-radius: 0.5rem !important;
+}
+
+/* Editor */
+::ng-deep .p-editor-container {
+  border-radius: 0.5rem !important;
+}
+
+/* Fix pour éviter les débordements */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+/* Espacement uniforme */
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.space-y-5 > * + * {
+  margin-top: 1.25rem;
+}
+
+/* Amélioration des champs de formulaire */
+::ng-deep .ng-invalid.ng-touched {
+  border-color: #ef4444 !important;
+}
+
+::ng-deep .p-inputtext:focus,
+::ng-deep .p-dropdown:focus,
+::ng-deep .p-calendar:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Transitions douces */
+::ng-deep .p-button {
+  transition: all 0.2s ease;
+}
+
+::ng-deep .p-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Dialog amélioré */
+::ng-deep .offre-dialog-enhanced .p-dialog {
+  border-radius: 0.875rem !important;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+::ng-deep .offre-dialog-enhanced .p-dialog-header {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+::ng-deep .offre-dialog-enhanced .p-dialog-content {
+  padding: 1.5rem !important;
+  max-height: calc(85vh - 140px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+::ng-deep .offre-dialog-enhanced .p-dialog-footer {
+  padding: 1rem 1.5rem !important;
+  background: linear-gradient(to top, #fafafa, transparent);
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Sections colorées subtiles */
+.bg-blue-50\/30 { background-color: rgba(239, 246, 255, 0.3); }
+.bg-green-50\/30 { background-color: rgba(240, 253, 244, 0.3); }
+.bg-purple-50\/30 { background-color: rgba(250, 245, 255, 0.3); }
+
+/* Animation des sections au hover */
+::ng-deep .offre-dialog-enhanced [class*="rounded-xl"]:hover {
+  transition: all 0.3s ease;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Numérotation des sections */
+::ng-deep .offre-dialog-enhanced .rounded-full.w-8 {
+  transition: all 0.3s ease;
+}
+
+::ng-deep .offre-dialog-enhanced .rounded-full.w-8:hover {
+  transform: scale(1.1);
+}
+
+/* Editor personnalisé */
+::ng-deep .offre-dialog-enhanced .p-editor-container {
+  border-radius: 0.5rem !important;
+  border: 1px solid #d1d5db !important;
+}
+
+::ng-deep .offre-dialog-enhanced .p-editor-container:focus-within {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Scrollbar élégante */
+::ng-deep .offre-dialog-enhanced .p-dialog-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+::ng-deep .offre-dialog-enhanced .p-dialog-content::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+::ng-deep .offre-dialog-enhanced .p-dialog-content::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+  border-radius: 3px;
+}
+
+/* Champs de formulaire améliorés */
+::ng-deep .offre-dialog-enhanced .p-inputtext,
+::ng-deep .offre-dialog-enhanced .p-dropdown,
+::ng-deep .offre-dialog-enhanced .p-calendar .p-inputtext {
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease;
+}
+
+::ng-deep .offre-dialog-enhanced .p-inputtext:focus,
+::ng-deep .offre-dialog-enhanced .p-dropdown:focus,
+::ng-deep .offre-dialog-enhanced .p-calendar .p-inputtext:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* États d'erreur */
+::ng-deep .offre-dialog-enhanced .ng-invalid.ng-touched {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+/* Boutons stylisés */
+::ng-deep .offre-dialog-enhanced .p-button-sm {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 500 !important;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  ::ng-deep .offre-dialog-enhanced .p-dialog {
+    margin: 0.5rem !important;
+    width: calc(100% - 1rem) !important;
+  }
+}
+</style>

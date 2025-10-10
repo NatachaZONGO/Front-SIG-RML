@@ -25,6 +25,7 @@ import { forkJoin } from 'rxjs';
 import { EditorModule } from 'primeng/editor';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { Tag, TagModule } from 'primeng/tag';
+import { SelectModule } from 'primeng/select';
 
 
 
@@ -78,8 +79,8 @@ interface PricingTier {
         InputIconModule,
         IconFieldModule,
         TagModule,
-        
-
+        DropdownModule,
+        SelectModule, 
     ],
     templateUrl: './publicite.component.html',
     providers: [MessageService, Publiciteservice, ConfirmationService],

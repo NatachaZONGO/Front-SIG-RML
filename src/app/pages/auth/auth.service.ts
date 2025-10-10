@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, catchError, firstValueFrom, map, Observable, tap, throwError } from 'rxjs';
 import { UserConnexion } from './connexion/userconnexion.model';
-import { BackendURL, LocalStorageFields } from '../../const';
+import { BackendURL, LocalStorageFields } from '../../Share/const';
 import { RegisterCandidat, RegisterRecruteur } from './register/user.model';
 
 
@@ -144,7 +144,9 @@ export class AuthService {
           })
         )
     );
+    
   }
+
 
   // ----------------------------- Déconnexion
   logout(): void {
