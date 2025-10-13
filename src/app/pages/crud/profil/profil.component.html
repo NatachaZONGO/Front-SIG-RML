@@ -160,10 +160,6 @@
               <p class="status-value">{{ user.statut === 'actif' ? 'Compte actif' : 'Compte inactif' }}</p>
             </div>
           </div>
-          <!-- Ajoutez cette ligne temporairement dans votre HTML -->
-          <div style="background: yellow; padding: 10px;">
-            DEBUG - Statut: "{{ user.statut }}" - Type: {{ typeof user.statut }}
-          </div>
                     <div class="status-item" *ngIf="user.created_at">
             <div class="status-item-icon calendar">
               <i class="pi pi-calendar-plus"></i>
@@ -440,6 +436,10 @@
 
         <!-- Champs mot de passe -->
         <div class="form-grid" *ngIf="changePassword()">
+          <div>
+            <label for="currentPassword" class="block text-sm font-medium mb-2">Mot de passe actuel</label>
+            <p-password id="currentPassword" formControlName="currentPassword" [feedback]="false" [toggleMask]="true"></p-password>
+          </div>
           <div class="form-field">
             <label for="password">Nouveau mot de passe <span class="required">*</span></label>
             <p-password

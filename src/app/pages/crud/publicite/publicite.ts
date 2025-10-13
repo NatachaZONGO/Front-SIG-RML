@@ -26,6 +26,7 @@ import { EditorModule } from 'primeng/editor';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { Tag, TagModule } from 'primeng/tag';
 import { SelectModule } from 'primeng/select';
+import { AuthService } from '../../auth/auth.service';
 
 
 
@@ -134,7 +135,8 @@ export class PubliciteComponent implements OnInit {
         private publiciteService: Publiciteservice,
         private messageService: MessageService,
         private confirmationService: ConfirmationService,
-        private entrepriseService: EntrepriseService
+        private entrepriseService: EntrepriseService,
+        private authService: AuthService
     ) {}
 
     ngOnInit(): void {
@@ -155,23 +157,55 @@ export class PubliciteComponent implements OnInit {
     }
 
     loadData() {
-    forkJoin({
-        entreprises: this.entrepriseService.getEntreprises({ page: 1, per_page: 1000 }),
-        publicites: this.publiciteService.getPublicites()
-    }).subscribe({
+  // Récupérer le rôle et le nettoyer
+  const rawRole = this.authService.getUserRole();
+  const role = rawRole?.toLowerCase()?.trim();
+  
+  // Log pour déboguer
+  console.log('🔍 Rôle de l\'utilisateur (publicités):', rawRole, '-> normalisé:', role);
+  
+  // Sélectionner le bon endpoint selon le rôle
+  const publicites$ = 
+    role === 'recruteur'
+      ? this.publiciteService.getMesPublicites()
+      : this.publiciteService.getPublicites();
+
+  console.log('📡 Endpoint utilisé:', role === 'recruteur' ? 'mes-publicites' : 'publicites');
+
+  forkJoin({
+    entreprises: this.entrepriseService.getEntreprises({ page: 1, per_page: 1000 }),
+    publicites: publicites$
+  }).subscribe({
     next: ({ entreprises, publicites }) => {
+      console.log('📦 Entreprises récupérées:', entreprises?.data?.data?.length || 0);
+      console.log('📦 Publicités récupérées:', publicites?.length || 0);
+      console.log('✅ Données publicités:', publicites);
+      
       this.entreprises = entreprises?.data?.data ?? [];
       this.publicites = publicites.map(p => ({
         ...p,
-        // Normaliser les URLs utilisables dans l’UI
+        // Normaliser les URLs utilisables dans l'UI
         image: p.image_url || p.image || '',
         video: p.video_url || p.video || '',
       }));
+      
+      console.log('🎯 Publicités finales affichées:', this.publicites.length);
     },
-    error: (err) => console.error('Erreur lors du chargement des données', err)
+    error: (err) => {
+      console.error('❌ Erreur lors du chargement des données:', err);
+      console.error('Détails de l\'erreur:', {
+        status: err.status,
+        message: err.message,
+        error: err.error
+      });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Erreur',
+        detail: 'Erreur lors du chargement des données'
+      });
+    }
   });
 }
-
 
    initColumns() {
     this.cols = [

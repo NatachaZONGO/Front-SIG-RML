@@ -10,11 +10,14 @@ export interface Entreprise {
   logo?: string;
   logoFile?: File;
   pays_id?: number;
+  taille_entreprise?: string;
+  ville?: string;
+  adresse?: string;                    // ✅ AJOUTÉ
   statut?: 'en attente' | 'valide' | 'refuse';
   motif_rejet?: string;
-  created_at?: string;
-  updated_at?: string;
-  
+  created_at?: string | Date;
+  updated_at?: string | Date;
+
   // Relations
   user?: {
     id: number;
@@ -40,6 +43,9 @@ export interface CreateEntrepriseRequest {
   logo?: string;
   logoFile?: File;
   pays_id?: number;
+  taille_entreprise?: string;          // ✅ AJOUTÉ
+  ville?: string;                      // ✅ AJOUTÉ
+  adresse?: string;                    // ✅ AJOUTÉ
   statut?: string;
 }
 
@@ -53,6 +59,9 @@ export interface UpdateEntrepriseRequest {
   logo?: string;
   logoFile?: File;
   pays_id?: number;
+  taille_entreprise?: string;          // ✅ AJOUTÉ
+  ville?: string;                      // ✅ AJOUTÉ
+  adresse?: string;                    // ✅ AJOUTÉ
   statut?: string;
   motif_rejet?: string;
 }

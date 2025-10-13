@@ -114,30 +114,30 @@ updateEntreprise(id: number, entreprise: UpdateEntrepriseRequest) {
    * Valider une entreprise
    */
   validateEntreprise(entrepriseId: number) {
-  return this.http.put<ApiResponse<Entreprise>>(
-    `${this.apiUrl}/admin/entreprises/${entrepriseId}/validate`, {}
-  );
-}
-
-rejectEntreprise(entrepriseId: number, motif: string) {
-  return this.http.put<ApiResponse<Entreprise>>(
-    `${this.apiUrl}/admin/entreprises/${entrepriseId}/reject`, { motif }
-  );
-}
-
-// Optionnel si tu ajoutes la route revalidate:
-revalidateEntreprise(entrepriseId: number) {
-  return this.http.put<ApiResponse<Entreprise>>(
-    `${this.apiUrl}/admin/entreprises/${entrepriseId}/revalidate`, {}
-  );
-}
-
-  /**
-   * Récupérer les entreprises en attente
-   */
-  getPendingEntreprises(): Observable<ApiResponse<{ entreprises: Entreprise[], total: number }>> {
-    return this.http.get<ApiResponse<{ entreprises: Entreprise[], total: number }>>(`${this.apiUrl}/admin/entreprises/pending`);
+    return this.http.put<ApiResponse<Entreprise>>(
+      `${this.apiUrl}/entreprises/${entrepriseId}/validate`, {}
+    );
   }
+
+  rejectEntreprise(entrepriseId: number, motif: string) {
+    return this.http.put<ApiResponse<Entreprise>>(
+      `${this.apiUrl}/entreprises/${entrepriseId}/reject`, { motif }
+    );
+  }
+
+  revalidateEntreprise(entrepriseId: number) {
+    return this.http.put<ApiResponse<Entreprise>>(
+      `${this.apiUrl}/entreprises/${entrepriseId}/revalidate`, {}
+    );
+  }
+
+  // Et pour la liste des en attente :
+  getPendingEntreprises(): Observable<ApiResponse<{ entreprises: Entreprise[], total: number }>> {
+    return this.http.get<ApiResponse<{ entreprises: Entreprise[], total: number }>>(
+      `${this.apiUrl}/entreprises/pending`
+    );
+  }
+
 
   /**
    * Construire FormData pour les requêtes avec fichiers
@@ -197,5 +197,13 @@ revalidateEntreprise(entrepriseId: number) {
         id: u.id, nom: u.nom, prenom: u.prenom, email: u.email
       })))
     );
+  }
+
+  createEntrepriseWithFile(formData: FormData): Observable<any> {
+  return this.http.post(`${this.apiUrl}/entreprises`, formData);
+  }
+
+  updateEntrepriseWithFile(id: number, formData: FormData): Observable<any> {
+    return this.http.post(`${this.apiUrl}/entreprises/${id}`, formData);
   }
 }

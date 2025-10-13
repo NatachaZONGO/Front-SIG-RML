@@ -65,6 +65,7 @@ export class ProfilComponent implements OnInit {
     prenom: FormControl<string>;
     email: FormControl<string>;
     telephone: FormControl<string>;
+    currentPassword: FormControl<string>;
     password: FormControl<string>;
     confirmPassword: FormControl<string>;
   }>;
@@ -98,6 +99,7 @@ export class ProfilComponent implements OnInit {
         prenom: new FormControl<string>('', { nonNullable: true, validators: [Validators.required] }),
         email: new FormControl<string>('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
         telephone: new FormControl<string>('', { nonNullable: true }),
+        currentPassword: new FormControl<string>('', { nonNullable: true }),
         password: new FormControl<string>('', { nonNullable: true }),
         confirmPassword: new FormControl<string>('', { nonNullable: true })
       },
@@ -116,52 +118,7 @@ export class ProfilComponent implements OnInit {
    *   }
    * }
    */
-  private loadUserProfile(): void {
-    this.isLoading.set(true);
-
-    this.auth.getCurrentUserInfos().subscribe({
-      next: (res: any) => {
-        const userPayload = res?.data?.user ?? res?.user ?? null;
-        const rolesPayload =
-          res?.data?.roles ?? // ex: ["candidat"]
-          userPayload?.roles ?? // ex: [{id, nom}]
-          res?.roles ?? [];
-
-        if (!userPayload) {
-          throw new Error('Réponse /me invalide : user manquant');
-        }
-
-        this.user = {
-          id: userPayload.id,
-          nom: userPayload.nom ?? '',
-          prenom: userPayload.prenom ?? '',
-          email: userPayload.email ?? '',
-          // si ton modèle User a telephone :
-          telephone: userPayload.telephone ?? ''
-        } as User;
-
-        // normalise les rôles en [{id?, nom}]
-        this.roles = Array.isArray(rolesPayload)
-          ? rolesPayload.map((r: any) =>
-              typeof r === 'string' ? ({ nom: r }) : ({ id: r?.id, nom: r?.nom })
-            )
-          : [];
-
-        // Optionnel: synchro localStorage
-        localStorage.setItem('utilisateur', JSON.stringify(this.user));
-      },
-      error: (err) => {
-        console.error('Erreur profil:', err);
-        this.messages.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Impossible de récupérer votre profil.',
-          life: 5000
-        });
-      },
-      complete: () => this.isLoading.set(false)
-    });
-  }
+  
 
   /**
    * Ouvre le dialog et pré-remplit avec les données courantes
@@ -173,6 +130,7 @@ export class ProfilComponent implements OnInit {
       prenom: user.prenom ?? '',
       email: user.email ?? '',
       telephone: (user as any).telephone ?? '',
+      currentPassword: '',
       password: '',
       confirmPassword: ''
     });
@@ -215,48 +173,48 @@ export class ProfilComponent implements OnInit {
     }
 
     this.isLoading.set(true);
-
     try {
-      // Adapte à ton endpoint réel
-      await this.userService.updateUser({
-        id: data.id,
+      await this.userService.updateProfileDetails({
         nom: data.nom,
         prenom: data.prenom,
         email: data.email,
-        // envoie le téléphone si supporté côté API :
-        telephone: data.telephone,
-        // envoie le password si non vide :
-        ...(data.password ? { password: data.password } : {})
-      } as unknown as User);
+        telephone: data.telephone
+        // (photo en string possible si tu affiches un champ)
+      }).toPromise();
 
-      // Met à jour l’état local
-      if (this.user) {
-        this.user = {
-          ...this.user,
-          nom: data.nom,
-          prenom: data.prenom,
-          email: data.email,
-          telephone: data.telephone
-        };
-        localStorage.setItem('utilisateur', JSON.stringify(this.user));
+      // 2) si changement de mot de passe
+      if (this.changePassword()) {
+        if (!data.currentPassword) {
+          this.messages.add({ severity: 'warn', summary: 'Mot de passe', detail: 'Mot de passe actuel requis.' });
+          this.isLoading.set(false);
+          return;
+        }
+        if (!data.password || data.password !== data.confirmPassword) {
+          this.messages.add({ severity: 'warn', summary: 'Mot de passe', detail: 'Les mots de passe ne correspondent pas.' });
+          this.isLoading.set(false);
+          return;
+        }
+
+        await this.userService.changePassword(
+          data.currentPassword,
+          data.password,
+          data.confirmPassword
+        ).toPromise();
       }
 
-      this.messages.add({
-        severity: 'success',
-        summary: 'Profil',
-        detail: 'Vos informations ont été mises à jour.',
-        life: 3000
-      });
+      // 3) recharger le profil (optionnel mais pratique)
+      await this.userService.getProfile().toPromise().then((u: User | undefined) => {
+          if (u) {
+            this.user = u;
+          }
+        });
 
+      this.messages.add({ severity: 'success', summary: 'Profil', detail: 'Vos informations ont été mises à jour.' });
       this.closeForm();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      this.messages.add({
-        severity: 'error',
-        summary: 'Erreur',
-        detail: 'Mise à jour impossible.',
-        life: 5000
-      });
+      const detail = err?.error?.message || 'Mise à jour impossible.';
+      this.messages.add({ severity: 'error', summary: 'Erreur', detail });
     } finally {
       this.isLoading.set(false);
     }
@@ -281,27 +239,30 @@ export class ProfilComponent implements OnInit {
   }
 
   // --- Toggle dynamique des validators pour les champs password
-  onToggleChangePassword(checked: boolean): void {
+ onToggleChangePassword(checked: boolean): void {
     this.changePassword.set(checked);
-
+    const cur = this.userForm.get('currentPassword');
     const pwd = this.userForm.get('password');
     const cfm = this.userForm.get('confirmPassword');
 
     if (checked) {
+      cur?.setValidators([Validators.required]);
       pwd?.setValidators([Validators.required, Validators.minLength(8)]);
       cfm?.setValidators([Validators.required]);
     } else {
+      cur?.clearValidators();
       pwd?.clearValidators();
       cfm?.clearValidators();
+      cur?.setValue('');
       pwd?.setValue('');
       cfm?.setValue('');
     }
+    cur?.updateValueAndValidity();
     pwd?.updateValueAndValidity();
     cfm?.updateValueAndValidity();
-
-    // recheck le validator global
     this.userForm.updateValueAndValidity();
   }
+
 
   // Gestion d’erreur de chargement de l’image
   /**
@@ -382,38 +343,25 @@ export class ProfilComponent implements OnInit {
     }
   }
 
-  **
-   * Charger le profil depuis l'API (données fraîches)
-   */
+
   loadUserProfile(): void {
     this.userService.getProfile().subscribe({
-      next: (data) => {
-        this.user = data;
-        
-        // Debug
-        console.log('User chargé:', this.user);
-        console.log('Statut:', this.user.statut);
-        console.log('Type du statut:', typeof this.user.statut);
-        
-        // Peupler le formulaire
+      next: (user) => {
+        this.user = user;
         if (this.user) {
           this.userForm.patchValue({
+            id: this.user.id ?? null,
             nom: this.user.nom,
             prenom: this.user.prenom,
             email: this.user.email,
             telephone: this.user.telephone
           });
-          
           this.loadUserRoles();
         }
       },
       error: (err) => {
-        console.error('Erreur lors du chargement du profil:', err);
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Erreur',
-          detail: 'Impossible de charger le profil'
-        });
+        console.error('Erreur profil:', err);
+        this.messages.add({ severity: 'error', summary: 'Erreur', detail: 'Impossible de charger le profil' });
       }
     });
   }
@@ -423,10 +371,12 @@ export class ProfilComponent implements OnInit {
    */
   loadUserRoles(): void {
     // Si vous avez les rôles directement dans l'objet user
-    if (this.user.roles) {
+    if (this.user?.roles) {
       this.roles = Array.isArray(this.user.roles) ? this.user.roles : [this.user.roles];
-    } else if (this.user.role) {
-      this.roles = [this.user.role];
+    } else if (this.user?.role) {
+      this.roles = [{ nom: this.user.role }];
     }
   }
+
+  
 }

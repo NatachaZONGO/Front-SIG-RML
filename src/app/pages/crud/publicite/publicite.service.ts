@@ -55,31 +55,64 @@ export class Publiciteservice {
   private apiUrl = `${BackendURL}publicites`;
   private activationUrl = `${BackendURL}publicites/activation`;
 
+  constructor(private http: HttpClient, private authService: AuthService) {}
+
+  // ===============================
+  // HELPER: Headers avec token
+  // ===============================
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    console.log('🔑 Token utilisé (publicite):', token ? 'Présent (longueur: ' + token.length + ')' : 'ABSENT');
+    
+    return new HttpHeaders({
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+  }
 
   private resolveMedia(u?: string): string | undefined {
-  if (!u) return undefined;
-  if (/^https?:\/\//i.test(u)) return u;
-  if (u.startsWith('/storage/')) {
-    const origin = BackendURL.replace(/\/api\/?$/, '');
-    return origin + u;
+    if (!u) return undefined;
+    if (/^https?:\/\//i.test(u)) return u;
+    if (u.startsWith('/storage/')) {
+      const origin = BackendURL.replace(/\/api\/?$/, '');
+      return origin + u;
+    }
+    return imageUrl + u.replace(/^\/+/, '');
   }
-  return imageUrl + u.replace(/^\/+/, '');
-}
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
- 
   // ===============================
   // MÉTHODES CRUD
   // ===============================
 
+  /** ADMIN - Toutes les publicités */
   getPublicites(): Observable<Publicite[]> {
-    return this.http.get<any>(this.apiUrl).pipe(
-      map(res =>
-        Array.isArray(res?.data?.data) ? res.data.data
-        : Array.isArray(res?.data)     ? res.data
-        : Array.isArray(res)           ? res
-        : []
-      )
+    console.log('📡 Appel getPublicites() (ADMIN) - endpoint:', this.apiUrl);
+    
+    return this.http.get<any>(this.apiUrl, { headers: this.getHeaders() }).pipe(
+      map(res => {
+        console.log('📦 Réponse getPublicites:', res);
+        return Array.isArray(res?.data?.data) ? res.data.data
+          : Array.isArray(res?.data) ? res.data
+          : Array.isArray(res) ? res
+          : [];
+      })
+    );
+  }
+
+  /** RECRUTEUR - Mes publicités uniquement */
+  getMesPublicites(): Observable<Publicite[]> {
+    const url = `${this.apiUrl}/mes-publicites`;
+    console.log('📡 Appel getMesPublicites() (RECRUTEUR) - endpoint:', url);
+    
+    return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
+      map(res => {
+        console.log('📦 Réponse getMesPublicites:', res);
+        return Array.isArray(res?.data?.data) ? res.data.data
+          : Array.isArray(res?.data) ? res.data
+          : Array.isArray(res) ? res
+          : [];
+      })
     );
   }
 
@@ -93,7 +126,6 @@ export class Publiciteservice {
     return d;
   }
 
-  // Conserve buildBody pour création/édition de contenu
   private buildBody(p: Publicite): FormData | any {
     const hasFiles = !!(p.imageFile || p.videoFile);
     const mediaReq = p.media_request ?? (p.video || p.videoFile ? 'video' : 'image');
@@ -107,7 +139,6 @@ export class Publiciteservice {
       fd.append('media_request', mediaReq);
       if (p.entreprise_id) fd.append('entreprise_id', String(p.entreprise_id));
 
-      // ⚠️ Durée & date_debut NE SONT PLUS exigées ici si vous les définissez à l’activation
       if (p.duree) fd.append('duree', String(p.duree));
       if (p.date_debut) fd.append('date_debut', p.date_debut instanceof Date ? p.date_debut.toISOString().slice(0,10) : p.date_debut);
 
@@ -127,7 +158,6 @@ export class Publiciteservice {
       type: p.type ?? 'banniere',
       media_request: mediaReq,
       entreprise_id: p.entreprise_id,
-      // idem ici: durée/date_debut optionnelles
       duree: p.duree,
       date_debut: p.date_debut instanceof Date ? p.date_debut.toISOString().slice(0,10) : p.date_debut
     };
@@ -135,21 +165,31 @@ export class Publiciteservice {
 
   createPublicite(pOrBody: Publicite | FormData | any): Observable<any> {
     const body = this.isFormData(pOrBody) || typeof pOrBody !== 'object' ? pOrBody : this.buildBody(pOrBody);
-    return this.http.post(this.apiUrl, body);
+    
+    // Pour FormData, on ne met pas Content-Type (le navigateur le fait automatiquement)
+    const headers = this.isFormData(body) 
+      ? new HttpHeaders({ 'Authorization': `Bearer ${this.authService.getToken()}` })
+      : this.getHeaders();
+    
+    return this.http.post(this.apiUrl, body, { headers });
   }
 
   updatePublicite(id: number, pOrBody: Publicite | FormData | any): Observable<any> {
     const body = this.isFormData(pOrBody) || typeof pOrBody !== 'object' ? pOrBody : this.buildBody(pOrBody);
-    return this.http.put(`${this.apiUrl}/${id}`, body);
+    
+    const headers = this.isFormData(body)
+      ? new HttpHeaders({ 'Authorization': `Bearer ${this.authService.getToken()}` })
+      : this.getHeaders();
+    
+    return this.http.put(`${this.apiUrl}/${id}`, body, { headers });
   }
 
-  // ✅ Ajout: mise à jour "brute" sans passer par buildBody (utile pour activation / transitions)
   updatePubliciteRaw(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}`, data);
+    return this.http.put(`${this.apiUrl}/${id}`, data, { headers: this.getHeaders() });
   }
 
   deletePublicite(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
   }
 
   // ===============================
@@ -194,23 +234,21 @@ export class Publiciteservice {
   }
 
   requestActivation(data: ActivationRequest): Observable<ActivationResponse> {
-    return this.http.post<ActivationResponse>(`${this.activationUrl}/request`, data);
+    return this.http.post<ActivationResponse>(`${this.activationUrl}/request`, data, { headers: this.getHeaders() });
   }
 
   validateActivationCode(data: CodeValidationRequest): Observable<CodeValidationResponse> {
-    return this.http.post<CodeValidationResponse>(`${this.activationUrl}/validate`, data);
+    return this.http.post<CodeValidationResponse>(`${this.activationUrl}/validate`, data, { headers: this.getHeaders() });
   }
 
   checkPaymentStatus(transactionId: string): Observable<any> {
-    return this.http.get(`${this.activationUrl}/status/${transactionId}`);
+    return this.http.get(`${this.activationUrl}/status/${transactionId}`, { headers: this.getHeaders() });
   }
 
-  // Ancienne méthode — si tu as un endpoint /activate
   activatePublicite(publiciteId: number, activationCode: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/${publiciteId}/activate`, { activation_code: activationCode });
+    return this.http.post(`${this.apiUrl}/${publiciteId}/activate`, { activation_code: activationCode }, { headers: this.getHeaders() });
   }
 
-  // ✅ Nouvelle méthode pratique: activer via PUT minimal (statut+payment_status+duree+date_debut)
   activateByStatusChange(publiciteId: number, duree: string, dateDebut: Date | string): Observable<any> {
     const toYMD = (d: Date | string) =>
       typeof d === 'string' ? d : new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10);
@@ -222,6 +260,18 @@ export class Publiciteservice {
       date_debut: toYMD(dateDebut)
     };
     return this.updatePubliciteRaw(publiciteId, payload);
+  }
+
+  activatePubliciteV2(id: number, duree: string, dateDebut: Date | string) {
+    const date_ymd = dateDebut instanceof Date
+      ? dateDebut.toISOString().slice(0,10)
+      : dateDebut;
+
+    return this.http.put(`${this.apiUrl}/${id}/activer`, {
+      duree,
+      date_debut: date_ymd,
+      payment_status: 'paid'
+    }, { headers: this.getHeaders() });
   }
 
   // ===============================
@@ -269,15 +319,15 @@ export class Publiciteservice {
   }
 
   getActivationHistory(publiciteId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.activationUrl}/history/${publiciteId}`);
+    return this.http.get<any[]>(`${this.activationUrl}/history/${publiciteId}`, { headers: this.getHeaders() });
   }
 
   getRevenueStats(): Observable<any> {
-    return this.http.get(`${this.activationUrl}/stats/revenue`);
+    return this.http.get(`${this.activationUrl}/stats/revenue`, { headers: this.getHeaders() });
   }
 
-    getPublicitesByStatus(status: string): Observable<Publicite[]> {
-    return this.http.get<any>(`${this.apiUrl}?status=${status}`).pipe(
+  getPublicitesByStatus(status: string): Observable<Publicite[]> {
+    return this.http.get<any>(`${this.apiUrl}?status=${status}`, { headers: this.getHeaders() }).pipe(
       map(res => Array.isArray(res?.data?.data) ? res.data.data
             : Array.isArray(res?.data) ? res.data
             : Array.isArray(res) ? res : []),
@@ -287,31 +337,5 @@ export class Publiciteservice {
         video: this.resolveMedia(p.video_url || p.video),
       })))
     );
-  }
-
-  activatePubliciteV2(id: number, duree: string, dateDebut: Date | string) {
-    const date_ymd = dateDebut instanceof Date
-      ? dateDebut.toISOString().slice(0,10)
-      : dateDebut;
-
-    return this.http.put(`${this.apiUrl}/${id}/activer`, {
-      duree,
-      date_debut: date_ymd,
-      payment_status: 'paid'
-    });
-  }
-  getPublicitesByRole(): Observable<any> {
-    const token = this.authService.getToken();
-    const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`,          'Content-Type': 'application/json'
-      });
-
-    if (this.authService.hasRole('Administrateur')) {
-        return this.http.get(`${BackendURL}publicites`, { headers });
-    } else if (this.authService.hasRole('Recruteur')) {
-        return this.http.get(`${BackendURL}mes-publicites`, { headers });
-    }
-
-    return of({ success: false, data: [], message: 'Accès non autorisé' });
   }
 }

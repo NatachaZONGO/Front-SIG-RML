@@ -50,7 +50,7 @@ export class AuthService {
  // --- REGISTER ---
   registerCandidat(payload: RegisterCandidat): Promise<any> {
     return firstValueFrom(
-      this.http.post(`${BackendURL}register-candidat`, payload).pipe(
+      this.http.post(`${BackendURL}auth/register-candidat`, payload).pipe(
         tap((res: any) => this.persistAuthAfterRegister(res)),
         catchError(err => {
           console.error('registerCandidat error', err);
@@ -83,7 +83,7 @@ export class AuthService {
   connexion(userConnexion: UserConnexion): Promise<any> {
     return firstValueFrom(
       this.http
-        .post<any>(`${BackendURL}login`, userConnexion, {
+        .post<any>(`${BackendURL}auth/login`, userConnexion, {
           headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
         })
         .pipe(

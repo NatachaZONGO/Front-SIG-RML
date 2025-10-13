@@ -1,0 +1,421 @@
+<p-toast></p-toast>
+
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div>
+        <h1 class="page-title">
+          <i class="pi pi-building mr-3"></i>
+          Mon Entreprise
+        </h1>
+        <p class="page-subtitle">
+          Gérez les informations de votre entreprise
+        </p>
+      </div>
+      <p-button 
+        label="Modifier" 
+        icon="pi pi-pencil" 
+        (onClick)="openEditDialog()"
+        [disabled]="loading">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- Skeleton loader -->
+  <div *ngIf="loading && !entreprise" class="loading-container">
+    <p-card>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div *ngFor="let i of [1,2,3]">
+          <p-skeleton height="150px"></p-skeleton>
+        </div>
+      </div>
+    </p-card>
+    <p-card class="mt-4">
+      <p-skeleton height="300px"></p-skeleton>
+    </p-card>
+  </div>
+
+  <!-- Contenu principal -->
+  <div *ngIf="!loading || entreprise" class="content-grid">
+    
+    <!-- Statistiques -->
+    <div class="stats-grid">
+      <div 
+        *ngFor="let stat of stats" 
+        class="stat-card"
+        [style.borderLeft]="'4px solid ' + stat.color">
+        <div class="stat-icon" [style.background]="stat.bgColor">
+          <i [class]="stat.icon" [style.color]="stat.color"></i>
+        </div>
+        <div class="stat-content">
+          <span class="stat-label">{{ stat.title }}</span>
+          <span class="stat-value">{{ stat.value }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Carte principale -->
+    <p-card styleClass="entreprise-card">
+      <ng-template pTemplate="header">
+        <div class="card-header-custom">
+          <div class="company-logo-section">
+            <div class="logo-wrapper">
+              <img 
+                [src]="getLogoUrl()" 
+                [alt]="entreprise?.nom_entreprise || 'Logo entreprise'"
+                class="company-logo"
+                (error)="onImageError($event)" />
+              <div class="logo-overlay">
+                <label for="logo-upload" class="upload-label">
+                  <i class="pi pi-camera"></i>
+                  <input 
+                    type="file" 
+                    id="logo-upload"
+                    accept="image/*"
+                    (change)="onLogoSelected($event)"
+                    style="display: none;" />
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="company-header-info">
+            <h2 class="company-name">{{ entreprise?.nom_entreprise || 'Non renseigné' }}</h2>
+            <p class="company-sector">
+              <i class="pi pi-tag mr-2"></i>
+              {{ entreprise?.secteur_activite || 'Secteur non précisé' }}
+            </p>
+            <div class="company-tags">
+              <p-chip 
+                *ngIf="entreprise?.taille_entreprise"
+                [label]="entreprise?.taille_entreprise"
+                icon="pi pi-users"
+                styleClass="mr-2">
+              </p-chip>
+              <p-chip 
+                *ngIf="entreprise?.ville"
+                [label]="entreprise?.ville"
+                icon="pi pi-map-marker">
+              </p-chip>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <!-- Informations détaillées -->
+      <div class="info-sections">
+        
+        <!-- Coordonnées -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="pi pi-phone section-icon"></i>
+            Coordonnées
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Email</span>
+              <span class="info-value">
+                <a *ngIf="entreprise?.email" 
+                   [href]="'mailto:' + entreprise?.email"
+                   class="email-link">
+                  {{ entreprise?.email }}
+                </a>
+                <span *ngIf="!entreprise?.email" class="text-muted">Non renseigné</span>
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Téléphone</span>
+              <span class="info-value">
+                <a *ngIf="entreprise?.telephone" 
+                   [href]="'tel:' + entreprise?.telephone"
+                   class="phone-link">
+                  {{ entreprise?.telephone }}
+                </a>
+                <span *ngIf="!entreprise?.telephone" class="text-muted">Non renseigné</span>
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Site web</span>
+              <span class="info-value">
+                <a *ngIf="entreprise?.site_web" 
+                   [href]="entreprise?.site_web" 
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="web-link">
+                  {{ entreprise?.site_web }} <i class="pi pi-external-link ml-1"></i>
+                </a>
+                <span *ngIf="!entreprise?.site_web" class="text-muted">Non renseigné</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Localisation -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="pi pi-map-marker section-icon"></i>
+            Localisation
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Adresse</span>
+              <span class="info-value">{{ entreprise?.adresse || 'Non renseignée' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Ville</span>
+              <span class="info-value">{{ entreprise?.ville || 'Non renseignée' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Pays</span>
+              <span class="info-value">{{ entreprise?.pays || 'Non renseigné' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Description -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="pi pi-align-left section-icon"></i>
+            À propos
+          </h3>
+          <p class="description-text" *ngIf="entreprise?.description">
+            {{ entreprise?.description }}
+          </p>
+          <p class="text-muted" *ngIf="!entreprise?.description">
+            Aucune description disponible
+          </p>
+        </div>
+
+        <p-divider></p-divider>
+
+        <!-- Informations supplémentaires -->
+        <div class="info-section">
+          <h3 class="section-title">
+            <i class="pi pi-info-circle section-icon"></i>
+            Informations complémentaires
+          </h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Date de création</span>
+              <span class="info-value">
+                {{ entreprise?.created_at | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Dernière modification</span>
+              <span class="info-value">
+                {{ entreprise?.updated_at | date:'dd/MM/yyyy à HH:mm' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>
+
+<!-- Dialog d'édition -->
+<p-dialog
+  [(visible)]="editDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="edit-dialog-moderne"
+  [style]="{ width: '800px', maxWidth: '95vw' }">
+
+  <ng-template pTemplate="header">
+    <div class="dialog-custom-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-pencil"></i>
+        </div>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">Modifier mon entreprise</h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            Mettez à jour les informations de votre entreprise
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <div class="form-container-scroll">
+      <form class="space-y-4">
+        
+        <!-- Informations de base -->
+        <div class="form-section">
+          <h3 class="form-section-title">Informations de base</h3>
+          
+          <div class="form-field">
+            <label for="nom" class="field-label">
+              Nom de l'entreprise <span class="required">*</span>
+            </label>
+            <input 
+              pInputText 
+              id="nom"
+              [(ngModel)]="editForm.nom_entreprise" 
+              name="nom"
+              placeholder="Ex: TechCorp SARL"
+              class="w-full"
+              [class.input-error]="submitted && !editForm.nom_entreprise" />
+            <small class="error-message" *ngIf="submitted && !editForm.nom_entreprise">
+              Le nom est obligatoire
+            </small>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-field">
+              <label for="secteur" class="field-label">Secteur d'activité</label>
+              <p-dropdown
+                id="secteur"
+                [options]="secteursActivite"
+                [(ngModel)]="editForm.secteur_activite"
+                name="secteur"
+                placeholder="Sélectionner"
+                [showClear]="true"
+                styleClass="w-full">
+              </p-dropdown>
+            </div>
+
+            <div class="form-field">
+              <label for="taille" class="field-label">Taille</label>
+              <p-dropdown
+                id="taille"
+                [options]="taillesEntreprise"
+                [(ngModel)]="editForm.taille_entreprise"
+                name="taille"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Sélectionner"
+                [showClear]="true"
+                styleClass="w-full">
+              </p-dropdown>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coordonnées -->
+        <div class="form-section">
+          <h3 class="form-section-title">Coordonnées</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-field">
+              <label for="email" class="field-label">Email</label>
+              <input 
+                pInputText 
+                type="email"
+                id="email"
+                [(ngModel)]="editForm.email" 
+                name="email"
+                placeholder="contact@entreprise.com"
+                class="w-full" />
+            </div>
+
+            <div class="form-field">
+              <label for="tel" class="field-label">Téléphone</label>
+              <input 
+                pInputText 
+                type="tel"
+                id="tel"
+                [(ngModel)]="editForm.telephone" 
+                name="telephone"
+                placeholder="+226 XX XX XX XX"
+                class="w-full" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="web" class="field-label">Site web</label>
+            <input 
+              pInputText 
+              type="url"
+              id="web"
+              [(ngModel)]="editForm.site_web" 
+              name="site_web"
+              placeholder="https://www.entreprise.com"
+              class="w-full" />
+          </div>
+        </div>
+
+        <!-- Localisation -->
+        <div class="form-section">
+          <h3 class="form-section-title">Localisation</h3>
+          
+          <div class="form-field">
+            <label for="adresse" class="field-label">Adresse</label>
+            <input 
+              pInputText 
+              id="adresse"
+              [(ngModel)]="editForm.adresse" 
+              name="adresse"
+              placeholder="123 Avenue de la République"
+              class="w-full" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-field">
+              <label for="ville" class="field-label">Ville</label>
+              <input 
+                pInputText 
+                id="ville"
+                [(ngModel)]="editForm.ville" 
+                name="ville"
+                placeholder="Ouagadougou"
+                class="w-full" />
+            </div>
+
+            <div class="form-field">
+              <label for="pays" class="field-label">Pays</label>
+              <input 
+                pInputText 
+                id="pays"
+                [(ngModel)]="editForm.pays" 
+                name="pays"
+                placeholder="Burkina Faso"
+                class="w-full" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-section">
+          <h3 class="form-section-title">Description</h3>
+          
+          <div class="form-field">
+            <textarea 
+              pInputTextarea
+              [(ngModel)]="editForm.description"
+              name="description"
+              rows="5"
+              placeholder="Présentez votre entreprise, ses activités, sa mission..."
+              class="w-full">
+            </textarea>
+          </div>
+        </div>
+      </form>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer-custom">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        severity="secondary"
+        [outlined]="true"
+        (click)="hideEditDialog()"
+        [disabled]="loading" />
+      <p-button 
+        label="Enregistrer" 
+        icon="pi pi-check" 
+        (click)="saveEntreprise()"
+        [loading]="loading" />
+    </div>
+  </ng-template>
+</p-dialog>.
+

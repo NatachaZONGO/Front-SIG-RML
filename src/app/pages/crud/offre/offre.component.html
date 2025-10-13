@@ -9,12 +9,12 @@
     <p-button
       label="Nouvelle offre"
       icon="pi pi-plus"
-      severity="secondary"
+      severity="success"
       class="mr-2"
       (onClick)="openNew()"
       [disabled]="loading()">
     </p-button>
-    <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined
+    <p-button severity="danger" label="Supprimer" icon="pi pi-trash" outlined
               (onClick)="deleteSelectedOffres()" [disabled]="!selectedOffres || !selectedOffres.length" />
   </ng-template>
 
@@ -22,7 +22,7 @@
       <p-button
       [label]="getExportLabel('CSV')"
       icon="pi pi-download"
-      severity="secondary"
+      severity="help"
       class="mr-2"
       (onClick)="exportCSV()"
       [disabled]="loading() || offres().length === 0">
@@ -224,7 +224,7 @@
       <td style="min-width: 200px">
         <div class="flex flex-wrap gap-1">
           <!-- Bouton Détails -->
-          <p-button 
+          <p-button *canSee="['Administrateur','Recruteur']"
             icon="pi pi-eye"
             [rounded]="true"
             [outlined]="true"
@@ -259,7 +259,7 @@
           </p-button>
 
           <!-- Bouton Soumettre à validation -->
-          <p-button
+          <p-button *canSee="['Recruteur']"
             icon="pi pi-send"
             severity="info"
             [rounded]="true"
@@ -271,7 +271,7 @@
           </p-button>
 
           <!-- Bouton Valider -->
-          <p-button
+          <p-button *canSee="['Administrateur']"
             icon="pi pi-check"
             severity="success"
             [rounded]="true"
@@ -283,7 +283,7 @@
           </p-button>
 
           <!-- Bouton Rejeter -->
-          <p-button
+          <p-button *canSee="['Administrateur']"
             icon="pi pi-times"
             severity="danger"
             [rounded]="true"
@@ -295,7 +295,7 @@
           </p-button>
 
           <!-- Bouton Publier -->
-          <p-button
+          <p-button *canSee="['Administrateur']"
             icon="pi pi-globe"
             severity="primary"
             [rounded]="true"
@@ -307,7 +307,7 @@
           </p-button>
 
           <!-- Bouton Fermer -->
-          <p-button
+          <p-button *canSee="['Administrateur']"
             icon="pi pi-lock"
             severity="secondary"
             [rounded]="true"
@@ -318,7 +318,7 @@
             pTooltip="Fermer l'offre">
           </p-button>
           <!-- Passer en vedette -->
-          <p-button
+          <p-button *canSee="['Administrateur', 'Recruteur']"
             icon="pi pi-star"
             severity="warn"
             [rounded]="true"
@@ -330,7 +330,7 @@
           </p-button>
 
           <!-- Retirer la vedette -->
-          <p-button
+          <p-button *canSee="['Administrateur']"
             icon="pi pi-star-fill"
             severity="help"
             [rounded]="true"
@@ -340,7 +340,6 @@
             [disabled]="loading() || !(offre.sponsored_level && (offre.sponsored_level > 0))"
             pTooltip="Retirer la vedette">
           </p-button>
-
         </div>
       </td>
     </tr>

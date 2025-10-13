@@ -4,17 +4,17 @@
 <p-toolbar styleClass="mb-6">
   <ng-template pTemplate="start">
     <p-button
-      label="Nouvelle Publicité"
+      label="Nouvelle publicité"
       icon="pi pi-plus"
-      severity="secondary"
+      severity="success"
       class="mr-2"
       (onClick)="openNew()">
     </p-button>
     <p-button
-      severity="secondary"
+      severity="danger"
       label="Supprimer"
       icon="pi pi-trash"
-      outlined
+      [outlined]="true"
       (onClick)="deleteSelectedPublicites()"
       [disabled]="!selectedPublicites || !selectedPublicites.length">
     </p-button>
@@ -28,13 +28,13 @@
           pInputText
           type="text"
           (input)="onGlobalFilter(dt, $event)"
-          placeholder="Rechercher..."
+          placeholder="Rechercher une publicité..."
           class="w-full" />
       </p-iconField>
       <p-button
-        label="Export CSV"
+        label="Exporter CSV"
         icon="pi pi-download"
-        severity="secondary"
+        severity="help"
         (onClick)="exportCSV()">
       </p-button>
     </div>
@@ -58,7 +58,7 @@
   <ng-template pTemplate="caption">
     <div class="flex items-center justify-between">
       <h2 class="m-0 text-xl font-semibold">Gestion des Publicités</h2>
-      <div class="text-sm text-color-secondary">
+      <div class="text-sm text-gray-500">
         Sélectionnées : {{ selectedPublicites.length || 0 }}
       </div>
     </div>
@@ -99,8 +99,8 @@
         {{ publicite.entreprise?.nom_entreprise || '—' }}
       </td>
 
-      <td style="min-width:200px">
-        <div class="flex items-center gap-3">
+      <td style="min-width:200px" class="text-center">
+        <div class="flex items-center justify-center gap-3">
           <img *ngIf="publicite.image || publicite.image_url"
                [src]="publicite.image || publicite.image_url"
                alt="Image"
@@ -116,27 +116,29 @@
 
       <td style="min-width:220px">
         <ng-container *ngIf="publicite.lien_externe; else noLink">
-          <a [href]="publicite.lien_externe" target="_blank" class="text-primary break-all">
+          <a [href]="publicite.lien_externe" target="_blank" class="text-blue-600 hover:underline break-all">
             {{ publicite.lien_externe }} <i class="pi pi-external-link ml-1"></i>
           </a>
         </ng-container>
         <ng-template #noLink>—</ng-template>
       </td>
 
-      <td style="min-width:140px">
+      <td style="min-width:140px" class="text-center">
         <p-tag [value]="publicite.statut || 'brouillon'"
                [severity]="getStatusColor(publicite.statut)"></p-tag>
       </td>
 
       <td style="min-width:220px">
-        <div class="flex flex-wrap gap-1">
+        <div class="flex flex-wrap gap-1 justify-center">
           <p-button
             *ngIf="canActivate(publicite)"
             icon="pi pi-play"
             [outlined]="true"
+            [rounded]="true"
             size="small"
             severity="success"
             pTooltip="Activer"
+            tooltipPosition="top"
             (onClick)="openActivationDialog(publicite)"></p-button>
 
           <p-button
@@ -146,6 +148,7 @@
             size="small"
             severity="info"
             pTooltip="Détails"
+            tooltipPosition="top"
             (onClick)="viewPubliciteDetails(publicite)"></p-button>
 
           <p-button
@@ -155,6 +158,7 @@
             size="small"
             severity="secondary"
             pTooltip="Modifier"
+            tooltipPosition="top"
             (onClick)="editPublicite(publicite)"></p-button>
 
           <p-button
@@ -164,6 +168,7 @@
             size="small"
             severity="danger"
             pTooltip="Supprimer"
+            tooltipPosition="top"
             (onClick)="deletePublicite(publicite)"></p-button>
         </div>
       </td>
@@ -174,8 +179,14 @@
     <tr>
       <td colspan="7" class="text-center py-8">
         <div class="flex flex-col items-center gap-2">
-          <i class="pi pi-image text-4xl text-gray-400"></i>
+          <i class="pi pi-megaphone text-4xl text-gray-400"></i>
           <p class="text-gray-500">Aucune publicité trouvée</p>
+          <p-button 
+            label="Créer la première publicité" 
+            icon="pi pi-plus" 
+            (onClick)="openNew()" 
+            size="small">
+          </p-button>
         </div>
       </td>
     </tr>
@@ -187,162 +198,231 @@
 <!-- ============================= -->
 <p-dialog
   [(visible)]="publiciteDialog"
-  [style]="{width: '850px', maxWidth: '95vw'}"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  styleClass="offre-dialog-enhanced">
+  [closable]="true"
+  styleClass="publicite-dialog-moderne"
+  [style]="{ width: '900px', maxWidth: '95vw' }">
 
   <ng-template pTemplate="header">
-    <div class="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-t-xl">
-      <div class="px-6 py-5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <div class="bg-white/20 rounded-full p-3 mr-4">
-              <i class="pi pi-bullhorn text-2xl"></i>
-            </div>
-            <div>
-              <h2 class="text-xl font-bold">
-                {{ publicite.id ? 'Modifier la publicité' : 'Créer une publicité' }}
-              </h2>
-              <p class="text-white/80 text-sm mt-0.5">
-                Média : {{ (publicite.media_request || 'image') | titlecase }}
-              </p>
-            </div>
-          </div>
-          <p-tag
-            [value]="(publicite.statut || 'brouillon') | titlecase"
-            [severity]="getStatusColor(publicite.statut)">
-          </p-tag>
+    <div class="dialog-custom-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-megaphone"></i>
         </div>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">
+            {{ publicite.id ? 'Modifier la publicité' : 'Nouvelle publicité' }}
+          </h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            Type de média : {{ (publicite.media_request || 'image') | titlecase }}
+          </p>
+        </div>
+        <p-tag
+          [value]="(publicite.statut || 'brouillon') | titlecase"
+          [severity]="getStatusColor(publicite.statut)"
+          styleClass="ml-auto">
+        </p-tag>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="content">
-    <form class="space-y-6">
-      <div class="bg-blue-50/30 rounded-xl p-5 border border-blue-100">
-        <div class="flex items-center mb-4">
-          <div class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">1</div>
-          <h3 class="text-lg font-semibold text-gray-800 ml-3">Informations de base</h3>
+    <div class="form-container-scroll">
+      
+      <!-- Section 1 : Informations de base -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-info-circle text-blue-600 mr-2"></i>
+          <h3 class="section-title">Informations de base</h3>
         </div>
 
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Titre <span class="text-red-500">*</span></label>
-            <input pInputText type="text" class="w-full" [(ngModel)]="publicite.titre" name="titre" required>
-            <small class="text-red-500 text-xs" *ngIf="submitted && !publicite.titre">
-              <i class="pi pi-exclamation-circle mr-1"></i>Le titre est obligatoire
+        <div class="form-grid">
+          <!-- Titre -->
+          <div class="form-field full-width">
+            <label for="titre" class="field-label">
+              Titre de la publicité <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-bookmark input-icon"></i>
+              <input 
+                type="text" 
+                pInputText 
+                id="titre" 
+                [(ngModel)]="publicite.titre" 
+                placeholder="Ex: Découvrez nos nouvelles offres"
+                [class.input-error]="submitted && !publicite.titre"
+                class="field-input pl-10"
+                autofocus />
+            </div>
+            <small class="error-message" *ngIf="submitted && !publicite.titre">
+              Le titre est obligatoire
             </small>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Entreprise <span class="text-red-500">*</span></label>
+          <!-- Entreprise -->
+          <div class="form-field full-width">
+            <label for="entreprise" class="field-label">
+              Entreprise <span class="required">*</span>
+            </label>
             <p-dropdown
+              id="entreprise"
               [options]="entreprises"
               [(ngModel)]="publicite.entreprise_id"
-              name="entreprise_id"
               optionLabel="nom_entreprise"
               optionValue="id"
               [filter]="true"
               [showClear]="true"
               placeholder="Sélectionner une entreprise"
-              styleClass="w-full">
+              styleClass="w-full"
+              [class.input-error]="submitted && !publicite.entreprise_id">
             </p-dropdown>
-            <small class="text-red-500 text-xs" *ngIf="submitted && !publicite.entreprise_id">
-              <i class="pi pi-exclamation-circle mr-1"></i>Requis
+            <small class="error-message" *ngIf="submitted && !publicite.entreprise_id">
+              L'entreprise est obligatoire
             </small>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Type de média <span class="text-red-500">*</span></label>
+          <!-- Type de média + Lien externe -->
+          <div class="form-field">
+            <label for="media_request" class="field-label">
+              Type de média <span class="required">*</span>
+            </label>
+            <p-select
+              id="media_request"
+              [options]="mediaModes"
+              [(ngModel)]="publicite.media_request"
+              placeholder="Choisir le type"
+              styleClass="w-full"
+              (onChange)="onMediaModeChange()">
+            </p-select>
+          </div>
 
-              <!-- PrimeNG ≥17 : p-select -->
-              <p-select
-                [options]="mediaModes"
-                [(ngModel)]="publicite.media_request"
-                name="media_request"
-                placeholder="Choisir"
-                class="w-full"
-                (onChange)="onMediaModeChange()">
-              </p-select>
-
-              <!-- Si tu n'utilises PAS p-select, remplace par:
-              <p-dropdown [options]="mediaModes" [(ngModel)]="publicite.media_request" name="media_request" placeholder="Choisir" styleClass="w-full" (onChange)="onMediaModeChange()"></p-dropdown>
-              -->
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1.5">Lien externe</label>
-              <input pInputText type="url" class="w-full break-all" [(ngModel)]="publicite.lien_externe" name="lien_externe" placeholder="https://votre-site.com">
+          <div class="form-field">
+            <label for="lien_externe" class="field-label">Lien externe</label>
+            <div class="input-with-icon">
+              <i class="pi pi-link input-icon"></i>
+              <input 
+                type="url" 
+                pInputText 
+                id="lien_externe" 
+                [(ngModel)]="publicite.lien_externe" 
+                placeholder="https://votre-site.com"
+                class="field-input pl-10" />
             </div>
           </div>
         </div>
       </div>
 
-      <div class="bg-green-50/30 rounded-xl p-5 border border-green-100">
-        <div class="flex items-center mb-4">
-          <div class="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">2</div>
-          <h3 class="text-lg font-semibold text-gray-800 ml-3">Médias</h3>
+      <!-- Section 2 : Médias -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-images text-blue-600 mr-2"></i>
+          <h3 class="section-title">Médias</h3>
         </div>
 
         <!-- IMAGE -->
-        <div *ngIf="publicite.media_request === 'image' || publicite.media_request === 'both'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Image (fichier)</label>
-            <input type="file" accept="image/*" (change)="onImageSelected($event)">
-            <img *ngIf="previewImage" [src]="previewImage" alt="Preview" class="pub-media-large mt-2">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Image (URL)</label>
-            <input pInputText type="text" class="w-full" [(ngModel)]="publicite.image" name="image" placeholder="https://..." [disabled]="!!previewImage">
-            <small class="text-gray-500 text-xs">Laissez vide si vous uploadez un fichier</small>
+        <div *ngIf="publicite.media_request === 'image' || publicite.media_request === 'both'" class="media-upload-section">
+          <h4 class="media-section-subtitle">📷 Image</h4>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="field-label">Fichier image</label>
+              <input 
+                type="file" 
+                accept="image/*" 
+                (change)="onImageSelected($event)"
+                class="file-input">
+              <small class="text-gray-500 text-xs mt-1">JPG, PNG, GIF (max. 5MB)</small>
+              <img *ngIf="previewImage" [src]="previewImage" alt="Aperçu" class="media-preview">
+            </div>
+            <div class="form-field">
+              <label class="field-label">URL de l'image</label>
+              <input 
+                pInputText 
+                type="text" 
+                [(ngModel)]="publicite.image" 
+                placeholder="https://..."
+                [disabled]="!!previewImage"
+                class="w-full" />
+              <small class="text-gray-500 text-xs mt-1">
+                Ou collez une URL d'image
+              </small>
+            </div>
           </div>
         </div>
 
         <!-- VIDEO -->
-        <div *ngIf="publicite.media_request === 'video' || publicite.media_request === 'both'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Vidéo (fichier)</label>
-            <input type="file" accept="video/*" (change)="onVideoSelected($event)">
-            <video *ngIf="previewVideo" [src]="previewVideo" class="pub-media-large mt-2" controls></video>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1.5">Vidéo (URL)</label>
-            <input pInputText type="text" class="w-full" [(ngModel)]="publicite.video" name="video" placeholder="https://..." [disabled]="!!previewVideo">
-            <small class="text-gray-500 text-xs">Laissez vide si vous uploadez un fichier</small>
+        <div *ngIf="publicite.media_request === 'video' || publicite.media_request === 'both'" class="media-upload-section">
+          <h4 class="media-section-subtitle">🎥 Vidéo</h4>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label class="field-label">Fichier vidéo</label>
+              <input 
+                type="file" 
+                accept="video/*" 
+                (change)="onVideoSelected($event)"
+                class="file-input">
+              <small class="text-gray-500 text-xs mt-1">MP4, WebM (max. 50MB)</small>
+              <video *ngIf="previewVideo" [src]="previewVideo" class="media-preview" controls></video>
+            </div>
+            <div class="form-field">
+              <label class="field-label">URL de la vidéo</label>
+              <input 
+                pInputText 
+                type="text" 
+                [(ngModel)]="publicite.video" 
+                placeholder="https://..."
+                [disabled]="!!previewVideo"
+                class="w-full" />
+              <small class="text-gray-500 text-xs mt-1">
+                Ou collez une URL de vidéo
+              </small>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="bg-purple-50/30 rounded-xl p-5 border border-purple-100">
-        <div class="flex items-center mb-4">
-          <div class="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">3</div>
-          <h3 class="text-lg font-semibold text-gray-800 ml-3">Description (optionnelle)</h3>
+      <!-- Section 3 : Description -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-align-left text-blue-600 mr-2"></i>
+          <h3 class="section-title">Description (optionnelle)</h3>
         </div>
-        <p-editor [(ngModel)]="publicite.description" name="description" [style]="{height:'260px'}" styleClass="w-full"></p-editor>
+        
+        <div class="form-field full-width">
+          <p-editor 
+            [(ngModel)]="publicite.description" 
+            [style]="{height:'300px'}"
+            styleClass="w-full">
+          </p-editor>
+        </div>
       </div>
 
-      <div class="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 flex items-center">
-        <i class="pi pi-info-circle mr-2 text-sm"></i>
-        Après l’enregistrement, la publicité est en <b>brouillon</b>. La durée et la date seront fixées lors de l’activation.
+      <!-- Info -->
+      <div class="info-box">
+        <i class="pi pi-info-circle"></i>
+        <span>
+          Après l'enregistrement, la publicité sera en <strong>brouillon</strong>. 
+          La durée et la date seront fixées lors de l'activation.
+        </span>
       </div>
-    </form>
+
+    </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-between items-center">
-      <div class="hidden sm:flex items-center space-x-2">
-        <div class="w-8 h-1 bg-blue-600 rounded"></div>
-        <div class="w-8 h-1 bg-green-600 rounded"></div>
-        <div class="w-8 h-1 bg-purple-600 rounded"></div>
-      </div>
-
-      <div class="flex gap-2 ml-auto">
-        <button pButton label="Annuler" icon="pi pi-times" class="p-button-outlined p-button-sm" (click)="hideDialog()"></button>
-        <button pButton label="Enregistrer" icon="pi pi-check" class="p-button-success p-button-sm" (click)="savePublicite()"></button>
-      </div>
+    <div class="dialog-footer-custom">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        severity="secondary"
+        [outlined]="true"
+        (click)="hideDialog()" />
+      <p-button 
+        label="Enregistrer" 
+        icon="pi pi-check" 
+        styleClass="footer-btn-submit"
+        (click)="savePublicite()" />
     </div>
   </ng-template>
 </p-dialog>
@@ -352,28 +432,33 @@
 <!-- ============================= -->
 <p-dialog
   [(visible)]="activationDialog"
-  [style]="{width:'720px', maxWidth:'96vw'}"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  styleClass="offre-dialog-enhanced">
+  [closable]="true"
+  styleClass="activation-dialog-moderne"
+  [style]="{ width: '800px', maxWidth: '95vw' }">
 
   <ng-template pTemplate="header">
-    <div class="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-t-xl">
-      <div class="px-6 py-5">
-        <div class="flex items-center">
-          <div class="bg-white/20 rounded-full p-3 mr-4"><i class="pi pi-play text-2xl"></i></div>
-          <div>
-            <h2 class="text-xl font-bold">Activer la publicité</h2>
-            <p class="text-white/80 text-sm mt-0.5">{{ selectedPubliciteForActivation?.titre }}</p>
-          </div>
+    <div class="dialog-custom-header activation-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-play"></i>
+        </div>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">Activer la publicité</h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            {{ selectedPubliciteForActivation?.titre }}
+          </p>
         </div>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="content">
-    <div class="space-y-5" *ngIf="selectedPubliciteForActivation">
+    <div class="form-container-scroll" *ngIf="selectedPubliciteForActivation">
+      
+      <!-- Aperçu -->
       <div class="activation-preview-card">
         <div class="preview-media">
           <img *ngIf="selectedPubliciteForActivation.image || selectedPubliciteForActivation.image_url"
@@ -381,7 +466,10 @@
           <video *ngIf="selectedPubliciteForActivation.video || selectedPubliciteForActivation.video_url"
                  [src]="selectedPubliciteForActivation.video || selectedPubliciteForActivation.video_url" controls></video>
           <div *ngIf="!(selectedPubliciteForActivation.image||selectedPubliciteForActivation.image_url||selectedPubliciteForActivation.video||selectedPubliciteForActivation.video_url)"
-               class="no-media"><i class="pi pi-image"></i><span>Aucun média</span></div>
+               class="no-media">
+            <i class="pi pi-image"></i>
+            <span>Aucun média</span>
+          </div>
         </div>
         <div class="preview-info">
           <h3>{{ selectedPubliciteForActivation.titre }}</h3>
@@ -392,116 +480,201 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="config-item full-width">
-          <label class="activation-label required"><i class="pi pi-clock mr-2"></i>Durée d'affichage</label>
-
-          <!-- PrimeNG ≥17 : p-select -->
-          <p-select
-            [options]="pricingTiers"
-            [(ngModel)]="activationForm.duree"
-            optionLabel="label"
-            optionValue="duree"
-            placeholder="Sélectionner la durée"
-            class="w-full"
-            (onChange)="onDurationChange()">
-          </p-select>
-
-          <!-- Alternative dropdown si besoin
-          <p-dropdown [options]="pricingTiers" [(ngModel)]="activationForm.duree"
-                      optionLabel="label" optionValue="duree" placeholder="Sélectionner la durée"
-                      styleClass="w-full" (onChange)="onDurationChange()"></p-dropdown>
-          -->
+      <!-- Configuration -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-cog text-green-600 mr-2"></i>
+          <h3 class="section-title">Configuration</h3>
         </div>
 
-        <div class="config-item">
-          <label class="activation-label required"><i class="pi pi-calendar mr-2"></i>Date de début</label>
-          <p-calendar [(ngModel)]="activationForm.date_debut" [showIcon]="true" dateFormat="dd/mm/yy" [minDate]="minDate" styleClass="w-full"></p-calendar>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label class="field-label">
+              Durée d'affichage <span class="required">*</span>
+            </label>
+            <p-select
+              [options]="pricingTiers"
+              [(ngModel)]="activationForm.duree"
+              optionLabel="label"
+              optionValue="duree"
+              placeholder="Sélectionner la durée"
+              styleClass="w-full"
+              (onChange)="onDurationChange()">
+            </p-select>
+          </div>
+
+          <div class="form-field">
+            <label class="field-label">
+              Date de début <span class="required">*</span>
+            </label>
+            <p-calendar 
+              [(ngModel)]="activationForm.date_debut" 
+              [showIcon]="true" 
+              dateFormat="dd/mm/yy" 
+              [minDate]="minDate" 
+              styleClass="w-full">
+            </p-calendar>
+          </div>
         </div>
 
-        <div class="config-item" *ngIf="activationForm.prix_calcule > 0">
-          <label class="activation-label"><i class="pi pi-wallet mr-2"></i>Prix total</label>
-          <div class="price-amount">{{ activationForm.prix_calcule | number }} <span>FCFA</span></div>
+        <div *ngIf="activationForm.prix_calcule > 0" class="price-display">
+          <span class="price-label">Prix total :</span>
+          <span class="price-value">{{ activationForm.prix_calcule | number }} <small>FCFA</small></span>
         </div>
       </div>
 
-      <div *ngIf="activationForm.prix_calcule > 0" class="payment-methods-grid">
-        <div
-          *ngFor="let method of paymentMethods"
-          class="payment-method-card"
-          [class.selected]="activationForm.moyen_paiement === method.value"
-          (click)="activationForm.moyen_paiement = method.value; onPaymentMethodChange()">
-          <div class="payment-method-radio">
-            <p-radioButton [inputId]="method.value" name="payment" [value]="method.value" [(ngModel)]="activationForm.moyen_paiement"></p-radioButton>
+      <!-- Moyens de paiement -->
+      <div class="form-section" *ngIf="activationForm.prix_calcule > 0">
+        <div class="section-header">
+          <i class="pi pi-wallet text-green-600 mr-2"></i>
+          <h3 class="section-title">Moyen de paiement</h3>
+        </div>
+
+        <div class="payment-methods-grid">
+          <div
+            *ngFor="let method of paymentMethods"
+            class="payment-method-card"
+            [class.selected]="activationForm.moyen_paiement === method.value"
+            (click)="activationForm.moyen_paiement = method.value; onPaymentMethodChange()">
+            <div class="payment-method-radio">
+              <p-radioButton 
+                [inputId]="method.value" 
+                name="payment" 
+                [value]="method.value" 
+                [(ngModel)]="activationForm.moyen_paiement">
+              </p-radioButton>
+            </div>
+            <div class="payment-method-icon">
+              <i [class]="method.icon"></i>
+            </div>
+            <div class="payment-method-info">
+              <span class="method-name">{{ method.label }}</span>
+              <small class="method-desc">{{ method.description || 'Paiement sécurisé' }}</small>
+            </div>
+            <i class="pi pi-check-circle payment-check"></i>
           </div>
-          <div class="payment-method-icon"><i [class]="method.icon"></i></div>
-          <div class="payment-method-info">
-            <span class="method-name">{{ method.label }}</span>
-            <small class="method-desc">{{ method.description || 'Paiement sécurisé' }}</small>
-          </div>
-          <i class="pi pi-check-circle payment-check"></i>
         </div>
       </div>
 
+      <!-- Code de paiement généré -->
       <div *ngIf="generatedPaymentCode" class="payment-code-section">
-        <div class="payment-code-header"><i class="pi pi-qrcode"></i><span>Code de paiement</span></div>
+        <div class="payment-code-header">
+          <i class="pi pi-qrcode"></i>
+          <span>Code de paiement</span>
+        </div>
         <div class="payment-code-display">
           <div class="code-value">{{ generatedPaymentCode }}</div>
-          <p-button icon="pi pi-copy" [text]="true" [rounded]="true" severity="secondary" (onClick)="copyPaymentCode()" pTooltip="Copier"></p-button>
+          <p-button 
+            icon="pi pi-copy" 
+            [text]="true" 
+            [rounded]="true" 
+            severity="secondary" 
+            (onClick)="copyPaymentCode()" 
+            pTooltip="Copier">
+          </p-button>
         </div>
-        <div class="payment-code-hint"><i class="pi pi-arrow-right mr-2"></i>Utilisez ce code pour payer</div>
+        <div class="payment-code-hint">
+          <i class="pi pi-arrow-right mr-2"></i>
+          Utilisez ce code pour effectuer le paiement
+        </div>
       </div>
+
     </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-between gap-2 w-full">
-      <button pButton label="Annuler" icon="pi pi-times" class="p-button-outlined p-button-sm" (click)="hideActivationDialog()"></button>
+    <div class="dialog-footer-custom">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        severity="secondary"
+        [outlined]="true"
+        (click)="hideActivationDialog()" />
       <div class="flex gap-2">
-        <button pButton label="Saisir le code" icon="pi pi-key" class="p-button-secondary p-button-sm" (click)="openCodeActivationDialog()" [disabled]="!generatedPaymentCode"></button>
-        <button pButton label="Générer / Confirmer" icon="pi pi-check" class="p-button-success p-button-sm" (click)="validateActivation()" [disabled]="!activationForm.duree || !activationForm.date_debut || !activationForm.moyen_paiement"></button>
+        <p-button 
+          label="Saisir le code" 
+          icon="pi pi-key" 
+          severity="info"
+          [outlined]="true"
+          (click)="openCodeActivationDialog()" 
+          [disabled]="!generatedPaymentCode" />
+        <p-button 
+          label="Générer / Confirmer" 
+          icon="pi pi-check" 
+          severity="success"
+          styleClass="footer-btn-submit"
+          (click)="validateActivation()" 
+          [disabled]="!activationForm.duree || !activationForm.date_debut || !activationForm.moyen_paiement" />
       </div>
     </div>
   </ng-template>
 </p-dialog>
 
 <!-- ============================= -->
-<!-- DIALOG CODE D’ACTIVATION      -->
+<!-- DIALOG CODE D'ACTIVATION      -->
 <!-- ============================= -->
 <p-dialog
   [(visible)]="codeActivationDialog"
-  [style]="{width:'580px', maxWidth:'96vw'}"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  styleClass="offre-dialog-enhanced">
+  [closable]="true"
+  styleClass="code-dialog-moderne"
+  [style]="{ width: '600px', maxWidth: '95vw' }">
 
   <ng-template pTemplate="header">
-    <div class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-t-xl">
-      <div class="px-6 py-5">
-        <div class="flex items-center">
-          <div class="bg-white/20 rounded-full p-3 mr-3"><i class="pi pi-key text-2xl"></i></div>
-          <div>
-            <h2 class="text-xl font-bold">Saisir le code d'activation</h2>
-            <p class="text-white/80 text-sm mt-0.5">Code reçu par SMS après paiement</p>
-          </div>
+    <div class="dialog-custom-header code-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-key"></i>
+        </div>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">Saisir le code d'activation</h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            Code reçu par SMS après paiement
+          </p>
         </div>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="content">
-    <div class="space-y-3">
-      <p>Entrez le code d'activation :</p>
-      <input pInputText type="text" class="w-full" [(ngModel)]="activationCode" placeholder="Ex.: PUB-123456" maxlength="20">
-      <small class="text-gray-500">Le code commence par « PUB- » (8–12 caractères).</small>
+    <div class="code-input-section">
+      <p class="code-instruction">
+        <i class="pi pi-info-circle mr-2"></i>
+        Entrez le code d'activation que vous avez reçu :
+      </p>
+      <div class="input-with-icon">
+        <i class="pi pi-hashtag input-icon"></i>
+        <input 
+          pInputText 
+          type="text" 
+          [(ngModel)]="activationCode" 
+          placeholder="Ex: PUB-123456" 
+          maxlength="20"
+          class="field-input pl-10 code-input" />
+      </div>
+      <small class="text-gray-500 text-xs">
+        Le code commence par « PUB- » et contient 8 à 12 caractères
+      </small>
     </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-end gap-2">
-      <button pButton label="Annuler" icon="pi pi-times" class="p-button-outlined p-button-sm" (click)="hideCodeActivationDialog()"></button>
-      <button pButton label="Activer" icon="pi pi-check" class="p-button-success p-button-sm" (click)="finalizeActivation()" [disabled]="!activationCode || activationCode.length < 6"></button>
+    <div class="dialog-footer-custom">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        severity="secondary"
+        [outlined]="true"
+        (click)="hideCodeActivationDialog()" />
+      <p-button 
+        label="Activer" 
+        icon="pi pi-check" 
+        severity="success"
+        styleClass="footer-btn-submit"
+        (click)="finalizeActivation()" 
+        [disabled]="!activationCode || activationCode.length < 6" />
     </div>
   </ng-template>
 </p-dialog>
@@ -511,34 +684,38 @@
 <!-- ============================= -->
 <p-dialog
   [(visible)]="detailsDialog"
-  [style]="{width:'960px', maxWidth:'98vw'}"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  styleClass="offre-dialog-enhanced">
+  [closable]="true"
+  styleClass="details-dialog-moderne"
+  [style]="{ width: '980px', maxWidth: '98vw' }">
 
   <ng-template pTemplate="header">
-    <div class="w-full bg-gradient-to-r from-sky-600 to-sky-500 text-white rounded-t-xl">
-      <div class="px-6 py-5">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <div class="bg-white/20 rounded-full p-3 mr-4"><i class="pi pi-eye text-2xl"></i></div>
-            <div>
-              <h2 class="text-xl font-bold">Détails de la publicité</h2>
-              <p class="text-white/80 text-sm mt-0.5">{{ selectedPubliciteForDetails?.titre }}</p>
-            </div>
-          </div>
-          <p-tag
-            [value]="selectedPubliciteForDetails?.statut || 'brouillon'"
-            [severity]="getStatusColor(selectedPubliciteForDetails?.statut)">
-          </p-tag>
+    <div class="dialog-custom-header details-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-eye"></i>
         </div>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">Détails de la publicité</h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            {{ selectedPubliciteForDetails?.titre }}
+          </p>
+        </div>
+        <p-tag
+          [value]="selectedPubliciteForDetails?.statut || 'brouillon'"
+          [severity]="getStatusColor(selectedPubliciteForDetails?.statut)"
+          styleClass="ml-auto">
+        </p-tag>
       </div>
     </div>
   </ng-template>
 
   <ng-template pTemplate="content">
-    <div class="space-y-6" *ngIf="selectedPubliciteForDetails">
+    <div class="form-container-scroll" *ngIf="selectedPubliciteForDetails">
+      
+      <!-- Hero avec média -->
       <div class="details-hero">
         <div class="details-media-container">
           <div *ngIf="selectedPubliciteForDetails.image || selectedPubliciteForDetails.image_url" class="details-media">
@@ -549,23 +726,37 @@
             <video [src]="selectedPubliciteForDetails.video || selectedPubliciteForDetails.video_url" controls></video>
             <div class="media-badge"><i class="pi pi-video mr-1"></i>Vidéo</div>
           </div>
-          <div *ngIf="!(selectedPubliciteForDetails.image||selectedPubliciteForDetails.image_url||selectedPubliciteForDetails.video||selectedPubliciteForDetails.video_url)" class="no-media-placeholder">
-            <i class="pi pi-image"></i><span>Aucun média disponible</span>
+          <div *ngIf="!(selectedPubliciteForDetails.image||selectedPubliciteForDetails.image_url||selectedPubliciteForDetails.video||selectedPubliciteForDetails.video_url)" 
+               class="no-media-placeholder">
+            <i class="pi pi-image"></i>
+            <span>Aucun média disponible</span>
           </div>
         </div>
       </div>
 
+      <!-- Informations -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-gray-50 rounded-xl p-4">
-          <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-            <i class="pi pi-info-circle text-sky-600 mr-2"></i>Infos principales
+        <div class="info-card">
+          <h3 class="info-card-title">
+            <i class="pi pi-info-circle text-sky-600 mr-2"></i>
+            Informations principales
           </h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-gray-600">Entreprise :</span><span class="font-medium">{{ selectedPubliciteForDetails.entreprise?.nom_entreprise || '—' }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">Type média :</span><span class="font-medium">{{ (selectedPubliciteForDetails.media_request || 'image') | titlecase }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">Lien externe :</span>
-              <span class="font-medium break-all">
-                <a *ngIf="selectedPubliciteForDetails.lien_externe" [href]="selectedPubliciteForDetails.lien_externe" target="_blank" class="text-primary">
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Entreprise :</span>
+              <span class="info-value">{{ selectedPubliciteForDetails.entreprise?.nom_entreprise || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Type de média :</span>
+              <span class="info-value">{{ (selectedPubliciteForDetails.media_request || 'image') | titlecase }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Lien externe :</span>
+              <span class="info-value break-all">
+                <a *ngIf="selectedPubliciteForDetails.lien_externe" 
+                   [href]="selectedPubliciteForDetails.lien_externe" 
+                   target="_blank" 
+                   class="text-blue-600 hover:underline">
                   {{ selectedPubliciteForDetails.lien_externe }} <i class="pi pi-external-link ml-1"></i>
                 </a>
                 <ng-container *ngIf="!selectedPubliciteForDetails.lien_externe">—</ng-container>
@@ -574,98 +765,756 @@
           </div>
         </div>
 
-        <div class="bg-gray-50 rounded-xl p-4">
-          <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-            <i class="pi pi-calendar text-sky-600 mr-2"></i>Dates & prix
+        <div class="info-card">
+          <h3 class="info-card-title">
+            <i class="pi pi-calendar text-sky-600 mr-2"></i>
+            Dates et tarification
           </h3>
-          <div class="space-y-2 text-sm">
-            <div class="flex justify-between"><span class="text-gray-600">Date de début :</span><span class="font-medium">{{ selectedPubliciteForDetails.date_debut | date:'dd/MM/yyyy' }}</span></div>
-            <div class="flex justify-between"><span class="text-gray-600">Date de fin :</span><span class="font-medium">{{ selectedPubliciteForDetails.date_fin | date:'dd/MM/yyyy' }}</span></div>
-            <div class="flex justify-between" *ngIf="selectedPubliciteForDetails.prix"><span class="text-gray-600">Prix payé :</span><span class="font-medium text-green-700">{{ selectedPubliciteForDetails.prix | number }} FCFA</span></div>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Date de début :</span>
+              <span class="info-value">{{ selectedPubliciteForDetails.date_debut | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Date de fin :</span>
+              <span class="info-value">{{ selectedPubliciteForDetails.date_fin | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedPubliciteForDetails.prix">
+              <span class="info-label">Prix payé :</span>
+              <span class="info-value price-highlight">{{ selectedPubliciteForDetails.prix | number }} FCFA</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div *ngIf="selectedPubliciteForDetails.description" class="bg-gray-50 rounded-xl p-4">
-        <h3 class="text-base font-bold text-gray-800 mb-3 flex items-center">
-          <i class="pi pi-align-left text-sky-600 mr-2"></i>Description
+      <!-- Description -->
+      <div *ngIf="selectedPubliciteForDetails.description" class="info-card full-width">
+        <h3 class="info-card-title">
+          <i class="pi pi-align-left text-sky-600 mr-2"></i>
+          Description
         </h3>
-        <div class="bg-white rounded-lg border border-gray-200 p-4 cd-content-html" [innerHTML]="selectedPubliciteForDetails.description"></div>
+        <div class="description-content" [innerHTML]="selectedPubliciteForDetails.description"></div>
       </div>
+
     </div>
   </ng-template>
 
   <ng-template pTemplate="footer">
-    <div class="flex justify-between gap-2">
+    <div class="dialog-footer-custom">
       <div class="flex gap-2">
-        <p-button *ngIf="selectedPubliciteForDetails && canActivate(selectedPubliciteForDetails)" label="Activer" icon="pi pi-play" severity="success" (onClick)="openActivationDialog(selectedPubliciteForDetails!)"></p-button>
+        <p-button 
+          *ngIf="selectedPubliciteForDetails && canActivate(selectedPubliciteForDetails)" 
+          label="Activer" 
+          icon="pi pi-play" 
+          severity="success"
+          (onClick)="openActivationDialog(selectedPubliciteForDetails!)">
+        </p-button>
       </div>
       <div class="flex gap-2">
-        <p-button label="Modifier" icon="pi pi-pencil" severity="secondary" [outlined]="true" (onClick)="editPublicite(selectedPubliciteForDetails!)"></p-button>
-        <p-button label="Fermer" icon="pi pi-times" (onClick)="hideDetailsDialog()"></p-button>
+        <p-button 
+          label="Modifier" 
+          icon="pi pi-pencil" 
+          severity="secondary" 
+          [outlined]="true" 
+          (onClick)="editPublicite(selectedPubliciteForDetails!)">
+        </p-button>
+        <p-button 
+          label="Fermer" 
+          icon="pi pi-times" 
+          severity="secondary"
+          (onClick)="hideDetailsDialog()">
+        </p-button>
       </div>
     </div>
   </ng-template>
 </p-dialog>
 
 <style>
-/* Thumbs & media */
-.pub-media-thumb{max-width:140px;max-height:90px;width:auto;height:auto;border-radius:8px;object-fit:cover;display:block}
-.pub-media-large{max-width:100%;max-height:260px;width:auto;height:auto;object-fit:contain}
+/* ============================================
+   STYLES COMMUNS
+   ============================================ */
 
-/* Unification dialogs (même logique que composant Offres) */
-::ng-deep .offre-dialog-enhanced .p-dialog{border-radius:.875rem!important;overflow:hidden;box-shadow:0 25px 50px -12px rgb(0 0 0 / .25)}
-::ng-deep .offre-dialog-enhanced .p-dialog-header{padding:0!important;background:transparent!important;border:none!important}
-::ng-deep .offre-dialog-enhanced .p-dialog-content{padding:1.5rem!important;max-height:calc(85vh - 140px);overflow-y:auto;overflow-x:hidden}
-::ng-deep .offre-dialog-enhanced .p-dialog-footer{padding:1rem 1.5rem!important;background:linear-gradient(to top,#fafafa,transparent);border-top:1px solid #e5e7eb}
+::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  vertical-align: middle !important;
+}
 
-/* Rich text safe */
-.cd-content-html{white-space:normal;overflow-wrap:anywhere;word-break:break-word;line-height:1.7}
-.cd-content-html img,.cd-content-html video,.cd-content-html iframe{max-width:100%!important;height:auto!important;display:block;border-radius:8px;margin:.5rem 0}
-.cd-content-html pre,.cd-content-html code{white-space:pre-wrap;overflow-x:auto;background:#f3f4f6;padding:.25rem .5rem;border-radius:4px;font-family:'Courier New',monospace;font-size:.9em}
+/* Médias dans le tableau */
+.pub-media-thumb {
+  max-width: 100px;
+  max-height: 70px;
+  width: auto;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
 
-/* Activation preview bits (repris du modèle) */
-.activation-preview-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:1rem;display:flex;align-items:center;gap:1rem}
-.preview-media{flex-shrink:0;width:120px;height:90px;border-radius:12px;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.preview-media img,.preview-media video{width:100%;height:100%;object-fit:cover}
-.preview-media .no-media{display:flex;flex-direction:column;align-items:center;gap:.5rem;color:#9ca3af;font-size:.85rem}
-.preview-info h3{margin:0 0 .5rem;font-size:1.1rem;font-weight:600;color:#111827}
-.preview-meta{display:flex;gap:1rem;font-size:.85rem;color:#6b7280}
+/* ============================================
+   DIALOG CRÉATION/MODIFICATION
+   ============================================ */
 
-/* Payment cards */
-.payment-methods-grid{display:grid;gap:1rem}
-.payment-method-card{display:grid;grid-template-columns:auto auto 1fr auto;gap:1rem;align-items:center;padding:1rem;border:2px solid #e5e7eb;border-radius:12px;cursor:pointer;transition:all .2s;background:#fff}
-.payment-method-card:hover{border-color:#d1d5db;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.payment-method-card.selected{border-color:#22c55e;background:#ecfdf5}
-.payment-method-icon{width:44px;height:44px;border-radius:12px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:1.25rem;color:#6b7280}
-.payment-method-card.selected .payment-method-icon{background:#22c55e;color:#fff}
-.payment-check{color:#22c55e;font-size:1.25rem;opacity:0;transition:opacity .2s}
-.payment-method-card.selected .payment-check{opacity:1}
+::ng-deep .publicite-dialog-moderne .p-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
 
-/* Price */
-.price-amount{font-size:2rem;font-weight:800;color:#047857}
-.price-amount span{font-size:1rem;font-weight:600;margin-left:.25rem}
+::ng-deep .publicite-dialog-moderne .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+::ng-deep .publicite-dialog-moderne .p-dialog-content {
+  padding: 0 !important;
+  height: calc(85vh - 150px);
+  overflow: hidden;
+}
+
+/* Header standard bleu */
+.dialog-custom-header {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+}
+
+.dialog-header-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.dialog-header-icon i {
+  font-size: 1.75rem;
+}
+
+.dialog-header-text {
+  flex: 1;
+}
+
+/* Header vert pour activation */
+.activation-header {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Header indigo pour code */
+.code-header {
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+}
+
+/* Header cyan pour détails */
+.details-header {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+}
+
+/* Container scrollable */
+.form-container-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+  background: #f9fafb;
+}
+
+/* Sections */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Grilles */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+/* Inputs */
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Input avec icône */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.pl-10 {
+  padding-left: 40px !important;
+}
+
+/* Médias upload */
+.media-upload-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.media-upload-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.media-section-subtitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+.file-input {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-input:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.media-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  margin-top: 1rem;
+  object-fit: contain;
+}
+
+/* Info box */
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0c4a6e;
+}
+
+.info-box i {
+  font-size: 1.25rem;
+  color: #0284c7;
+}
+
+/* Activation preview */
+.activation-preview-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.preview-media {
+  flex-shrink: 0;
+  width: 140px;
+  height: 100px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.preview-media img,
+.preview-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-media .no-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+.preview-info h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.preview-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Price display */
+.price-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 2px solid #86efac;
+  border-radius: 12px;
+  margin-top: 1rem;
+}
+
+.price-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+.price-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #047857;
+}
+
+.price-value small {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+/* Payment methods */
+.payment-methods-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.payment-method-card {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.payment-method-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+}
+
+.payment-method-card.selected {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.payment-method-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #6b7280;
+}
+
+.payment-method-card.selected .payment-method-icon {
+  background: #10b981;
+  color: #fff;
+}
+
+.method-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.method-desc {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.payment-check {
+  color: #10b981;
+  font-size: 1.25rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.payment-method-card.selected .payment-check {
+  opacity: 1;
+}
+
+/* Payment code */
+.payment-code-section {
+  background: #fefce8;
+  border: 2px solid #fde047;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.payment-code-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #854d0e;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.payment-code-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 2px dashed #fbbf24;
+}
+
+.code-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #92400e;
+  font-family: 'Courier New', monospace;
+}
+
+.payment-code-hint {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #78350f;
+  display: flex;
+  align-items: center;
+}
+
+/* Code input */
+.code-input-section {
+  padding: 1.5rem;
+  background: white;
+}
+
+.code-instruction {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  color: #374151;
+  font-size: 14px;
+}
+
+.code-input {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: 'Courier New', monospace !important;
+}
 
 /* Details hero */
-.details-hero{margin-bottom:1rem}
-.details-media-container{background:#1f2937;border-radius:16px;padding:1.25rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.15)}
-.details-media{position:relative}
-.details-media img,.details-media video{max-width:100%;max-height:400px;border-radius:12px}
-.media-badge{position:absolute;top:1rem;right:1rem;background:rgba(0,0,0,.7);color:#fff;padding:.35rem .75rem;border-radius:8px;font-size:.85rem;font-weight:600}
-.no-media-placeholder{display:flex;flex-direction:column;align-items:center;gap:1rem;padding:3rem 1rem;color:#9ca3af}
-.no-media-placeholder i{font-size:3rem;opacity:.6}
+.details-hero {
+  margin-bottom: 1.5rem;
+}
 
-/* Inputs look & focus */
-::ng-deep .p-inputtext,::ng-deep .p-dropdown,::ng-deep .p-select,::ng-deep .p-calendar .p-inputtext{border-radius:.5rem!important;transition:all .2s}
-::ng-deep .p-inputtext:focus,::ng-deep .p-dropdown:focus,::ng-deep .p-select:focus,::ng-deep .p-calendar .p-inputtext:focus{border-color:#3b82f6!important;box-shadow:0 0 0 3px rgba(59,130,246,.1)!important}
+.details-media-container {
+  background: #1f2937;
+  border-radius: 16px;
+  padding: 1.25rem;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
 
-/* Buttons */
-::ng-deep .p-button-sm{padding:.5rem 1rem!important;font-size:.875rem!important;border-radius:.5rem!important;font-weight:500!important}
-::ng-deep .p-button{transition:all .2s ease}
-::ng-deep .p-button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 4px 6px -1px rgb(0 0 0 / .1),0 2px 4px -2px rgb(0 0 0 / .1)}
+.details-media {
+  position: relative;
+}
+
+.details-media img,
+.details-media video {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 12px;
+  margin: 0 auto;
+  display: block;
+}
+
+.media-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.no-media-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  color: #9ca3af;
+}
+
+.no-media-placeholder i {
+  font-size: 3rem;
+  opacity: 0.6;
+}
+
+/* Info cards */
+.info-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.info-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-card-title {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 1rem;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.info-label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.info-value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.price-highlight {
+  color: #047857;
+  font-size: 1.1rem;
+}
+
+.description-content {
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  line-height: 1.7;
+  color: #374151;
+}
+
+/* Footer */
+.dialog-footer-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .footer-btn-submit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+}
+
+::ng-deep .footer-btn-submit:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+/* Personnalisation PrimeNG */
+::ng-deep .publicite-dialog-moderne .p-inputtext,
+::ng-deep .activation-dialog-moderne .p-inputtext,
+::ng-deep .code-dialog-moderne .p-inputtext,
+::ng-deep .details-dialog-moderne .p-inputtext {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .publicite-dialog-moderne .p-inputtext:enabled:focus,
+::ng-deep .activation-dialog-moderne .p-inputtext:enabled:focus,
+::ng-deep .code-dialog-moderne .p-inputtext:enabled:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+::ng-deep .publicite-dialog-moderne .p-dropdown,
+::ng-deep .publicite-dialog-moderne .p-select,
+::ng-deep .activation-dialog-moderne .p-dropdown,
+::ng-deep .activation-dialog-moderne .p-select {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .publicite-dialog-moderne .p-dropdown:not(.p-disabled).p-focus,
+::ng-deep .publicite-dialog-moderne .p-select:not(.p-disabled).p-focus,
+::ng-deep .activation-dialog-moderne .p-dropdown:not(.p-disabled).p-focus,
+::ng-deep .activation-dialog-moderne .p-select:not(.p-disabled).p-focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 
 /* Responsive */
-@media (max-width:768px){
-  .pub-media-large{max-height:200px}
+@media (max-width: 768px) {
+  .form-grid,
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .header-content {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .dialog-footer-custom {
+    flex-direction: column;
+  }
+  
+  .form-container-scroll {
+    padding: 1rem 1.25rem;
+  }
+  
+  .activation-preview-card {
+    flex-direction: column;
+  }
+  
+  .price-value {
+    font-size: 1.5rem;
+  }
 }
+
+/* Utilitaires */
+.text-gray-400 { color: #9ca3af; }
+.text-gray-500 { color: #6b7280; }
+.text-blue-600 { color: #2563eb; }
 </style>

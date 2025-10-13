@@ -15,10 +15,9 @@ import { ConseilComponent } from './crud/conseil/conseil';
 import { NotificationComponent } from './crud/notification/notification';
 import { OffreComponent } from './crud/offre/offre';
 import { CandidaturesComponent } from './crud/candidature/candidature';
-import { UserService } from './crud/user/user.service';
 import { UserComponent } from './crud/user/user';
 import { ProfilComponent } from './crud/profil/profil.component';
-import { CanSeeDirective } from '../Share/can_see/can_see.directive';
+import { MonEntrepriseComponent } from './crud/mon-entreprise/mon-entreprise.component';
 
 
 
@@ -29,9 +28,10 @@ export default [
   { path: 'connexion', component: ConnexionComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'entreprise', component: EntrepriseComponent },
+  { path: 'mon-entreprise', component: MonEntrepriseComponent, canActivate: [authGuard], data: { roles: ['Recruteur'] } },
   { path: 'role', component: RoleComponent },
   { path: 'pays', component: PaysComponent },
-  { path: 'offre', component: OffreComponent , canSee: ['recruteur','administrateur'] },
+  { path: 'offre', component: OffreComponent , canActivate: [authGuard], data: { roles: ['Recruteur', 'Administrateur'] } },
   { path : 'categorie', component: CategorieComponent },
   { path: 'publicite', component: PubliciteComponent }, 
   { path: 'conseil', component: ConseilComponent },
@@ -39,8 +39,7 @@ export default [
   { path: 'candidature', component: CandidaturesComponent },
   { path: 'user', component: UserComponent}, 
   { path: 'profil', component: ProfilComponent},
-  //{ path: 'ufr', component: Ufrr, canActivate: [authGuard], data: { roles: ['admin'] } }, // Seul l'admin peut accéder
-   { path: 'empty', component: Empty },
+  { path: 'empty', component: Empty },
   { path: '**', redirectTo: '/notfound' },
 ] as Routes;
 ;

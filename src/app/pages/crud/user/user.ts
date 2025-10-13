@@ -56,7 +56,7 @@ export class UserComponent implements OnInit { // Corrigé le nom de la classe (
   user: Partial<UiUser> = { statut: 'actif' }; // Retiré role par défaut
   selectedUsers: UiUser[] = [];
   submitted = false;
-  previewPhotoUrl?: string;
+  previewPhotoUrl?: string | null;
   userDetailsDialog = false;
   selectedUserForDetails: any = null;
   loading = signal(false);
@@ -515,10 +515,6 @@ export class UserComponent implements OnInit { // Corrigé le nom de la classe (
     }
   }
 
-  viewUserDetails(user: any): void {
-  this.selectedUserForDetails = { ...user };
-  this.userDetailsDialog = true;
-}
 
 hideDetailsDialog(): void {
   this.userDetailsDialog = false;
@@ -627,6 +623,36 @@ resetPassword(user: any): void {
         }
       });
     }
+  });
+}
+
+// Dans user.component.ts
+viewUserDetails(user: User) {
+  console.group('🔍 DÉTAILS USER SÉLECTIONNÉ');
+  console.log('User complet:', user);
+  console.log('last_login:', user.last_login);
+  console.log('Type de last_login:', typeof user.last_login);
+  console.log('created_at:', user.created_at);
+  console.log('updated_at:', user.updated_at);
+  console.groupEnd();
+  
+  this.selectedUserForDetails = user;
+  this.userDetailsDialog = true;
+}
+
+// Ajoutez aussi cette méthode pour tester
+testLastLogin() {
+  console.log('=== TEST LAST LOGIN ===');
+  const allUsers = this.users();
+  console.log('Nombre d\'utilisateurs:', allUsers.length);
+  
+  allUsers.forEach((user, index) => {
+    console.log(`User ${index + 1} (${user.nom}):`, {
+      id: user.id,
+      last_login: user.last_login,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    });
   });
 }
 }

@@ -1,16 +1,30 @@
 <p-toast />
 <p-confirmDialog />
 
+<!-- Toolbar avec boutons colorés -->
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
-        <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="ouvrirNouveau()" />
-        <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined 
-                 (onClick)="supprimerPaysSelectionnes()" 
-                 [disabled]="!paysSelectionnes || !paysSelectionnes.length" />
+        <p-button 
+            label="Nouveau pays" 
+            icon="pi pi-plus" 
+            severity="success"
+            class="mr-2" 
+            (onClick)="ouvrirNouveau()" />
+        <p-button 
+            severity="danger" 
+            label="Supprimer" 
+            icon="pi pi-trash" 
+            [outlined]="true"
+            (onClick)="supprimerPaysSelectionnes()" 
+            [disabled]="!paysSelectionnes || !paysSelectionnes.length" />
     </ng-template>
 
     <ng-template #end>
-        <p-button label="Export" icon="pi pi-upload" severity="secondary" (click)="exporterCSV()" />
+        <p-button 
+            label="Exporter CSV" 
+            icon="pi pi-download" 
+            severity="help"
+            (click)="exporterCSV()" />
     </ng-template>
 </p-toolbar>
 
@@ -24,19 +38,20 @@
     [(selection)]="paysSelectionnes"
     [rowHover]="true"
     dataKey="id"
-    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} entrées"
+    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} pays"
     [showCurrentPageReport]="true"
-    [rowsPerPageOptions]="[10, 20, 30]"
->
+    [rowsPerPageOptions]="[10, 20, 30]">
+    
     <ng-template #caption>
         <div class="flex items-center justify-between">
-            <h5 class="m-0">Gestion des Pays</h5>
+            <h5 class="m-0 text-xl font-semibold">Gestion des Pays</h5>
             <p-iconField>
                 <p-inputIcon styleClass="pi pi-search" />
-                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher..." />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher un pays..." />
             </p-iconField>
         </div>
     </ng-template>
+
     <ng-template #header>
         <tr>
             <th style="width: 3rem">
@@ -52,104 +67,680 @@
             <th pSortableColumn="isActive" style="min-width:10rem">
                 Statut <p-sortIcon field="isActive" />
             </th>
-            <th style="min-width:8rem">Actions</th>
+            <th style="min-width:10rem">Actions</th>
         </tr>
     </ng-template>
+
     <ng-template #body let-pays>
         <tr>
             <td>
                 <p-tableCheckbox [value]="pays" />
             </td>
-            <td>{{ pays.nom }}</td>
-            <td>{{ pays.code | uppercase }}</td>
+            <td >
+                <span class="font-semibold">{{ pays.nom }}</span>
+            </td>
             <td>
-                <img *ngIf="pays.flagImage" [src]="pays.flagImage" [alt]="pays.nom" width="40" height="30" />
+                <span class="font-mono font-semibold text-blue-600">{{ pays.code | uppercase }}</span>
+            </td>
+            <td>
+                <div>
+                    <img *ngIf="pays.flagImage" 
+                         [src]="pays.flagImage" 
+                         [alt]="'Drapeau de ' + pays.nom" 
+                         class="flag-thumbnail" />
+                    <div *ngIf="!pays.flagImage" class="flag-placeholder">
+                        <i class="pi pi-image"></i>
+                    </div>
+                </div>
             </td>
             <td>
                 <p-tag [severity]="pays.isActive ? 'success' : 'danger'" 
-                      [value]="pays.isActive ? 'Actif' : 'Inactif'"></p-tag>
+                       [value]="pays.isActive ? 'Actif' : 'Inactif'">
+                </p-tag>
             </td>
             <td>
                 <div class="flex gap-2">
-                    <p-button icon="pi pi-pencil" severity="secondary" [rounded]="true" [text]="true" 
-                             (click)="modifierPays(pays)"></p-button>
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [text]="true" 
-                             (click)="supprimerPays(pays)"></p-button>
+                    <p-button 
+                        icon="pi pi-pencil" 
+                        [rounded]="true" 
+                        [outlined]="true"
+                        severity="secondary"
+                        size="small"
+                        (click)="modifierPays(pays)"
+                        pTooltip="Modifier"
+                        tooltipPosition="top">
+                    </p-button>
+                    <p-button 
+                        icon="pi pi-trash" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true"
+                        size="small"
+                        (click)="supprimerPays(pays)"
+                        pTooltip="Supprimer"
+                        tooltipPosition="top">
+                    </p-button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="6" class="text-center py-8">
+                <div class="flex flex-col items-center gap-2">
+                    <i class="pi pi-globe text-4xl text-gray-400"></i>
+                    <p class="text-gray-500">Aucun pays trouvé</p>
+                    <p-button 
+                        label="Ajouter le premier pays" 
+                        icon="pi pi-plus" 
+                        (onClick)="ouvrirNouveau()" 
+                        size="small">
+                    </p-button>
                 </div>
             </td>
         </tr>
     </ng-template>
 </p-table>
 
-<p-dialog [(visible)]="paysDialog" [style]="{ width: '650px' }" [modal]="true" [closable]="false">
-    <ng-template pTemplate="header">
-        <div class="flex items-center gap-2">
-            <span class="font-bold text-xl">{{ currentPays.id ? 'Modifier' : 'Créer' }} un pays</span>
+<!-- Dialog Créer/Modifier Pays -->
+<p-dialog 
+    [(visible)]="paysDialog" 
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    styleClass="pays-dialog"
+    [style]="{ width: '700px', maxWidth: '90vw' }">
+    
+    <!-- Header personnalisé -->
+    <ng-template #header>
+        <div class="dialog-custom-header">
+            <div class="header-content">
+                <div class="dialog-header-icon">
+                    <i class="pi pi-globe"></i>
+                </div>
+                <div class="dialog-header-text">
+                    <h2 class="text-xl font-bold m-0">
+                        {{ currentPays.id ? 'Modifier le pays' : 'Nouveau pays' }}
+                    </h2>
+                    <p class="text-sm m-0 mt-1 opacity-90">
+                        {{ currentPays.id ? 'Modifiez les informations du pays' : 'Ajoutez un nouveau pays à la liste' }}
+                    </p>
+                </div>
+            </div>
         </div>
     </ng-template>
 
-    <div class="grid gap-4">
-        <div class="field">
-            <label for="nom" class="font-medium required">Nom</label>
-            <input pInputText id="nom" [(ngModel)]="currentPays.nom" class="w-full" />
-            <small *ngIf="submitted && !currentPays.nom" class="text-red-500">Ce champ est requis</small>
-        </div>
+    <ng-template #content>
+        <div class="form-container">
+            
+            <!-- Section Informations générales -->
+            <div class="form-section">
+                <div class="section-header">
+                    <i class="pi pi-info-circle text-blue-600 mr-2"></i>
+                    <h3 class="section-title">Informations générales</h3>
+                </div>
+                
+                <div class="form-grid">
+                    <!-- Nom du pays -->
+                    <div class="form-field full-width">
+                        <label for="nom" class="field-label">
+                            Nom du pays <span class="required">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <i class="pi pi-map-marker input-icon"></i>
+                            <input 
+                                type="text" 
+                                pInputText 
+                                id="nom" 
+                                [(ngModel)]="currentPays.nom" 
+                                placeholder="Ex: Burkina Faso"
+                                [class.input-error]="submitted && !currentPays.nom"
+                                class="field-input pl-10"
+                                autofocus />
+                        </div>
+                        <small class="error-message" *ngIf="submitted && !currentPays.nom">
+                            Le nom du pays est obligatoire
+                        </small>
+                    </div>
 
-        <div class="field">
-            <label for="code" class="font-medium required">Code ISO (2 lettres)</label>
-            <input pInputText id="code" [(ngModel)]="currentPays.code" [maxlength]="2" class="w-full" 
-                   (input)="currentPays.code = currentPays.code ? currentPays.code.toUpperCase() : ''"/>
-            <small *ngIf="submitted && !currentPays.code" class="text-red-500">Ce champ est requis</small>
-        </div>
+                    <!-- Code ISO -->
+                    <div class="form-field">
+                        <label for="code" class="field-label">
+                            Code ISO <span class="required">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <i class="pi pi-id-card input-icon"></i>
+                            <input 
+                                type="text" 
+                                pInputText 
+                                id="code" 
+                                [(ngModel)]="currentPays.code" 
+                                [maxlength]="2"
+                                placeholder="Ex: BF"
+                                [class.input-error]="submitted && !currentPays.code"
+                                class="field-input pl-10"
+                                (input)="currentPays.code = currentPays.code ? currentPays.code.toUpperCase() : ''" />
+                        </div>
+                        <small class="error-message" *ngIf="submitted && !currentPays.code">
+                            Le code ISO est obligatoire (2 lettres)
+                        </small>
+                        <small class="text-gray-500 text-xs mt-1">
+                            Code à 2 lettres (ex: FR, US, BF)
+                        </small>
+                    </div>
 
-        <div class="field">
-            <label class="font-medium">Source du drapeau</label>
-            <div class="flex gap-4 mt-2">
-                <p-radioButton name="flagSource" value="url" [(ngModel)]="flagSource" 
-                             label="URL externe"></p-radioButton>
-                <p-radioButton name="flagSource" value="upload" [(ngModel)]="flagSource" 
-                             label="Upload fichier"></p-radioButton>
+                    <!-- Statut -->
+                    <div class="form-field">
+                        <label class="field-label">Statut</label>
+                        <div class="status-toggle">
+                            <p-checkbox 
+                                [(ngModel)]="currentPays.isActive" 
+                                inputId="isActive" 
+                                [binary]="true">
+                            </p-checkbox>
+                            <label for="isActive" class="toggle-label">
+                                Pays actif (visible dans les listes)
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="field" *ngIf="flagSource === 'url'">
-            <label for="flagUrl" class="font-medium">URL du drapeau</label>
-            <input pInputText id="flagUrl" [(ngModel)]="currentPays.flagImage" class="w-full" 
-                   placeholder="https://example.com/drapeau.png" />
-        </div>
+            <!-- Section Drapeau -->
+            <div class="form-section">
+                <div class="section-header">
+                    <i class="pi pi-image text-blue-600 mr-2"></i>
+                    <h3 class="section-title">Drapeau du pays</h3>
+                </div>
 
-        <div class="field" *ngIf="flagSource === 'upload'">
-            <label class="font-medium">Upload du drapeau</label>
-            <p-fileUpload 
-                mode="basic"
-                name="flagFile" 
-                accept="image/*" 
-                maxFileSize="1000000"
-                (onSelect)="onFileUpload($event)"
-                chooseLabel="Choisir une image"
-                [auto]="true"
-                [showCancelButton]="false"
-                [chooseIcon]="'pi pi-cloud-upload'"
-                class="mt-2">
-            </p-fileUpload>
-        </div>
+                <!-- Choix du mode -->
+                <div class="flag-mode-selector">
+                    <label class="field-label mb-3">Source du drapeau</label>
+                    <div class="mode-buttons">
+                        <button 
+                            type="button"
+                            class="mode-btn"
+                            [class.active]="flagSource === 'url'"
+                            (click)="flagSource = 'url'">
+                            <i class="pi pi-link"></i>
+                            <span>URL externe</span>
+                        </button>
+                        <button 
+                            type="button"
+                            class="mode-btn"
+                            [class.active]="flagSource === 'upload'"
+                            (click)="flagSource = 'upload'">
+                            <i class="pi pi-cloud-upload"></i>
+                            <span>Upload fichier</span>
+                        </button>
+                    </div>
+                </div>
 
-        <div class="field" *ngIf="currentPays.flagImage">
-            <label class="font-medium">Aperçu du drapeau</label>
-            <img [src]="currentPays.flagImage" [alt]="'Drapeau ' + currentPays.nom" 
-                 class="flag-preview mt-2">
-        </div>
+                <!-- URL du drapeau -->
+                <div class="form-field full-width mt-4" *ngIf="flagSource === 'url'">
+                    <label for="flagUrl" class="field-label">URL du drapeau</label>
+                    <div class="input-with-icon">
+                        <i class="pi pi-link input-icon"></i>
+                        <input 
+                            type="text" 
+                            pInputText 
+                            id="flagUrl" 
+                            [(ngModel)]="currentPays.flagImage" 
+                            placeholder="https://example.com/drapeau.png"
+                            class="field-input pl-10" />
+                    </div>
+                </div>
 
-        <div class="field-checkbox mt-3">
-            <p-checkbox [(ngModel)]="currentPays.isActive" inputId="isctive" [binary]="true"></p-checkbox>
-            <label for="isActive" class="ml-2">Pays actif (visible dans les listes)</label>
-        </div>
-    </div>
+                <!-- Upload du drapeau -->
+                <div class="form-field full-width mt-4" *ngIf="flagSource === 'upload'">
+                    <label class="field-label">Télécharger le drapeau</label>
+                    <div class="upload-zone">
+                        <p-fileUpload 
+                            mode="basic"
+                            name="flagFile" 
+                            accept="image/*" 
+                            maxFileSize="1000000"
+                            (onSelect)="onFileUpload($event)"
+                            chooseLabel="Choisir une image"
+                            [auto]="true"
+                            [showCancelButton]="false"
+                            [chooseIcon]="'pi pi-cloud-upload'"
+                            class="custom-upload">
+                        </p-fileUpload>
+                        <small class="text-gray-500 text-xs mt-2">
+                            PNG, JPG ou SVG (max. 1MB)
+                        </small>
+                    </div>
+                </div>
 
-    <ng-template pTemplate="footer">
-        <div class="flex justify-end gap-2">
-            <p-button label="Annuler" icon="pi pi-times" (click)="fermerDialog()" [outlined]="true" />
-            <p-button label="Enregistrer" icon="pi pi-check" (click)="sauvegarderPays()" />
+                <!-- Aperçu du drapeau -->
+                <div class="form-field full-width mt-4" *ngIf="currentPays.flagImage">
+                    <label class="field-label">Aperçu du drapeau</label>
+                    <div class="flag-preview-container">
+                        <img 
+                            [src]="currentPays.flagImage" 
+                            [alt]="'Drapeau de ' + currentPays.nom" 
+                            class="flag-preview-img">
+                        <button 
+                            type="button"
+                            class="remove-flag-btn"
+                            (click)="currentPays.flagImage = ''"
+                            title="Supprimer">
+                            <i class="pi pi-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </ng-template>
+
+    <ng-template #footer>
+        <div class="dialog-footer-custom">
+            <p-button 
+                label="Annuler" 
+                icon="pi pi-times" 
+                severity="secondary"
+                [outlined]="true"
+                styleClass="footer-btn-cancel"
+                (click)="fermerDialog()">
+            </p-button>
+            <p-button 
+                [label]="currentPays.id ? 'Mettre à jour' : 'Créer le pays'"
+                [icon]="currentPays.id ? 'pi pi-check' : 'pi pi-plus'"
+                styleClass="footer-btn-submit"
+                (click)="sauvegarderPays()">
+            </p-button>
         </div>
     </ng-template>
 </p-dialog>
+
+<style>
+/* ============================================
+   STYLES DU TABLEAU
+   ============================================ */
+
+.font-mono {
+  font-family: 'Courier New', monospace;
+}
+
+
+
+.flag-thumbnail {
+  width: 50px;
+  height: 35px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.flag-placeholder {
+  width: 50px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 4px;
+  border: 1px dashed #d1d5db;
+  color: #9ca3af;
+}
+
+/* ============================================
+   STYLES DU DIALOG PAYS
+   ============================================ */
+
+::ng-deep .pays-dialog .p-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+::ng-deep .pays-dialog .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+::ng-deep .pays-dialog .p-dialog-content {
+  padding: 0 !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Header avec dégradé bleu - FULL WIDTH */
+.dialog-custom-header {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+}
+
+.dialog-header-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.dialog-header-icon i {
+  font-size: 1.75rem;
+}
+
+.dialog-header-text {
+  flex: 1;
+}
+
+/* Container du formulaire */
+.form-container {
+  padding: 1.5rem 2rem;
+  background: #f9fafb;
+}
+
+/* Section */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Grid de formulaire */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+/* Inputs */
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Input avec icône */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.pl-10 {
+  padding-left: 40px !important;
+}
+
+/* Toggle statut */
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.toggle-label {
+  font-weight: 500;
+  color: #1f2937;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Sélecteur de mode drapeau */
+.flag-mode-selector {
+  margin-bottom: 1rem;
+}
+
+.mode-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.mode-btn:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.mode-btn.active {
+  border-color: #3b82f6;
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.mode-btn i {
+  font-size: 1.5rem;
+}
+
+/* Zone d'upload */
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+::ng-deep .custom-upload .p-button {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Aperçu du drapeau */
+.flag-preview-container {
+  position: relative;
+  display: inline-block;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.flag-preview-img {
+  max-width: 200px;
+  max-height: 140px;
+  object-fit: contain;
+  border-radius: 8px;
+  display: block;
+}
+
+.remove-flag-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.remove-flag-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Footer */
+.dialog-footer-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .footer-btn-submit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+}
+
+::ng-deep .footer-btn-submit:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+::ng-deep .footer-btn-cancel {
+  padding: 10px 24px !important;
+}
+
+/* Personnalisation PrimeNG */
+::ng-deep .pays-dialog .p-inputtext {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .pays-dialog .p-inputtext:enabled:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .mode-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .header-content {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .dialog-footer-custom {
+    flex-direction: column;
+  }
+  
+  .form-container {
+    padding: 1rem 1.25rem;
+  }
+}
+
+/* Utilitaires */
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+</style>

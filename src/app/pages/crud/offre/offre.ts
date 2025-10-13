@@ -198,24 +198,36 @@ export class OffreComponent implements OnInit, OnDestroy {
 loadOffres(): void {
   this.loading.set(true);
 
-  const role = this.authService.getUserRole(); // peut être undefined/null
-  const source$ =
+  // Récupérer le rôle et le nettoyer
+  const rawRole = this.authService.getUserRole();
+  const role = rawRole?.toLowerCase()?.trim(); // Normaliser en minuscule
+  
+  // Log pour déboguer (à retirer en production)
+  console.log('🔍 Rôle de l\'utilisateur:', rawRole, '-> normalisé:', role);
+  
+  // Sélectionner le bon endpoint selon le rôle
+  const source$ = 
     role === 'recruteur'
       ? this.offreService.getMesOffres()
-      : this.offreService.getAdminOffres(); // fallback par défaut
+      : this.offreService.getAdminOffres();
+
+  console.log('📡 Endpoint utilisé:', role === 'recruteur' ? 'mes-offres' : 'admin-offres');
 
   source$
     .pipe(finalize(() => this.loading.set(false)))
     .subscribe({
       next: (respOrArray: any) => {
+        console.log('📦 Réponse brute du serveur:', respOrArray);
+        
         const rawList: any[] = Array.isArray(respOrArray)
           ? respOrArray
           : (respOrArray?.data?.data ?? respOrArray?.data ?? respOrArray?.content ?? []);
 
+        console.log('✅ Nombre d\'offres récupérées:', rawList.length);
+
         const now = new Date().getTime();
 
         const list = rawList.map((o: any) => {
-          // Dates sûres (sans dépendre d’un helper externe)
           const toDate = (v: any) => {
             if (!v) return null;
             if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
@@ -231,10 +243,8 @@ loadOffres(): void {
           const isActive  = o.statut === 'publiee' && !isExpired;
 
           const level = Number(o.sponsored_level ?? 0);
-          const isFeaturedActive =
-            level > 0 && (!fu || fu.getTime() > now);
+          const isFeaturedActive = level > 0 && (!fu || fu.getTime() > now);
 
-          // petit label pratique si tu veux l’afficher dans un tag
           const featuredBadgeLabel =
             isFeaturedActive
               ? (level === 3 ? 'Vedette ★★★'
@@ -244,7 +254,6 @@ loadOffres(): void {
 
           return {
             ...o,
-            // relations -> noms pour l’UI
             entrepriseName: o.entreprise?.nom_entreprise ?? 'Non renseignée',
             recruteurName: o.recruteur
               ? `${o.recruteur.firstname ?? ''} ${o.recruteur.lastname ?? ''}`.trim() || 'Non renseigné'
@@ -253,49 +262,38 @@ loadOffres(): void {
             validateurName: o.validateur
               ? `${o.validateur.firstname ?? ''} ${o.validateur.lastname ?? ''}`.trim() || undefined
               : undefined,
-
-            // dates normalisées (si parse ok)
             date_publication: pub ?? o.date_publication,
             date_expiration: exp ?? o.date_expiration,
-
-            // états dérivés
             isExpired,
             isActive,
-
-            // vedette
             sponsored_level: level,
             featured_until: fu ?? o.featured_until,
             isFeaturedActive,
             featuredBadgeLabel,
-          } as Offre & {
-            isFeaturedActive?: boolean;
-            featuredBadgeLabel?: string;
-            sponsored_level?: number;
-            featured_until?: Date | string | null;
           };
         });
 
-        // Optionnel : trier vedettes actives d’abord (puis par date de création desc)
         const sorted = [...list].sort((a, b) => {
-          // Vedette active en premier
           if (a.isFeaturedActive && !b.isFeaturedActive) return -1;
           if (!a.isFeaturedActive && b.isFeaturedActive) return 1;
-
-          // À niveau égal, on peut ordonner par niveau décroissant
           const la = Number(a.sponsored_level ?? 0);
           const lb = Number(b.sponsored_level ?? 0);
           if (la !== lb) return lb - la;
-
-          // Sinon tri par created_at desc (si dispo)
           const da = a.created_at ? new Date(a.created_at).getTime() : 0;
           const db = b.created_at ? new Date(b.created_at).getTime() : 0;
           return db - da;
         });
 
         this.offres.set(sorted as Offre[]);
+        console.log('🎯 Offres finales affichées:', sorted.length);
       },
       error: (err) => {
-        console.error('Erreur chargement offres', err);
+        console.error('❌ Erreur chargement offres:', err);
+        console.error('Détails de l\'erreur:', {
+          status: err.status,
+          message: err.message,
+          error: err.error
+        });
         this.showErrorMessage('Erreur lors du chargement des offres');
         this.offres.set([]);
       }
@@ -911,8 +909,6 @@ saveAsDraft(): void {
   this.offre.statut = 'brouillon';
   this.saveOffre();
 }
-
-
 canEdit(_offre: Offre): boolean { return this.ALLOW_ALL; }
 canDelete(_offre: Offre): boolean { return this.ALLOW_ALL; }
 canSubmitValidation(_offre: Offre): boolean { return this.ALLOW_ALL; }

@@ -2,21 +2,31 @@
 
 <p-toolbar styleClass="mb-6">
   <ng-template pTemplate="start">
-    <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
-    <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined
-              (onClick)="deleteSelectedUsers()" [disabled]="!selectedUsers || !selectedUsers.length" />
+    <p-button 
+      label="Nouvel utilisateur" 
+      icon="pi pi-plus" 
+      severity="success"
+      class="mr-2" 
+      (onClick)="openNew()" />
+    <p-button 
+      severity="danger" 
+      label="Supprimer" 
+      icon="pi pi-trash" 
+      [outlined]="true"
+      (onClick)="deleteSelectedUsers()" 
+      [disabled]="!selectedUsers || !selectedUsers.length" />
   </ng-template>
 
   <ng-template pTemplate="end">
     <div class="flex gap-2">
       <p-button 
-        label="Export CSV" 
-        icon="pi pi-file-excel" 
-        severity="secondary" 
+        label="Exporter CSV" 
+        icon="pi pi-download" 
+        severity="help"
         (onClick)="exportCSV()"
         [disabled]="users().length === 0" />
       <p-button 
-        label="Export PDF" 
+        label="Exporter PDF" 
         icon="pi pi-file-pdf" 
         severity="warn" 
         (onClick)="exportPDF()"
@@ -36,12 +46,12 @@
   [showCurrentPageReport]="true"
   [rowsPerPageOptions]="[10, 20, 30]"
   [globalFilterFields]="['nom','prenom','roleLabel','telephone','email']"
-  [(selection)]="selectedUsers"
->
+  [(selection)]="selectedUsers">
+  
   <!-- CAPTION -->
   <ng-template pTemplate="caption">
     <div class="flex items-center justify-between flex-wrap gap-4">
-      <h5 class="m-0">Gestion des utilisateurs</h5>
+      <h5 class="m-0 text-xl font-semibold">Gestion des utilisateurs</h5>
       
       <div class="flex items-center gap-4">
         <!-- Filtre par rôle -->
@@ -63,7 +73,7 @@
         <!-- Recherche globale -->
         <p-iconField>
           <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
-          <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+          <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher un utilisateur..." />
         </p-iconField>
       </div>
     </div>
@@ -80,9 +90,9 @@
       <th pSortableColumn="roleLabel" style="min-width:16rem">Rôle <p-sortIcon field="roleLabel" /></th>
       <th pSortableColumn="telephone" style="min-width:16rem">Téléphone <p-sortIcon field="telephone" /></th>
       <th pSortableColumn="email" style="min-width:16rem">Email <p-sortIcon field="email" /></th>
-      <th style="min-width:16rem">Photo</th>
+      <th style="min-width:10rem">Photo</th>
       <th pSortableColumn="statut" style="min-width:12rem">Statut <p-sortIcon field="statut" /></th>
-      <th style="min-width:12rem">Actions</th>
+      <th style="min-width:14rem">Actions</th>
     </tr>
   </ng-template>
 
@@ -92,39 +102,66 @@
       <td style="width: 3rem">
         <p-tableCheckbox [value]="user" />
       </td>
-      <td>{{ user.nom || 'N/A' }}</td>
-      <td>{{ user.prenom || 'N/A' }}</td>
-      <td>{{ user.roleLabel || 'N/A' }}</td>
-      <td>{{ user.telephone || 'N/A' }}</td>
-      <td>{{ user.email || 'N/A' }}</td>
+      <td><span class="font-semibold">{{ user.nom || 'N/A' }}</span></td>
+      <td><span class="font-semibold">{{ user.prenom || 'N/A' }}</span></td>
       <td>
+        <p-tag [value]="user.roleLabel || 'N/A'" severity="info" styleClass="text-xs"></p-tag>
+      </td>
+      <td>{{ user.telephone || 'N/A' }}</td>
+      <td>
+        <a [href]="'mailto:' + user.email" class="text-blue-600 hover:underline">
+          {{ user.email || 'N/A' }}
+        </a>
+      </td>
+      <td class="text-center">
         <!-- Photo dans le tableau -->
         <ng-container *ngIf="user.photo; else noPhotoTemplate">
           <img [src]="getImageUrl(user.photo)"
                alt="Photo de {{ user.nom }}"
-               [ngStyle]="{ width: '50px', height: '50px', 'object-fit': 'cover', 'border-radius': '6px' }"
+               class="photo-thumbnail"
                (error)="onImageError($event)">
         </ng-container>
         <ng-template #noPhotoTemplate>
-          <div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded"
-               style="width: 50px; height: 50px;">
-            <i class="pi pi-user text-gray-400"></i>
+          <div class="photo-placeholder">
+            <i class="pi pi-user"></i>
           </div>
         </ng-template>
       </td>
-      <td>
+      <td class="text-center">
         <p-tag [value]="user.statut" 
                [severity]="user.statut === 'actif' ? 'success' : 'danger'">
         </p-tag>
       </td>
       <td>
-        <p-button icon="pi pi-eye" class="mr-2" [rounded]="true" [outlined]="true" 
-            severity="secondary" (click)="viewUserDetails(user)" 
-            pTooltip="Voir les détails" tooltipPosition="top" />
-        <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" 
-                  severity="info" (click)="editUser(user)" />
-        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" 
-                  (click)="deleteUser(user)" />
+        <div class="flex gap-2 justify-center">
+          <p-button 
+            icon="pi pi-eye" 
+            [rounded]="true" 
+            [outlined]="true" 
+            severity="info"
+            size="small"
+            (click)="viewUserDetails(user)" 
+            pTooltip="Voir les détails" 
+            tooltipPosition="top" />
+          <p-button 
+            icon="pi pi-pencil" 
+            [rounded]="true" 
+            [outlined]="true" 
+            severity="secondary"
+            size="small"
+            (click)="editUser(user)"
+            pTooltip="Modifier"
+            tooltipPosition="top" />
+          <p-button 
+            icon="pi pi-trash" 
+            severity="danger" 
+            [rounded]="true" 
+            [outlined]="true"
+            size="small"
+            (click)="deleteUser(user)"
+            pTooltip="Supprimer"
+            tooltipPosition="top" />
+        </div>
       </td>
     </tr>
   </ng-template>
@@ -132,127 +169,328 @@
   <!-- MESSAGE VIDE -->
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="9" class="text-center py-6">
+      <td colspan="9" class="text-center py-8">
         <div class="flex flex-col items-center gap-2">
-          <i class="pi pi-users" style="font-size: 2rem; color: #6b7280;"></i>
-          <span>Aucun utilisateur trouvé</span>
+          <i class="pi pi-users text-4xl text-gray-400"></i>
+          <p class="text-gray-500">Aucun utilisateur trouvé</p>
+          <p-button 
+            label="Créer le premier utilisateur" 
+            icon="pi pi-plus" 
+            (onClick)="openNew()" 
+            size="small">
+          </p-button>
         </div>
       </td>
     </tr>
   </ng-template>
 </p-table>
 
-<p-dialog [(visible)]="userDialog" [style]="{ width: '600px' }" header="Ajouter / Modifier un utilisateur" [modal]="true">
-  <ng-template pTemplate="content">
-    <div class="flex flex-col gap-4">
-      <div class="flex gap-4">
-        <div class="flex-1">
-          <label for="nom" class="block font-bold mb-2">Nom</label>
-          <input type="text" pInputText id="nom" [(ngModel)]="user.nom" required class="w-full" 
-                 [class.ng-invalid]="submitted && !user.nom" />
-          <small class="text-red-500" *ngIf="submitted && !user.nom">Le nom est obligatoire.</small>
+<!-- Dialog Créer/Modifier Utilisateur - MODERNISÉ -->
+<p-dialog 
+  [(visible)]="userDialog" 
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  styleClass="user-form-dialog"
+  [style]="{ width: '800px', maxWidth: '95vw' }">
+  
+  <!-- Header personnalisé -->
+  <ng-template pTemplate="header">
+    <div class="dialog-custom-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-user-plus"></i>
         </div>
-        <div class="flex-1">
-          <label for="prenom" class="block font-bold mb-2">Prénom</label>
-          <input type="text" pInputText id="prenom" [(ngModel)]="user.prenom" required class="w-full"
-                 [class.ng-invalid]="submitted && !user.prenom" />
-          <small class="text-red-500" *ngIf="submitted && !user.prenom">Le prénom est obligatoire.</small>
-        </div>
-      </div>
-
-      <div>
-        <label for="role" class="block font-bold mb-2">Rôle</label>
-        <p-dropdown id="role" [(ngModel)]="user.roleId" [options]="roles" optionLabel="label" optionValue="value"
-                    placeholder="Sélectionnez un rôle" required [style]="{ 'width': '100%' }"
-                    [class.ng-invalid]="submitted && !user.roleId"></p-dropdown>
-        <small class="text-red-500" *ngIf="submitted && !user.roleId">Le rôle est obligatoire.</small>
-      </div>
-
-      <div class="flex gap-4">
-        <div class="flex-1">
-          <label for="phone" class="block font-bold mb-2">Téléphone</label>
-          <input type="text" pInputText id="phone" [(ngModel)]="user.telephone" required class="w-full"
-                 [class.ng-invalid]="submitted && !user.telephone" />
-          <small class="text-red-500" *ngIf="submitted && !user.telephone">Le téléphone est obligatoire.</small>
-        </div>
-        <div class="flex-1">
-          <label for="email" class="block font-bold mb-2">Email</label>
-          <input type="email" pInputText id="email" [(ngModel)]="user.email" required class="w-full"
-                 [class.ng-invalid]="submitted && !user.email" />
-          <small class="text-red-500" *ngIf="submitted && !user.email">L'email est obligatoire.</small>
-        </div>
-      </div>
-
-      <div>
-        <label for="password" class="block font-bold mb-2">
-          Mot de passe {{ user.id ? '(laisser vide pour ne pas changer)' : '' }}
-        </label>
-        <input type="password" pInputText id="password" [(ngModel)]="user.password" 
-               [required]="!user.id" class="w-full"
-               [class.ng-invalid]="submitted && !user.password && !user.id" />
-        <small class="text-red-500" *ngIf="submitted && !user.password && !user.id">
-          Le mot de passe est obligatoire pour la création.
-        </small>
-      </div>
-
-      <div class="flex gap-4">
-        <div class="flex-1">
-          <label for="statut" class="block font-bold mb-2">Statut</label>
-          <p-dropdown id="statut" [(ngModel)]="user.statut" [options]="statuts" optionLabel="label"
-                      optionValue="value" placeholder="Sélectionnez un statut" required [style]="{ 'width': '100%' }"
-                      [class.ng-invalid]="submitted && !user.statut"></p-dropdown>
-          <small class="text-red-500" *ngIf="submitted && !user.statut">Le statut est obligatoire.</small>
-        </div>
-        <div class="flex-1">
-          <label for="image" class="block font-bold mb-2">Photo</label>
-          <input type="file" id="image" (change)="onFileChange($event)"
-                 accept="image/jpeg, image/png, image/jpg, image/gif" class="w-full" />
-          
-          <!-- Aperçu de la nouvelle photo sélectionnée -->
-          <div class="flex justify-center mt-3" *ngIf="previewPhotoUrl">
-            <div class="relative">
-              <img [src]="previewPhotoUrl" alt="Aperçu de la nouvelle photo" 
-                   class="w-32 h-32 object-cover rounded border-2 border-blue-300" />
-              <span class="absolute top-0 left-0 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                Nouveau
-              </span>
-            </div>
-          </div>
-          
-          <!-- Photo actuelle (si pas de nouveau fichier) -->
-          <div class="flex justify-center mt-3" *ngIf="!previewPhotoUrl && user.photo">
-            <div class="relative">
-              <img [src]="getImageUrl(user.photo)" alt="Photo actuelle" 
-                   class="w-32 h-32 object-cover rounded border-2 border-gray-300"
-                   (error)="onImageError($event)" />
-              <span class="absolute top-0 left-0 bg-gray-500 text-white text-xs px-2 py-1 rounded">
-                Actuelle
-              </span>
-            </div>
-          </div>
-          
-          <!-- Message si aucune photo -->
-          <div class="flex justify-center mt-3" *ngIf="!previewPhotoUrl && !user.photo">
-            <div class="w-32 h-32 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
-              <div class="text-center text-gray-500">
-                <i class="pi pi-image text-2xl block mb-2"></i>
-                <span class="text-sm">Aucune photo</span>
-              </div>
-            </div>
-          </div>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">
+            {{ user.id ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur' }}
+          </h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            {{ user.id ? 'Modifiez les informations de l\'utilisateur' : 'Créez un nouveau compte utilisateur' }}
+          </p>
         </div>
       </div>
     </div>
   </ng-template>
 
+  <ng-template pTemplate="content">
+    <div class="form-container">
+      
+      <!-- Section 1 : Identité -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-id-card text-blue-600 mr-2"></i>
+          <h3 class="section-title">Identité</h3>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Nom -->
+          <div class="form-field">
+            <label for="nom" class="field-label">
+              Nom <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-user input-icon"></i>
+              <input 
+                type="text" 
+                pInputText 
+                id="nom" 
+                [(ngModel)]="user.nom" 
+                placeholder="Nom de famille"
+                [class.input-error]="submitted && !user.nom"
+                class="field-input pl-10"
+                autofocus />
+            </div>
+            <small class="error-message" *ngIf="submitted && !user.nom">
+              Le nom est obligatoire
+            </small>
+          </div>
+
+          <!-- Prénom -->
+          <div class="form-field">
+            <label for="prenom" class="field-label">
+              Prénom <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-user input-icon"></i>
+              <input 
+                type="text" 
+                pInputText 
+                id="prenom" 
+                [(ngModel)]="user.prenom" 
+                placeholder="Prénom"
+                [class.input-error]="submitted && !user.prenom"
+                class="field-input pl-10" />
+            </div>
+            <small class="error-message" *ngIf="submitted && !user.prenom">
+              Le prénom est obligatoire
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 : Contact -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-envelope text-blue-600 mr-2"></i>
+          <h3 class="section-title">Coordonnées</h3>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Email -->
+          <div class="form-field">
+            <label for="email" class="field-label">
+              Email <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-at input-icon"></i>
+              <input 
+                type="email" 
+                pInputText 
+                id="email" 
+                [(ngModel)]="user.email" 
+                placeholder="exemple@email.com"
+                [class.input-error]="submitted && !user.email"
+                class="field-input pl-10" />
+            </div>
+            <small class="error-message" *ngIf="submitted && !user.email">
+              L'email est obligatoire
+            </small>
+          </div>
+
+          <!-- Téléphone -->
+          <div class="form-field">
+            <label for="phone" class="field-label">
+              Téléphone <span class="required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-phone input-icon"></i>
+              <input 
+                type="text" 
+                pInputText 
+                id="phone" 
+                [(ngModel)]="user.telephone" 
+                placeholder="+226 XX XX XX XX"
+                [class.input-error]="submitted && !user.telephone"
+                class="field-input pl-10" />
+            </div>
+            <small class="error-message" *ngIf="submitted && !user.telephone">
+              Le téléphone est obligatoire
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3 : Rôle et Sécurité -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-shield text-blue-600 mr-2"></i>
+          <h3 class="section-title">Rôle et Sécurité</h3>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Rôle -->
+          <div class="form-field">
+            <label for="role" class="field-label">
+              Rôle <span class="required">*</span>
+            </label>
+            <p-dropdown 
+              id="role" 
+              [(ngModel)]="user.roleId" 
+              [options]="roles" 
+              optionLabel="label" 
+              optionValue="value"
+              placeholder="Sélectionnez un rôle"
+              [class.input-error]="submitted && !user.roleId"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="error-message" *ngIf="submitted && !user.roleId">
+              Le rôle est obligatoire
+            </small>
+          </div>
+
+          <!-- Statut -->
+          <div class="form-field">
+            <label for="statut" class="field-label">
+              Statut <span class="required">*</span>
+            </label>
+            <p-dropdown 
+              id="statut" 
+              [(ngModel)]="user.statut" 
+              [options]="statuts" 
+              optionLabel="label"
+              optionValue="value" 
+              placeholder="Sélectionnez un statut"
+              [class.input-error]="submitted && !user.statut"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="error-message" *ngIf="submitted && !user.statut">
+              Le statut est obligatoire
+            </small>
+          </div>
+
+          <!-- Mot de passe -->
+          <div class="form-field full-width">
+            <label for="password" class="field-label">
+              Mot de passe 
+              <span class="required" *ngIf="!user.id">*</span>
+              <span class="optional" *ngIf="user.id">(laisser vide pour ne pas changer)</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-lock input-icon"></i>
+              <input 
+                type="password" 
+                pInputText 
+                id="password" 
+                [(ngModel)]="user.password" 
+                placeholder="Minimum 8 caractères"
+                [required]="!user.id"
+                [class.input-error]="submitted && !user.password && !user.id"
+                class="field-input pl-10" />
+            </div>
+            <small class="error-message" *ngIf="submitted && !user.password && !user.id">
+              Le mot de passe est obligatoire pour la création
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4 : Photo de profil -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-image text-blue-600 mr-2"></i>
+          <h3 class="section-title">Photo de profil</h3>
+        </div>
+
+        <div class="photo-upload-area">
+          <!-- Photo actuelle ou aperçu -->
+          <div class="current-photo-zone">
+            <ng-container *ngIf="previewPhotoUrl; else currentPhotoBlock">
+              <div class="photo-preview-wrapper">
+                <img [src]="previewPhotoUrl" alt="Nouvelle photo" class="photo-preview-img" />
+                <span class="photo-badge new-badge">Nouvelle</span>
+                <button 
+                  type="button"
+                  class="remove-photo-btn"
+                  (click)="previewPhotoUrl =  null; user.photo = ''"
+                  title="Supprimer">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </ng-container>
+            
+            <ng-template #currentPhotoBlock>
+              <ng-container *ngIf="user.photo; else noPhotoBlock">
+                <div class="photo-preview-wrapper">
+                  <img [src]="getImageUrl(user.photo)" alt="Photo actuelle" 
+                       class="photo-preview-img"
+                       (error)="onImageError($event)" />
+                  <span class="photo-badge current-badge">Actuelle</span>
+                </div>
+              </ng-container>
+              
+              <ng-template #noPhotoBlock>
+                <div class="no-photo-block">
+                  <i class="pi pi-user text-4xl text-gray-400"></i>
+                  <p class="text-sm text-gray-500 mt-2">Aucune photo</p>
+                </div>
+              </ng-template>
+            </ng-template>
+          </div>
+
+          <!-- Contrôles d'upload -->
+          <div class="upload-controls">
+            <input 
+              #fileInput
+              type="file" 
+              id="image" 
+              (change)="onFileChange($event)"
+              accept="image/jpeg, image/png, image/jpg, image/gif" 
+              style="display: none;" />
+            
+            <button 
+              type="button"
+              pButton
+              label="Choisir une photo"
+              icon="pi pi-upload"
+              class="p-button-outlined w-full"
+              (click)="fileInput.click()">
+            </button>
+            
+            <small class="text-gray-500 text-xs text-center mt-2">
+              JPG, PNG ou GIF (max. 5MB)
+            </small>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </ng-template>
+
   <ng-template pTemplate="footer">
-    <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
-    <p-button label="Enregistrer" icon="pi pi-check" (click)="saveUser()" />
+    <div class="dialog-footer-custom">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        severity="secondary"
+        [outlined]="true"
+        styleClass="footer-btn-cancel"
+        (click)="hideDialog()">
+      </p-button>
+      <p-button 
+        [label]="user.id ? 'Mettre à jour' : 'Créer l\'utilisateur'"
+        [icon]="user.id ? 'pi pi-check' : 'pi pi-user-plus'"
+        styleClass="footer-btn-submit"
+        (click)="saveUser()">
+      </p-button>
+    </div>
   </ng-template>
 </p-dialog>
+
 <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
 
-<!-- Dialog de détails utilisateur -->
+<!-- Dialog de détails utilisateur - INCHANGÉ (tu l'aimes déjà !) -->
 <p-dialog
   [(visible)]="userDetailsDialog"
   [style]="{width: '750px', maxWidth: '90vw'}"
@@ -485,21 +723,7 @@
         </h3>
         
         <div class="flex flex-wrap gap-3">
-          <button pButton
-                  label="Envoyer un email"
-                  icon="pi pi-envelope"
-                  class="p-button-sm p-button-outlined"
-                  [disabled]="!selectedUserForDetails.email"
-                  (click)="sendEmail(selectedUserForDetails)">
-          </button>
           
-          <button pButton
-                  label="Appeler"
-                  icon="pi pi-phone"
-                  class="p-button-sm p-button-outlined"
-                  [disabled]="!selectedUserForDetails.telephone"
-                  (click)="callUser(selectedUserForDetails)">
-          </button>
           
           <button pButton
                   [label]="selectedUserForDetails.statut === 'actif' ? 'Désactiver' : 'Activer'"
@@ -548,7 +772,384 @@
 </p-dialog>
 
 <style>
-  /* Dialog de détails utilisateur */
+/* ============================================
+   STYLES DU TABLEAU
+   ============================================ */
+
+.photo-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto;
+}
+
+.photo-placeholder {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border-radius: 50%;
+  border: 2px dashed #d1d5db;
+  color: #9ca3af;
+  margin: 0 auto;
+}
+
+.photo-placeholder i {
+  font-size: 1.25rem;
+}
+
+/* Alignement des colonnes */
+::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  vertical-align: middle !important;
+}
+
+::ng-deep .p-datatable .p-datatable-tbody > tr {
+  height: 70px;
+}
+
+/* ============================================
+   STYLES DU DIALOG UTILISATEUR (FORMULAIRE)
+   ============================================ */
+
+::ng-deep .user-form-dialog .p-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+::ng-deep .user-form-dialog .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+::ng-deep .user-form-dialog .p-dialog-content {
+  padding: 0 !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Header avec dégradé bleu - FULL WIDTH */
+.dialog-custom-header {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+}
+
+.dialog-header-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.dialog-header-icon i {
+  font-size: 1.75rem;
+}
+
+.dialog-header-text {
+  flex: 1;
+}
+
+/* Container du formulaire */
+.form-container {
+  padding: 1.5rem 2rem;
+  background: #f9fafb;
+}
+
+/* Section */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Grid de formulaire */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.optional {
+  color: #9ca3af;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* Inputs */
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Input avec icône */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.pl-10 {
+  padding-left: 40px !important;
+}
+
+/* Section photo de profil */
+.photo-upload-area {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.current-photo-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-preview-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.photo-preview-img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.photo-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.new-badge {
+  background: #3b82f6;
+  color: white;
+}
+
+.current-badge {
+  background: #6b7280;
+  color: white;
+}
+
+.remove-photo-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.remove-photo-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.no-photo-block {
+  width: 150px;
+  height: 150px;
+  border: 2px dashed #d1d5db;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+}
+
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Footer */
+.dialog-footer-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .footer-btn-submit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+}
+
+::ng-deep .footer-btn-submit:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+::ng-deep .footer-btn-cancel {
+  padding: 10px 24px !important;
+}
+
+/* Personnalisation PrimeNG */
+::ng-deep .user-form-dialog .p-inputtext {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .user-form-dialog .p-inputtext:enabled:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+::ng-deep .user-form-dialog .p-dropdown {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .user-form-dialog .p-dropdown:not(.p-disabled).p-focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .photo-upload-area {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .header-content {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .dialog-footer-custom {
+    flex-direction: column;
+  }
+  
+  .form-container {
+    padding: 1rem 1.25rem;
+  }
+}
+
+/* ============================================
+   DIALOG DE DÉTAILS - INCHANGÉ
+   ============================================ */
+
 ::ng-deep .user-details-dialog .p-dialog {
   border-radius: 0.875rem !important;
   overflow: hidden;
@@ -574,7 +1175,6 @@
   border-top: 1px solid #e5e7eb;
 }
 
-/* Scrollbar personnalisée */
 ::ng-deep .user-details-dialog .p-dialog-content::-webkit-scrollbar {
   width: 6px;
 }
@@ -589,14 +1189,12 @@
   border-radius: 3px;
 }
 
-/* Tags et badges */
 ::ng-deep .user-details-dialog .p-tag {
   padding: 0.25rem 0.75rem !important;
   border-radius: 9999px !important;
   font-size: 0.875rem !important;
 }
 
-/* Animations */
 ::ng-deep .user-details-dialog .rounded-xl {
   transition: all 0.3s ease;
 }
@@ -606,11 +1204,23 @@
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-/* Responsive */
 @media (max-width: 640px) {
   ::ng-deep .user-details-dialog .p-dialog {
     margin: 0.5rem !important;
     width: calc(100% - 1rem) !important;
   }
+}
+
+/* Utilitaires */
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-blue-600 {
+  color: #2563eb;
 }
 </style>

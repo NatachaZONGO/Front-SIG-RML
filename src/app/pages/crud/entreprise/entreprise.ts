@@ -74,6 +74,7 @@ export class EntrepriseComponent implements OnInit {
   entreprise: Entreprise = this.getEmptyEntreprise();
   selectedFile: File | null = null;
   previewLogoUrl: string | null = null;
+  logoUrlPreview: string | null = null;
   
   
   // Options pour les dropdowns
@@ -195,6 +196,7 @@ sanitizeMotif(val: unknown): string | undefined {
     this.entreprise = this.getEmptyEntreprise();
     this.selectedFile = null;
     this.previewLogoUrl = null;
+    this.logoUrlPreview = null;
     this.submitted = false;
     this.entrepriseDialog = true;
   }
@@ -203,6 +205,7 @@ sanitizeMotif(val: unknown): string | undefined {
     this.entreprise = { ...entreprise };
     this.selectedFile = null;
     this.previewLogoUrl = null;
+    this.logoUrlPreview = entreprise.logo ? this.getImageUrl(entreprise.logo) : null;
     this.submitted = false;
     this.entrepriseDialog = true;
   }
@@ -273,26 +276,48 @@ sanitizeMotif(val: unknown): string | undefined {
       this.messageService.add({
         severity: 'warn',
         summary: 'Champs requis',
-        detail: 'Nom de l’entreprise et secteur d’activité sont obligatoires.'
+        detail: 'Nom de l\'entreprise et secteur d\'activité sont obligatoires.'
       });
       return;
     }
 
-    // Construire le payload attendu par le backend
-    const base: any = { ...this.entreprise };
-
-    // Logo : pour l’instant on envoie une URL (le backend valide "logo" comme string)
-    // Si un fichier a été choisi, on ignore (tant que l’API n’accepte pas un upload direct)
-    if (this.selectedFile) {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Logo',
-      });
+    // Préparer les données avec FormData pour supporter l'upload de fichier
+    const formData = new FormData();
+    
+    formData.append('nom_entreprise', this.entreprise.nom_entreprise);
+    formData.append('secteur_activite', this.entreprise.secteur_activite);
+    
+    if (this.entreprise.description) {
+      formData.append('description', this.entreprise.description);
+    }
+    if (this.entreprise.email) {
+      formData.append('email', this.entreprise.email);
+    }
+    if (this.entreprise.telephone) {
+      formData.append('telephone', this.entreprise.telephone);
+    }
+    if (this.entreprise.site_web) {
+      formData.append('site_web', this.entreprise.site_web);
+    }
+    if (this.entreprise.pays_id) {
+      formData.append('pays_id', this.entreprise.pays_id.toString());
+    }
+    if (this.entreprise.statut) {
+      formData.append('statut', this.entreprise.statut);
     }
 
-    // Choix du flux : update si id présent, sinon create
+    // Gérer le logo : priorité au fichier uploadé
+    if (this.selectedFile) {
+      formData.append('logo', this.selectedFile, this.selectedFile.name);
+    } else if (this.entreprise.logo?.trim()) {
+      formData.append('logo_url', this.entreprise.logo);
+    }
+
     if (this.entreprise.id) {
-      this.entrepriseService.updateEntreprise(this.entreprise.id, base).subscribe({
+      // Mise à jour
+      formData.append('_method', 'PUT');
+      
+      this.entrepriseService.updateEntrepriseWithFile(this.entreprise.id, formData).subscribe({
         next: (response) => {
           if (response.success) {
             this.messageService.add({
@@ -304,16 +329,17 @@ sanitizeMotif(val: unknown): string | undefined {
             this.hideDialog();
           }
         },
-        error: () => {
+        error: (error) => {
+          const msg = error?.error?.message || 'Erreur lors de la mise à jour';
           this.messageService.add({
             severity: 'error',
             summary: 'Erreur',
-            detail: 'Erreur lors de la mise à jour'
+            detail: msg
           });
         }
       });
     } else {
-      // Création : l’API exige user_id
+      // Création
       if (!this.entreprise.user_id) {
         this.messageService.add({
           severity: 'error',
@@ -322,8 +348,10 @@ sanitizeMotif(val: unknown): string | undefined {
         });
         return;
       }
+      
+      formData.append('user_id', this.entreprise.user_id.toString());
 
-      this.entrepriseService.createEntreprise(base).subscribe({
+      this.entrepriseService.createEntrepriseWithFile(formData).subscribe({
         next: (response) => {
           if (response.success) {
             this.messageService.add({
@@ -335,11 +363,12 @@ sanitizeMotif(val: unknown): string | undefined {
             this.hideDialog();
           }
         },
-        error: () => {
+        error: (error) => {
+          const msg = error?.error?.message || 'Erreur lors de la création';
           this.messageService.add({
             severity: 'error',
             summary: 'Erreur',
-            detail: 'Erreur lors de la création'
+            detail: msg
           });
         }
       });
@@ -352,24 +381,85 @@ openEntrepriseDetail(e: any) {
   this.detailEntrepriseDialog = true;
 }
   
+
+  
+onFileChange(event: any) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Vérification de la taille (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Fichier trop volumineux',
+        detail: 'La taille du fichier ne doit pas dépasser 2MB'
+      });
+      event.target.value = ''; // Reset input
+      return;
+    }
+
+    // Vérification du type
+    if (!file.type.startsWith('image/')) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Format invalide',
+        detail: 'Seules les images sont acceptées'
+      });
+      event.target.value = ''; // Reset input
+      return;
+    }
+
+    this.selectedFile = file;
+    this.previewLogoUrl = URL.createObjectURL(file);
+    
+    // Effacer l'URL si on upload un fichier
+    this.entreprise.logo = undefined;
+    this.logoUrlPreview = null;
+  }
+
+  onLogoUrlChange() {
+    // Si l'utilisateur saisit une URL, effacer le fichier uploadé
+    if (this.entreprise.logo?.trim()) {
+      this.removeSelectedFile();
+      this.logoUrlPreview = this.getImageUrl(this.entreprise.logo);
+    } else {
+      this.logoUrlPreview = null;
+    }
+  }
+
+  clearLogoUrl() {
+    this.entreprise.logo = undefined;
+    this.logoUrlPreview = null;
+  }
+  removeSelectedFile() {
+    this.selectedFile = null;
+    this.previewLogoUrl = null;
+    if (this.previewLogoUrl) {
+      URL.revokeObjectURL(this.previewLogoUrl);
+    }
+  }
+
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  handleImageError(event: any) {
+    event.target.style.display = 'none';
+    this.logoUrlPreview = null;
+  }
+
   hideDialog() {
     this.entrepriseDialog = false;
     this.submitted = false;
     this.selectedFile = null;
     this.previewLogoUrl = null;
+    this.logoUrlPreview = null;
   }
-  
-onFileChange(event: any) {
-  const file = event.target.files?.[0];
-  if (file) {
-    this.selectedFile = file;
-    this.previewLogoUrl = URL.createObjectURL(file);
-    this.entreprise.logoFile = file;   // ✅ on n’écrase plus .logo (string)
-  }
-}
-
-
-    
 
   getImageUrl(imagePath: string): string {
   if (!imagePath) return '';

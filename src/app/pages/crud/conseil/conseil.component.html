@@ -1,21 +1,20 @@
 <p-toast />
 <p-confirmDialog />
 
-<!-- Barre d'outils -->
 <!-- Toolbar -->
 <p-toolbar styleClass="mb-6">
   <ng-template pTemplate="start">
     <p-button 
       label="Nouveau conseil" 
       icon="pi pi-plus" 
-      severity="secondary" 
+      severity="success" 
       class="mr-2" 
       (onClick)="openNew()" />
     <p-button 
-      severity="secondary" 
+      severity="danger" 
       label="Supprimer sélection" 
       icon="pi pi-trash" 
-      outlined 
+      [outlined]="true"
       (onClick)="deleteSelectedConseils()" 
       [disabled]="!hasSelectedConseils" />
   </ng-template>
@@ -24,7 +23,7 @@
     <p-button 
       label="Exporter CSV" 
       icon="pi pi-download" 
-      severity="secondary" 
+      severity="help" 
       (onClick)="exportCSV()" />
   </ng-template>
 </p-toolbar>
@@ -139,21 +138,56 @@
 
       <td>
         <div class="flex gap-1">
-          <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" size="small"
-                    severity="info" (onClick)="openConseilDetail(conseil)" pTooltip="Voir les détails"></p-button>
-          <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" size="small"
-                    (onClick)="editConseil(conseil)" pTooltip="Modifier"></p-button>
+          <p-button 
+            icon="pi pi-eye" 
+            [rounded]="true" 
+            [outlined]="true" 
+            size="small"
+            severity="info" 
+            (onClick)="openConseilDetail(conseil)" 
+            pTooltip="Voir les détails"
+            tooltipPosition="top"></p-button>
+          <p-button 
+            icon="pi pi-pencil" 
+            [rounded]="true" 
+            [outlined]="true" 
+            size="small"
+            severity="secondary"
+            (onClick)="editConseil(conseil)" 
+            pTooltip="Modifier"
+            tooltipPosition="top"></p-button>
 
-          <p-button icon="pi pi-send" [rounded]="true" [outlined]="true" size="small"
-                    severity="success" (onClick)="publierConseil(conseil)"
-                    *ngIf="(conseil.statut || 'brouillon') === 'brouillon'" pTooltip="Publier"></p-button>
+          <p-button 
+            icon="pi pi-send" 
+            [rounded]="true" 
+            [outlined]="true" 
+            size="small"
+            severity="success" 
+            (onClick)="publierConseil(conseil)"
+            *ngIf="(conseil.statut || 'brouillon') === 'brouillon'" 
+            pTooltip="Publier"
+            tooltipPosition="top"></p-button>
 
-          <p-button icon="pi pi-envelope" [rounded]="true" [outlined]="true" size="small"
-                    severity="secondary" (onClick)="archiverConseil(conseil)"
-                    *ngIf="conseil.statut === 'publie'" pTooltip="Archiver"></p-button>
+          <p-button 
+            icon="pi pi-envelope" 
+            [rounded]="true" 
+            [outlined]="true" 
+            size="small"
+            severity="secondary" 
+            (onClick)="archiverConseil(conseil)"
+            *ngIf="conseil.statut === 'publie'" 
+            pTooltip="Archiver"
+            tooltipPosition="top"></p-button>
 
-          <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" size="small"
-                    (onClick)="deleteConseil(conseil)" pTooltip="Supprimer"></p-button>
+          <p-button 
+            icon="pi pi-trash" 
+            severity="danger" 
+            [rounded]="true" 
+            [outlined]="true" 
+            size="small"
+            (onClick)="deleteConseil(conseil)" 
+            pTooltip="Supprimer"
+            tooltipPosition="top"></p-button>
         </div>
       </td>
     </tr>
@@ -165,238 +199,283 @@
         <div class="flex flex-col items-center gap-2">
           <i class="pi pi-lightbulb text-4xl text-gray-400"></i>
           <p class="text-gray-500">Aucun conseil trouvé</p>
-          <p-button label="Créer le premier conseil" icon="pi pi-plus" (onClick)="openNew()" size="small"></p-button>
+          <p-button 
+            label="Créer le premier conseil" 
+            icon="pi pi-plus" 
+            (onClick)="openNew()" 
+            size="small"></p-button>
         </div>
       </td>
     </tr>
   </ng-template>
 </p-table>
 
-<!-- Dialogue pour créer/modifier un conseil -->
+<!-- Dialog Créer/Modifier Conseil - MODERNISÉ -->
 <p-dialog 
-    [(visible)]="conseilDialog" 
-    [style]="{ width: '900px', height: '80vh' }" 
-    [header]="dialogHeader" 
-    [modal]="true"
-    [closable]="true"
-    [draggable]="false"
-    [resizable]="true"
-    styleClass="conseil-dialog">
-    
-    <ng-template #content>
-        <form class="flex flex-col gap-4 h-full">
-            <!-- Titre -->
-            <div class="field">
-                <label for="titre" class="block font-semibold mb-2 required">
-                    Titre du conseil *
-                </label>
-                <input 
-                    type="text" 
-                    pInputText 
-                    id="titre" 
-                    [(ngModel)]="conseil.titre" 
-                    name="titre"
-                    required 
-                    autofocus 
-                    class="w-full"
-                    [class.ng-invalid]="isFieldInvalid('titre')"
-                    placeholder="Ex: 10 conseils pour réussir son entretien d'embauche" />
-                <small class="text-red-500" *ngIf="isFieldInvalid('titre')">
-                    Le titre est obligatoire (5-255 caractères).
-                </small>
-            </div>
-
-            <!-- Métadonnées en ligne -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- Catégorie -->
-                <div class="field">
-                    <label for="categorie" class="block font-semibold mb-2 required">
-                        Catégorie *
-                    </label>
-                    <p-select 
-                        id="categorie" 
-                        [(ngModel)]="conseil.categorie" 
-                        name="categorie"
-                        [options]="categorieOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Sélectionnez"
-                        class="w-full"
-                        [class.ng-invalid]="isFieldInvalid('categorie')" />
-                    <small class="text-red-500" *ngIf="isFieldInvalid('categorie')">
-                        Catégorie obligatoire.
-                    </small>
-                </div>
-
-                <!-- Type -->
-                <div class="field">
-                    <label for="type_conseil" class="block font-semibold mb-2 required">
-                        Type *
-                    </label>
-                    <p-select 
-                        id="type_conseil" 
-                        [(ngModel)]="conseil.type_conseil" 
-                        name="type_conseil"
-                        [options]="typeOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Sélectionnez"
-                        class="w-full"
-                        [class.ng-invalid]="isFieldInvalid('type_conseil')" />
-                    <small class="text-red-500" *ngIf="isFieldInvalid('type_conseil')">
-                        Type obligatoire.
-                    </small>
-                </div>
-
-                <!-- Niveau -->
-                <div class="field">
-                    <label for="niveau" class="block font-semibold mb-2 required">
-                        Niveau *
-                    </label>
-                    <p-select 
-                        id="niveau" 
-                        [(ngModel)]="conseil.niveau" 
-                        name="niveau"
-                        [options]="niveauOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Sélectionnez"
-                        class="w-full"
-                        [class.ng-invalid]="isFieldInvalid('niveau')" />
-                    <small class="text-red-500" *ngIf="isFieldInvalid('niveau')">
-                        Niveau obligatoire.
-                    </small>
-                </div>
-
-                <!-- Statut -->
-                <div class="field">
-                    <label for="statut" class="block font-semibold mb-2 required">
-                        Statut *
-                    </label>
-                    <p-select 
-                        id="statut" 
-                        [(ngModel)]="conseil.statut" 
-                        name="statut"
-                        [options]="statutOptions"
-                        optionLabel="label"
-                        optionValue="value"
-                        placeholder="Sélectionnez"
-                        class="w-full"
-                        [class.ng-invalid]="isFieldInvalid('statut')" />
-                    <small class="text-red-500" *ngIf="isFieldInvalid('statut')">
-                        Statut obligatoire.
-                    </small>
-                </div>
-            </div>
-
-            <!-- Tags et Auteur -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="field">
-                    <label for="tags" class="block font-semibold mb-2">
-                        Tags
-                    </label>
-                    <input 
-                        type="text" 
-                        pInputText 
-                        id="tags" 
-                        [(ngModel)]="conseil.tags" 
-                        name="tags"
-                        class="w-full"
-                        placeholder="cv, entretien, conseils" />
-                    <small class="text-gray-500 text-xs">
-                        Séparez les tags par des virgules
-                    </small>
-                </div>
-
-                <div class="field">
-                    <label for="auteur" class="block font-semibold mb-2">
-                        Auteur
-                    </label>
-                    <input 
-                        type="text" 
-                        pInputText 
-                        id="auteur" 
-                        [(ngModel)]="conseil.auteur" 
-                        name="auteur"
-                        class="w-full"
-                        placeholder="Nom de l'auteur" />
-                </div>
-            </div>
-
-            <!-- Contenu principal -->
-            <div class="field flex-1">
-                <label for="contenu" class="block font-semibold mb-2 required">
-                    Contenu du conseil *
-                </label>
-                <p-editor 
-                    [(ngModel)]="conseil.contenu" 
-                    name="contenu"
-                    [style]="{ height: '300px' }"
-                    [class.ng-invalid]="isFieldInvalid('contenu')"
-                    (ngModelChange)="conseil.contenu = normalizeEditorHtml($event)">
-                    <ng-template #toolbar>
-                        <span class="ql-formats">
-                            <button class="ql-bold" aria-label="Bold"></button>
-                            <button class="ql-italic" aria-label="Italic"></button>
-                            <button class="ql-underline" aria-label="Underline"></button>
-                        </span>
-                        <span class="ql-formats">
-                            <select class="ql-header">
-                                <option selected></option>
-                                <option value="1"></option>
-                                <option value="2"></option>
-                                <option value="3"></option>
-                            </select>
-                        </span>
-                        <span class="ql-formats">
-                            <button class="ql-list" value="ordered"></button>
-                            <button class="ql-list" value="bullet"></button>
-                        </span>
-                        <span class="ql-formats">
-                            <button class="ql-link"></button>
-                            <button class="ql-image"></button>
-                        </span>
-                        <span class="ql-formats">
-                            <button class="ql-clean"></button>
-                        </span>
-                    </ng-template>
-                </p-editor>
-                <small class="text-red-500" *ngIf="isFieldInvalid('contenu')">
-                    Le contenu est obligatoire (minimum 10 caractères).
-                </small>
-            </div>
-        </form>
-    </ng-template>
-
-    <ng-template #footer>
-        <div class="flex justify-between items-center">
-            <div class="text-sm text-gray-500" *ngIf="conseil.contenu">
-                📖 Temps de lecture estimé : {{ getTempsLecture() }} min
-            </div>
-            <div class="flex gap-2">
-                <p-button 
-                    label="Annuler" 
-                    icon="pi pi-times" 
-                    severity="secondary"
-                    outlined
-                    (click)="hideDialog()" />
-                <p-button 
-                    label="Sauvegarder" 
-                    icon="pi pi-save" 
-                    severity="secondary"
-                    outlined
-                    (click)="saveConseil()"
-                    *ngIf="!isEditMode || conseil.statut === 'brouillon'" />
-                <p-button 
-                    label="Publier" 
-                    icon="pi pi-send" 
-                    severity="success"
-                    (click)="saveConseil()" />
-            </div>
+  [(visible)]="conseilDialog" 
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  styleClass="conseil-dialog-moderne"
+  [style]="{ width: '950px', maxWidth: '95vw', height: '90vh' }">
+  
+  <!-- Header personnalisé -->
+  <ng-template pTemplate="header">
+    <div class="dialog-custom-header">
+      <div class="header-content">
+        <div class="dialog-header-icon">
+          <i class="pi pi-lightbulb"></i>
         </div>
-    </ng-template>
+        <div class="dialog-header-text">
+          <h2 class="text-xl font-bold m-0">
+            {{ conseil.id ? 'Modifier le conseil' : 'Nouveau conseil' }}
+          </h2>
+          <p class="text-sm m-0 mt-1 opacity-90">
+            {{ conseil.id ? 'Modifiez les informations du conseil' : 'Créez un nouveau conseil pour aider les candidats' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <div class="form-container-scroll">
+      
+      <!-- Section 1 : Informations principales -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-info-circle text-blue-600 mr-2"></i>
+          <h3 class="section-title">Informations principales</h3>
+        </div>
+        
+        <!-- Titre -->
+        <div class="form-field full-width mb-4">
+          <label for="titre" class="field-label">
+            Titre du conseil <span class="required">*</span>
+          </label>
+          <div class="input-with-icon">
+            <i class="pi pi-bookmark input-icon"></i>
+            <input 
+              type="text" 
+              pInputText 
+              id="titre" 
+              [(ngModel)]="conseil.titre" 
+              placeholder="Ex: 10 conseils pour réussir son entretien d'embauche"
+              [class.input-error]="isFieldInvalid('titre')"
+              class="field-input pl-10"
+              autofocus />
+          </div>
+          <small class="error-message" *ngIf="isFieldInvalid('titre')">
+            Le titre est obligatoire (5-255 caractères)
+          </small>
+        </div>
+
+        <!-- Métadonnées en grille -->
+        <div class="form-grid-4">
+          <!-- Catégorie -->
+          <div class="form-field">
+            <label for="categorie" class="field-label">
+              Catégorie <span class="required">*</span>
+            </label>
+            <p-select 
+              id="categorie" 
+              [(ngModel)]="conseil.categorie" 
+              [options]="categorieOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez"
+              styleClass="w-full"
+              [class.input-error]="isFieldInvalid('categorie')" />
+            <small class="error-message" *ngIf="isFieldInvalid('categorie')">
+              Catégorie obligatoire
+            </small>
+          </div>
+
+          <!-- Type -->
+          <div class="form-field">
+            <label for="type_conseil" class="field-label">
+              Type <span class="required">*</span>
+            </label>
+            <p-select 
+              id="type_conseil" 
+              [(ngModel)]="conseil.type_conseil" 
+              [options]="typeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez"
+              styleClass="w-full"
+              [class.input-error]="isFieldInvalid('type_conseil')" />
+            <small class="error-message" *ngIf="isFieldInvalid('type_conseil')">
+              Type obligatoire
+            </small>
+          </div>
+
+          <!-- Niveau -->
+          <div class="form-field">
+            <label for="niveau" class="field-label">
+              Niveau <span class="required">*</span>
+            </label>
+            <p-select 
+              id="niveau" 
+              [(ngModel)]="conseil.niveau" 
+              [options]="niveauOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez"
+              styleClass="w-full"
+              [class.input-error]="isFieldInvalid('niveau')" />
+            <small class="error-message" *ngIf="isFieldInvalid('niveau')">
+              Niveau obligatoire
+            </small>
+          </div>
+
+          <!-- Statut -->
+          <div class="form-field">
+            <label for="statut" class="field-label">
+              Statut <span class="required">*</span>
+            </label>
+            <p-select 
+              id="statut" 
+              [(ngModel)]="conseil.statut" 
+              [options]="statutOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez"
+              styleClass="w-full"
+              [class.input-error]="isFieldInvalid('statut')" />
+            <small class="error-message" *ngIf="isFieldInvalid('statut')">
+              Statut obligatoire
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 : Métadonnées -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-tags text-blue-600 mr-2"></i>
+          <h3 class="section-title">Métadonnées et auteur</h3>
+        </div>
+        
+        <div class="form-grid-2">
+          <!-- Tags -->
+          <div class="form-field">
+            <label for="tags" class="field-label">Tags</label>
+            <div class="input-with-icon">
+              <i class="pi pi-hashtag input-icon"></i>
+              <input 
+                type="text" 
+                pInputText 
+                id="tags" 
+                [(ngModel)]="conseil.tags" 
+                placeholder="cv, entretien, conseils"
+                class="field-input pl-10" />
+            </div>
+            <small class="text-gray-500 text-xs mt-1">
+              Séparez les tags par des virgules
+            </small>
+          </div>
+
+          <!-- Auteur -->
+          <div class="form-field">
+            <label for="auteur" class="field-label">Auteur</label>
+            <div class="input-with-icon">
+              <i class="pi pi-user input-icon"></i>
+              <input 
+                type="text" 
+                pInputText 
+                id="auteur" 
+                [(ngModel)]="conseil.auteur" 
+                placeholder="Nom de l'auteur"
+                class="field-input pl-10" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3 : Contenu -->
+      <div class="form-section">
+        <div class="section-header">
+          <i class="pi pi-file-edit text-blue-600 mr-2"></i>
+          <h3 class="section-title">Contenu du conseil</h3>
+        </div>
+        
+        <div class="form-field full-width">
+          <label for="contenu" class="field-label">
+            Contenu <span class="required">*</span>
+          </label>
+          <p-editor 
+            [(ngModel)]="conseil.contenu" 
+            [style]="{ height: '400px' }"
+            [class.input-error]="isFieldInvalid('contenu')">
+            <ng-template pTemplate="toolbar">
+              <span class="ql-formats">
+                <button class="ql-bold" aria-label="Bold"></button>
+                <button class="ql-italic" aria-label="Italic"></button>
+                <button class="ql-underline" aria-label="Underline"></button>
+              </span>
+              <span class="ql-formats">
+                <select class="ql-header">
+                  <option selected></option>
+                  <option value="1"></option>
+                  <option value="2"></option>
+                  <option value="3"></option>
+                </select>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-list" value="ordered"></button>
+                <button class="ql-list" value="bullet"></button>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-link"></button>
+                <button class="ql-image"></button>
+              </span>
+              <span class="ql-formats">
+                <button class="ql-clean"></button>
+              </span>
+            </ng-template>
+          </p-editor>
+          <small class="error-message" *ngIf="isFieldInvalid('contenu')">
+            Le contenu est obligatoire (minimum 10 caractères)
+          </small>
+          <small class="text-gray-500 text-xs mt-2 block" *ngIf="conseil.contenu">
+            📖 Temps de lecture estimé : {{ getTempsLecture() }} min
+          </small>
+        </div>
+      </div>
+
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer-custom">
+      <div class="flex gap-2">
+        <p-button 
+          label="Annuler" 
+          icon="pi pi-times" 
+          severity="secondary"
+          [outlined]="true"
+          (click)="hideDialog()" />
+        <p-button 
+          label="Sauvegarder brouillon" 
+          icon="pi pi-save" 
+          severity="secondary"
+          [outlined]="true"
+          (click)="saveConseil()"
+          *ngIf="!isEditMode || conseil.statut === 'brouillon'" />
+      </div>
+      <p-button 
+        label="Publier" 
+        icon="pi pi-send" 
+        severity="success"
+        styleClass="footer-btn-publish"
+        (click)="saveConseil()" />
+    </div>
+  </ng-template>
 </p-dialog>
-<!-- Dialogue pour voir les détails d'un conseil -->
+
+<!-- Dialog détails - INCHANGÉ (déjà beau !) -->
 <p-dialog
   [(visible)]="detailConseilDialog"
   [modal]="true"
@@ -472,7 +551,7 @@
         </div>
       </div>
 
-      <!-- Aperçu (extrait) -->
+      <!-- Aperçu -->
       <div class="cd-card" *ngIf="conseilDetail.contenu">
         <div class="cd-section-title">
           <i class="pi pi-align-left mr-2"></i> Aperçu
@@ -482,7 +561,7 @@
         </div>
       </div>
 
-      <!-- Contenu complet (HTML sécurisé) -->
+      <!-- Contenu complet -->
       <div class="cd-card">
         <div class="cd-section-title">
           <i class="pi pi-book mr-2"></i> Contenu
@@ -535,79 +614,287 @@
   </ng-template>
 </p-dialog>
 
-
 <style>
-.required::after {
-    content: ' *';
-    color: red;
+/* ============================================
+   STYLES DU DIALOG MODERNE
+   ============================================ */
+
+::ng-deep .conseil-dialog-moderne .p-dialog {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.field {
-    margin-bottom: 1rem;
+::ng-deep .conseil-dialog-moderne .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
 }
 
-.conseil-dialog .p-dialog-content {
-    padding: 1.5rem;
-    height: calc(80vh - 140px);
-    overflow-y: auto;
+::ng-deep .conseil-dialog-moderne .p-dialog-content {
+  padding: 0 !important;
+  height: calc(90vh - 180px);
+  overflow: hidden;
 }
 
-.conseil-dialog .p-editor {
-    height: 300px;
+/* Header avec dégradé bleu - FULL WIDTH */
+.dialog-custom-header {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
 }
 
-.conseil-dialog .p-editor .ql-editor {
-    min-height: 250px;
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
 }
 
-/* Styles pour les tags dans le tableau */
-.p-tag {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+.dialog-header-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  flex-shrink: 0;
 }
 
-/* Responsive pour mobile */
+.dialog-header-icon i {
+  font-size: 1.75rem;
+}
+
+.dialog-header-text {
+  flex: 1;
+}
+
+/* Container scrollable */
+.form-container-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+  background: #f9fafb;
+}
+
+/* Section */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Grilles */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+/* Inputs */
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Input avec icône */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.pl-10 {
+  padding-left: 40px !important;
+}
+
+/* Editor */
+::ng-deep .conseil-dialog-moderne .p-editor-container {
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+::ng-deep .conseil-dialog-moderne .p-editor-content {
+  border-radius: 0 0 8px 8px;
+}
+
+::ng-deep .conseil-dialog-moderne .p-editor-content .ql-editor {
+  min-height: 350px;
+  font-size: 14px;
+}
+
+/* Footer */
+.dialog-footer-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .footer-btn-publish {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+}
+
+::ng-deep .footer-btn-publish:hover {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+}
+
+/* Dropdown personnalisé */
+::ng-deep .conseil-dialog-moderne .p-select {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .conseil-dialog-moderne .p-select:not(.p-disabled).p-focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .form-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
-    .conseil-dialog {
-        width: 95vw !important;
-        height: 95vh !important;
-    }
-    
-    .grid {
-        grid-template-columns: 1fr;
-    }
-
-  .conseil-dialog .p-editor .ql-editor {
-    white-space: pre-wrap;   /* gère bien les retours à la ligne */
-    word-break: break-word;  /* évite les débordements */
+  .form-grid-2,
+  .form-grid-4 {
+    grid-template-columns: 1fr;
   }
-
-  .p-tooltip .p-tooltip-text {
-    white-space: normal !important;
+  
+  .form-section {
+    padding: 1rem;
   }
-
+  
+  .header-content {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .dialog-footer-custom {
+    flex-direction: column;
+  }
+  
+  .form-container-scroll {
+    padding: 1rem 1.25rem;
+  }
 }
-/* En-tête du dialog */
+
+/* ============================================
+   STYLES DU DIALOG DÉTAILS (INCHANGÉ)
+   ============================================ */
+
 ::ng-deep .conseil-detail-dialog .p-dialog-header {
   padding: 0 !important;
   border: 0 !important;
 }
+
 .cd-header {
   display:flex; align-items:center; justify-content:space-between;
   padding: 18px 24px;
   background: linear-gradient(90deg, #0ea5e9, #38bdf8);
   color:#fff;
 }
+
 .cd-header-left { display:flex; gap:14px; align-items:center; }
+
 .cd-icon {
   width:48px; height:48px; border-radius:12px; background:#ffffff22;
   display:flex; align-items:center; justify-content:center; font-size:20px;
 }
+
 .cd-title { margin:0; font-size:20px; font-weight:700; }
 .cd-sub { opacity:.95; font-size:12px; margin-top:2px; }
 
-/* Contenu */
-::ng-deep .conseil-detail-dialog .p-dialog-content { padding: 16px 24px 8px; }
+::ng-deep .conseil-detail-dialog .p-dialog-content { 
+  padding: 16px 24px 8px;
+  max-height: 72vh;
+  overflow: auto;
+}
+
 .cd-content { display:flex; flex-direction:column; gap:16px; }
 .cd-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
 .cd-meta { display:flex; flex-direction:column; gap:6px; }
@@ -624,73 +911,30 @@
   padding:4px 8px; border-radius:9999px; font-size:12px; font-weight:600;
 }
 
-/* Contenu HTML (éditeur) */
-.cd-content-html { color:#111827; line-height:1.7; }
+.cd-content-html { 
+  color:#111827; 
+  line-height:1.7;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .cd-content-html h1,.cd-content-html h2,.cd-content-html h3 { margin:12px 0 6px; }
 .cd-content-html p { margin: 0 0 10px; }
 .cd-content-html ul { padding-left: 20px; margin: 8px 0; }
 .cd-content-html a { color:#2563eb; text-decoration:none; }
 .cd-content-html a:hover { text-decoration:underline; }
 
-@media (max-width: 768px) {
-  .cd-header { padding:14px 16px; }
-  ::ng-deep .conseil-detail-dialog .p-dialog-content { padding: 12px 16px; }
-}
-
-/* Limite la zone scrollable du contenu du dialog */
-::ng-deep .conseil-detail-dialog .p-dialog-content {
-  max-height: 72vh;             /* adapte la hauteur visible */
-  overflow: auto;               /* scroll interne propre */
-}
-
-/* Contenu HTML rendu (innerHTML) */
-.cd-content-html {
-  white-space: normal !important;   /* pas de ligne unique */
-  overflow-wrap: anywhere;          /* casse les très longs mots/URLs */
-  word-break: break-word;           /* fallback vieux navigateurs */
-  line-height: 1.7;
-}
-
-/* Empêche les éléments médias de déborder */
 .cd-content-html img,
 .cd-content-html video,
-.cd-content-html iframe,
-.cd-content-html svg,
-.cd-content-html canvas {
+.cd-content-html iframe {
   max-width: 100% !important;
   height: auto !important;
   display: block;
 }
 
-/* Blocs de code / <pre> scrollent à l’horizontale si besoin */
-.cd-content-html pre,
-.cd-content-html code,
-.cd-content-html .ql-code-block {
-  white-space: pre-wrap;        /* retour à la ligne si possible */
-  overflow-x: auto;             /* sinon scrollbar horizontale */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Listes & paragraphes : marges raisonnables */
-.cd-content-html p { margin: 0 0 10px; }
-.cd-content-html ul,
-.cd-content-html ol { padding-left: 1.25rem; margin: 8px 0; }
-
-/* Tableaux responsives */
-.cd-content-html table {
-  width: 100%;
-  border-collapse: collapse;
-  display: block;               /* pour permettre le scroll x */
-  overflow-x: auto;
-}
-.cd-content-html th,
-.cd-content-html td {
-  border: 1px solid #e5e7eb;
-  padding: .5rem;
-}
-
-/* Liens */
-.cd-content-html a { color:#2563eb; text-decoration:none; }
-.cd-content-html a:hover { text-decoration:underline; }
-
+/* Utilitaires */
+.text-gray-400 { color: #9ca3af; }
+.text-gray-500 { color: #6b7280; }
+.text-blue-600 { color: #2563eb; }
 </style>

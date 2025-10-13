@@ -6,10 +6,11 @@
   acceptLabel="Oui"
   rejectLabel="Non">
 </p-confirmDialog>
+
 <p-toolbar styleClass="mb-6">
   <ng-template pTemplate="start">
-    <p-button label="Nouvelle entreprise" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
-    <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined
+    <p-button label="Nouvelle entreprise" icon="pi pi-plus" severity="success" class="mr-2" (onClick)="openNew()" />
+    <p-button severity="danger" label="Supprimer" icon="pi pi-trash" outlined
               (onClick)="deleteSelectedEntreprises()" [disabled]="!selectedEntreprises || !selectedEntreprises.length" />
   </ng-template>
 
@@ -18,7 +19,7 @@
       <p-button 
         label="Export CSV" 
         icon="pi pi-file-excel" 
-        severity="secondary" 
+        severity="help" 
         (onClick)="exportCSV()"
         [disabled]="entreprises().length === 0" />
       <p-button 
@@ -45,15 +46,14 @@
   [showCurrentPageReport]="true"
   [rowsPerPageOptions]="[10, 15, 20, 30]"
   [globalFilterFields]="['nom_entreprise','user.email','user.nom','secteur_activite','statut']"
-  [(selection)]="selectedEntreprises"
->
+  [(selection)]="selectedEntreprises">
+  
   <!-- CAPTION -->
   <ng-template pTemplate="caption">
     <div class="flex items-center justify-between flex-wrap gap-4">
       <h5 class="m-0">Gestion des entreprises</h5>
       
       <div class="flex items-center gap-4">
-        <!-- Filtre par statut -->
         <div class="flex items-center gap-2">
           <label for="statusFilter" class="text-sm font-medium">Filtrer par statut:</label>
           <p-dropdown 
@@ -69,7 +69,6 @@
           </p-dropdown>
         </div>
         
-        <!-- Recherche globale -->
         <p-iconField>
           <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
           <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
@@ -146,12 +145,10 @@
         </div>
       </td>
       <td>
-        <!-- Logo dans le tableau -->
         <ng-container *ngIf="entreprise.logo; else noLogoTemplate">
           <img [src]="getImageUrl(entreprise.logo)"
                alt="Logo de {{ entreprise.nom_entreprise }}"
-               [ngStyle]="{ width: '50px', height: '50px', 'object-fit': 'cover', 'border-radius': '6px' }"
-               >
+               [ngStyle]="{ width: '50px', height: '50px', 'object-fit': 'cover', 'border-radius': '6px' }">
         </ng-container>
         <ng-template #noLogoTemplate>
           <div class="flex items-center justify-center w-12 h-12 bg-gray-200 rounded"
@@ -165,10 +162,8 @@
                [severity]="getStatusSeverity(entreprise.statut || '')">
         </p-tag>
         <div *ngIf="hasMotif(entreprise.motif_rejet)" class="mt-1">
-            <small class="text-red-500">{{ entreprise.motif_rejet }}</small>
+          <small class="text-red-500">{{ entreprise.motif_rejet }}</small>
         </div>
-
-
       </td>
       <td>
         <span *ngIf="entreprise.pays">{{ entreprise.pays.nom }}</span>
@@ -176,18 +171,14 @@
       </td>
       <td>
         <div class="flex gap-2">
-          <!-- Bouton détails -->
           <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" 
                     severity="info" size="small" (click)="openEntrepriseDetail(entreprise)"
                     pTooltip="Voir les détails" tooltipPosition="top" />
-          <!-- Bouton modifier -->
           <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" 
                     severity="secondary" size="small" (click)="editEntreprise(entreprise)"
                     pTooltip="Modifier" tooltipPosition="top" />
           
-          <!-- Actions spécifiques selon le statut -->
           <ng-container [ngSwitch]="entreprise.statut">
-            <!-- Si en attente : boutons valider/rejeter -->
             <ng-container *ngSwitchCase="'en attente'">
               <p-button icon="pi pi-check" [rounded]="true" [outlined]="true" 
                         severity="success" size="small" 
@@ -199,15 +190,12 @@
                         pTooltip="Rejeter l'entreprise" tooltipPosition="top" />
             </ng-container>
             
-            <!-- Si validé : indicateur -->
             <ng-container *ngSwitchCase="'valide'">
               <p-button icon="pi pi-shield" [rounded]="true" [outlined]="true" 
                         severity="success" size="small" [disabled]="true"
                         pTooltip="Entreprise validée" tooltipPosition="top" />
             </ng-container>
-
             
-            <!-- Si refusé : bouton revalider -->
             <ng-container *ngSwitchCase="'refuse'">
               <p-button icon="pi pi-refresh" [rounded]="true" [outlined]="true" 
                         severity="warn" size="small" 
@@ -220,12 +208,12 @@
                     size="small" (click)="deleteEntreprise(entreprise)"
                     pTooltip="Supprimer" tooltipPosition="top" />
         </div>
-
       </td>
     </tr>
-</ng-template>
+  </ng-template>
 </p-table>
 
+<!-- Dialog Détails -->
 <p-dialog
   [(visible)]="detailEntrepriseDialog"
   [modal]="true"
@@ -235,14 +223,12 @@
   styleClass="entreprise-detail-dialog"
   [style]="{ width: '920px', maxWidth: '95vw' }">
 
-  <!-- Header custom -->
   <ng-template pTemplate="header">
     <div class="ed-header">
       <div class="ed-title">
         <div class="ed-logo-wrap">
           <ng-container *ngIf="currentEntreprise?.logo; else noLogoLarge">
-            <img [src]="getImageUrl(currentEntreprise!.logo!)" alt="Logo"
-                 class="ed-logo" />
+            <img [src]="getImageUrl(currentEntreprise!.logo!)" alt="Logo" class="ed-logo" />
           </ng-container>
           <ng-template #noLogoLarge>
             <div class="ed-logo ed-logo-fallback">
@@ -272,8 +258,6 @@
 
   <ng-template pTemplate="content">
     <div *ngIf="currentEntreprise" class="ed-content">
-
-      <!-- Carte infos principales -->
       <div class="ed-card grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="ed-item">
           <div class="ed-item-icon"><i class="pi pi-user"></i></div>
@@ -328,7 +312,6 @@
         </div>
       </div>
 
-      <!-- Description -->
       <div class="ed-card">
         <div class="ed-section-title">
           <i class="pi pi-align-left mr-2"></i> Description
@@ -338,12 +321,10 @@
         </div>
       </div>
 
-      <!-- Bandeau “motif de rejet” si présent -->
       <div *ngIf="hasMotif(currentEntreprise.motif_rejet)" class="ed-banner-error">
         <i class="pi pi-exclamation-triangle mr-2"></i>
         {{ currentEntreprise.motif_rejet }}
       </div>
-
     </div>
   </ng-template>
 
@@ -369,50 +350,862 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<!-- Dialog Créer/Modifier Entreprise -->
+<p-dialog
+  [(visible)]="entrepriseDialog"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [closable]="true"
+  styleClass="entreprise-form-dialog"
+  [style]="{ width: '700px', maxWidth: '95vw' }">
+  
+  <ng-template pTemplate="header">
+    <div class="dialog-header-custom">
+      <i class="pi pi-building text-2xl text-blue-600 mr-3"></i>
+      <div>
+        <h2 class="text-xl font-bold m-0">{{ dialogHeader }}</h2>
+        <p class="text-sm text-gray-500 m-0 mt-1">
+          {{ entreprise.id ? 'Modifiez les informations de l\'entreprise' : 'Créez votre compte entreprise et trouvez vos opportunités' }}
+        </p>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="content">
+    <div class="form-container">
+      
+      <!-- Section 1 : Informations principales -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="section-number">1</div>
+          <h3 class="section-title">Informations principales</h3>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Nom entreprise -->
+          <div class="form-field full-width">
+            <label for="nom_entreprise" class="field-label">
+              Nom de l'entreprise <span class="required">*</span>
+            </label>
+            <input 
+              pInputText 
+              id="nom_entreprise" 
+              [(ngModel)]="entreprise.nom_entreprise"
+              placeholder="Ex: ACME Corporation"
+              [class.input-error]="submitted && !entreprise.nom_entreprise.trim()"
+              class="field-input" />
+            <small class="error-message" *ngIf="submitted && !entreprise.nom_entreprise.trim()">
+              Le nom de l'entreprise est obligatoire
+            </small>
+          </div>
+
+          <!-- Secteur d'activité -->
+          <div class="form-field">
+            <label for="secteur" class="field-label">
+              Secteur d'activité <span class="required">*</span>
+            </label>
+            <p-dropdown
+              id="secteur"
+              [(ngModel)]="entreprise.secteur_activite"
+              [options]="secteursActivite"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionner"
+              [class.input-error]="submitted && !entreprise.secteur_activite?.trim()"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="error-message" *ngIf="submitted && !entreprise.secteur_activite?.trim()">
+              Le secteur est obligatoire
+            </small>
+          </div>
+
+          <!-- Pays -->
+          <div class="form-field">
+            <label for="pays" class="field-label">
+              Pays
+            </label>
+            <p-dropdown
+              id="pays"
+              [(ngModel)]="entreprise.pays_id"
+              [options]="pays"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Choisir un pays"
+              [filter]="true"
+              filterBy="label"
+              [showClear]="true"
+              styleClass="w-full">
+            </p-dropdown>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2 : Contact -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="section-number section-number-orange">2</div>
+          <h3 class="section-title">Informations de contact</h3>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Email -->
+          <div class="form-field">
+            <label for="email" class="field-label">Email</label>
+            <div class="input-with-icon">
+              <i class="pi pi-envelope input-icon"></i>
+              <input 
+                pInputText 
+                id="email" 
+                type="email"
+                [(ngModel)]="entreprise.email"
+                placeholder="contact@entreprise.com"
+                class="field-input pl-10" />
+            </div>
+          </div>
+
+          <!-- Téléphone -->
+          <div class="form-field">
+            <label for="telephone" class="field-label">Téléphone</label>
+            <div class="input-with-icon">
+              <i class="pi pi-phone input-icon"></i>
+              <input 
+                pInputText 
+                id="telephone" 
+                [(ngModel)]="entreprise.telephone"
+                placeholder="+226XXXXXXXX"
+                class="field-input pl-10" />
+            </div>
+          </div>
+
+          <!-- Site web -->
+          <div class="form-field full-width">
+            <label for="site_web" class="field-label">
+              Site web <span class="optional">(Optionnel)</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="pi pi-globe input-icon"></i>
+              <input 
+                pInputText 
+                id="site_web" 
+                type="url"
+                [(ngModel)]="entreprise.site_web"
+                placeholder="https://www.entreprise.com"
+                class="field-input pl-10" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3 : Détails entreprise -->
+      <div class="form-section">
+        <div class="section-header">
+          <div class="section-number section-number-green">3</div>
+          <h3 class="section-title">Détails de l'entreprise</h3>
+        </div>
+        
+        <div class="form-grid">
+          <!-- Propriétaire -->
+          <div class="form-field full-width">
+            <label for="user" class="field-label">
+              Propriétaire <span class="required" *ngIf="!entreprise.id">*</span>
+            </label>
+            <p-dropdown
+              id="user"
+              [(ngModel)]="entreprise.user_id"
+              [options]="users"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionner un utilisateur"
+              [filter]="true"
+              filterBy="label"
+              [class.input-error]="submitted && !entreprise.id && !entreprise.user_id"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="error-message" *ngIf="submitted && !entreprise.id && !entreprise.user_id">
+              Le propriétaire est obligatoire
+            </small>
+          </div>
+
+          <!-- Description -->
+          <div class="form-field full-width">
+            <label for="description" class="field-label">
+              Description <span class="optional">(Optionnel)</span>
+            </label>
+            <textarea 
+              pInputTextarea
+              id="description"
+              [(ngModel)]="entreprise.description"
+              rows="4"
+              placeholder="Présentez brièvement votre entreprise..."
+              class="field-input">
+            </textarea>
+          </div>
+
+          <!-- Logo - Upload ou URL -->
+          <div class="form-field full-width">
+            <label class="field-label">
+              Logo de l'entreprise <span class="optional">(Optionnel)</span>
+            </label>
+            
+            <div class="logo-upload-container">
+              <!-- Colonne gauche : Upload fichier -->
+              <div class="logo-column">
+                <div class="column-header">
+                  <i class="pi pi-file mr-2"></i>
+                  Image (fichier)
+                </div>
+                
+                <input 
+                  #fileInput
+                  type="file" 
+                  accept="image/*"
+                  (change)="onFileChange($event)"
+                  style="display: none;" />
+                
+                <button 
+                  type="button"
+                  class="file-choose-btn"
+                  (click)="fileInput.click()">
+                  <i class="pi pi-upload mr-2"></i>
+                  Choisir un fichier
+                </button>
+                
+                <small class="upload-info">PNG, JPG, JPEG, GIF (MAX. 2MB)</small>
+
+                <!-- Prévisualisation fichier uploadé -->
+                <div *ngIf="selectedFile && previewLogoUrl" class="preview-container">
+                  <div class="preview-wrapper">
+                    <img [src]="previewLogoUrl" alt="Aperçu" class="preview-img" />
+                    <button 
+                      type="button"
+                      class="remove-preview-btn"
+                      (click)="removeSelectedFile()"
+                      title="Supprimer">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+                  <div class="file-details">
+                    <i class="pi pi-check-circle text-green-600 mr-2"></i>
+                    <span class="file-name-small">{{ selectedFile.name }}</span>
+                    <span class="file-size-small">({{ formatFileSize(selectedFile.size) }})</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Colonne droite : URL -->
+              <div class="logo-column">
+                <div class="column-header">
+                  <i class="pi pi-link mr-2"></i>
+                  Image (URL)
+                </div>
+                
+                <input 
+                  pInputText 
+                  id="logo_url" 
+                  [(ngModel)]="entreprise.logo"
+                  placeholder="https://..."
+                  (input)="onLogoUrlChange()"
+                  class="url-input" />
+                
+                <small class="upload-info">
+                  Laissez vide si vous uploadez un fichier
+                </small>
+
+                <!-- Prévisualisation URL -->
+                <div *ngIf="entreprise.logo && !selectedFile && logoUrlPreview" class="preview-container">
+                  <div class="preview-wrapper">
+                    <img 
+                      [src]="logoUrlPreview" 
+                      alt="Aperçu" 
+                      class="preview-img"
+                      (error)="handleImageError($event)" />
+                    <button 
+                      type="button"
+                      class="remove-preview-btn"
+                      (click)="clearLogoUrl()"
+                      title="Supprimer">
+                      <i class="pi pi-times"></i>
+                    </button>
+                  </div>
+                  <div class="file-details">
+                    <i class="pi pi-check-circle text-green-600 mr-2"></i>
+                    <span class="text-sm text-gray-600">Image depuis URL</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Statut (si modification) -->
+          <div class="form-field full-width" *ngIf="entreprise.id">
+            <label for="statut" class="field-label">Statut</label>
+            <p-dropdown
+              id="statut"
+              [(ngModel)]="entreprise.statut"
+              [options]="statuts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionner un statut"
+              styleClass="w-full">
+            </p-dropdown>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer-custom">
+      <p-button 
+        label="Annuler" 
+        icon="pi pi-times" 
+        severity="secondary"
+        [outlined]="true"
+        styleClass="footer-btn-cancel"
+        (onClick)="hideDialog()">
+      </p-button>
+      <p-button 
+        [label]="entreprise.id ? 'Mettre à jour' : 'Créer mon compte'"
+        [icon]="entreprise.id ? 'pi pi-check' : 'pi pi-user-plus'"
+        styleClass="footer-btn-submit"
+        (onClick)="saveEntreprise()">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialogs de validation/rejet -->
+<p-dialog
+  [(visible)]="validationDialog"
+  header="Valider l'entreprise"
+  [modal]="true"
+  [style]="{ width: '450px' }">
+  <p class="mb-4">
+    Voulez-vous vraiment valider l'entreprise 
+    <strong>{{ currentEntreprise?.nom_entreprise }}</strong> ?
+  </p>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" [outlined]="true" (onClick)="validationDialog=false" />
+    <p-button label="Valider" icon="pi pi-check" severity="success" (onClick)="validateEntreprise()" />
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="rejectionDialog"
+  header="Rejeter l'entreprise"
+  [modal]="true"
+  [style]="{ width: '500px' }">
+  <div class="flex flex-col gap-4">
+    <p>
+      Vous êtes sur le point de rejeter l'entreprise 
+      <strong>{{ currentEntreprise?.nom_entreprise }}</strong>.
+    </p>
+    <div class="flex flex-col gap-2">
+      <label for="motif" class="font-medium">Motif du rejet <span class="text-red-500">*</span></label>
+      <textarea 
+        pInputTextarea
+        id="motif"
+        [(ngModel)]="rejectionMotif"
+        rows="4"
+        placeholder="Indiquez la raison du rejet..."
+        class="w-full">
+      </textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" [outlined]="true" (onClick)="rejectionDialog=false" />
+    <p-button 
+      label="Rejeter" 
+      icon="pi pi-times" 
+      severity="danger" 
+      (onClick)="rejectEntreprise()"
+      [disabled]="!rejectionMotif.trim()" />
+  </ng-template>
+</p-dialog>
+
 <style>
-  /* Dialog header */
+/* Dialog header */
 ::ng-deep .entreprise-detail-dialog .p-dialog-header {
   padding: 0 !important;
   border: 0 !important;
 }
+
 .ed-header {
-  display:flex; align-items:center; justify-content:space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 18px 24px;
   background: linear-gradient(90deg, #2563eb, #3b82f6);
   color: #fff;
 }
-.ed-title { display:flex; gap:14px; align-items:center; }
-.ed-logo-wrap { width:56px; height:56px; }
+
+.ed-title {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.ed-logo-wrap {
+  width: 56px;
+  height: 56px;
+}
+
 .ed-logo {
-  width:56px; height:56px; object-fit:cover; border-radius:10px;
-  background:#fff;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #fff;
 }
+
 .ed-logo-fallback {
-  display:flex; align-items:center; justify-content:center;
-  font-size:22px; color:#94a3b8; background:#fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #94a3b8;
+  background: #fff;
 }
-.ed-name { margin:0; font-size:20px; font-weight:700; }
-.ed-sub { opacity:.9; font-size:12px; margin-top:2px; }
+
+.ed-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.ed-sub {
+  opacity: .9;
+  font-size: 12px;
+  margin-top: 2px;
+}
 
 /* Content */
-::ng-deep .entreprise-detail-dialog .p-dialog-content { padding: 16px 24px 8px; }
-.ed-content { display:flex; flex-direction:column; gap:16px; }
-.ed-card {
-  background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px;
-}
-.ed-item { display:flex; gap:12px; align-items:flex-start; }
-.ed-item-icon {
-  width:36px; height:36px; border-radius:9999px;
-  display:flex; align-items:center; justify-content:center;
-  background:#eff6ff; color:#2563eb;
-}
-.ed-item-label { font-size:12px; color:#6b7280; }
-.ed-item-value { font-weight:600; color:#111827; }
-.ed-section-title { font-weight:700; color:#111827; margin-bottom:8px; }
-.ed-desc { color:#374151; line-height:1.6; white-space:pre-wrap; }
-.ed-banner-error {
-  background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;
-  border-radius:10px; padding:10px 12px; display:flex; align-items:center;
+::ng-deep .entreprise-detail-dialog .p-dialog-content {
+  padding: 16px 24px 8px;
 }
 
+.ed-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ed-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.ed-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.ed-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.ed-item-label {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.ed-item-value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.ed-section-title {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.ed-desc {
+  color: #374151;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ed-banner-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+}
+
+/* Dialog personnalisé */
+::ng-deep .entreprise-form-dialog .p-dialog-header {
+  padding: 24px 24px 16px !important;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+::ng-deep .entreprise-form-dialog .p-dialog-content {
+  padding: 0 !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.dialog-header-custom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Container du formulaire */
+.form-container {
+  padding: 24px;
+  background: #f9fafb;
+}
+
+/* Sections */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.section-number-orange {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.section-number-green {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Grid de formulaire */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.optional {
+  color: #9ca3af;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* Inputs */
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Input avec icône */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.pl-10 {
+  padding-left: 40px !important;
+}
+
+/* Container logo avec 2 colonnes */
+.logo-upload-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.logo-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.column-header {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* Bouton choisir fichier */
+.file-choose-btn {
+  padding: 10px 16px;
+  background: white;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.file-choose-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* Input URL */
+.url-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.url-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.upload-info {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: -4px;
+}
+
+/* Container de prévisualisation */
+.preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.remove-preview-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.remove-preview-btn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.file-details {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.file-name-small {
+  font-weight: 600;
+  color: #166534;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-size-small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Footer */
+.dialog-footer-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 16px 24px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .footer-btn-submit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+}
+
+::ng-deep .footer-btn-submit:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+::ng-deep .footer-btn-cancel {
+  padding: 10px 24px !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .logo-upload-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-section {
+    padding: 16px;
+  }
+  
+  .dialog-footer-custom {
+    flex-direction: column;
+  }
+}
+
+/* Personnalisation PrimeNG Dropdown */
+::ng-deep .p-dropdown {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .p-dropdown:not(.p-disabled).p-focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+::ng-deep .p-inputtextarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .p-inputtextarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
 </style>

@@ -3,12 +3,12 @@
 
 <p-toolbar styleClass="mb-6">
     <ng-template #start>
-        <p-button label="Nouveau" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
-        <p-button severity="secondary" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedCategories()" [disabled]="!selectedCategories || !selectedCategories.length" />
+        <p-button label="Nouvelle catégorie" icon="pi pi-plus" severity="success" class="mr-2" (onClick)="openNew()" />
+        <p-button severity="danger" label="Supprimer" icon="pi pi-trash" outlined (onClick)="deleteSelectedCategories()" [disabled]="!selectedCategories || !selectedCategories.length" />
     </ng-template>
 
     <ng-template #end>
-        <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+        <p-button label="Exporter CSV" icon="pi pi-download" severity="help" (onClick)="exportCSV()" />
     </ng-template>
 </p-toolbar>
 
@@ -23,19 +23,20 @@
     [(selection)]="selectedCategories"
     [rowHover]="true"
     dataKey="id"
-    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} catégories"
     [showCurrentPageReport]="true"
-    [rowsPerPageOptions]="[10, 20, 30]"
->
+    [rowsPerPageOptions]="[10, 20, 30]">
+    
     <ng-template #caption>
         <div class="flex items-center justify-between">
-            <h5 class="m-0">Gestion des Catégories</h5>
+            <h5 class="m-0 text-xl font-semibold">Gestion des Catégories</h5>
             <p-iconField>
                 <p-inputIcon styleClass="pi pi-search" />
-                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Recherche..." />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Rechercher une catégorie..." />
             </p-iconField>
         </div>
     </ng-template>
+
     <ng-template #header>
         <tr>
             <th style="width: 3rem">
@@ -44,46 +45,423 @@
             <th pSortableColumn="nom" style="min-width:16rem">
                 Nom <p-sortIcon field="nom" />
             </th>
-            <th pSortableColumn="description" style="min-width:16rem">
+            <th pSortableColumn="description" style="min-width:20rem">
                 Description <p-sortIcon field="description" />
             </th>
-            <th style="min-width: 12rem"></th>
+            <th style="min-width: 12rem">Actions</th>
         </tr>
     </ng-template>
+
     <ng-template #body let-categorie>
         <tr>
             <td style="width: 3rem">
                 <p-tableCheckbox [value]="categorie" />
             </td>
-            <td style="min-width: 16rem">{{ categorie.nom }}</td>
-            <td style="min-width: 16rem">{{ categorie.description }}</td>
+            <td style="min-width: 16rem">
+                <span class="font-semibold">{{ categorie.nom }}</span>
+            </td>
+            <td style="min-width: 20rem">
+                <span class="text-gray-600">{{ categorie.description }}</span>
+            </td>
             <td>
-                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editCategorie(categorie)" />
-                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteCategorie(categorie)" />
+                <div class="flex gap-2">
+                    <p-button 
+                        icon="pi pi-pencil" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        severity="secondary"
+                        size="small"
+                        (click)="editCategorie(categorie)"
+                        pTooltip="Modifier" 
+                        tooltipPosition="top" />
+                    <p-button 
+                        icon="pi pi-trash" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        size="small"
+                        (click)="deleteCategorie(categorie)"
+                        pTooltip="Supprimer" 
+                        tooltipPosition="top" />
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+        <tr>
+            <td colspan="4" class="text-center py-8">
+                <div class="flex flex-col items-center gap-2">
+                    <i class="pi pi-inbox text-4xl text-gray-400"></i>
+                    <p class="text-gray-500">Aucune catégorie trouvée</p>
+                    <p-button 
+                        label="Créer la première catégorie" 
+                        icon="pi pi-plus" 
+                        (onClick)="openNew()" 
+                        size="small">
+                    </p-button>
+                </div>
             </td>
         </tr>
     </ng-template>
 </p-table>
 
-<p-dialog [(visible)]="categorieDialog" [style]="{ width: '450px' }" header="Ajouter une Catégorie" [modal]="true">
-    <ng-template #content>
-        <div class="flex flex-col gap-6">
-            <div>
-                <label for="nom" class="block font-bold mb-3">Nom</label>
-                <input type="text" pInputText id="nom" [(ngModel)]="categorie.nom" required autofocus [style]="{ 'width': '100%' }"/>
-                <small class="text-red-500" *ngIf="submitted && !categorie.nom">Le nom est obligatoire.</small>
-            </div>
-           
-            <div>
-                <label for="description" class="block font-bold mb-3">Description</label>
-                <textarea pInputText id="description" [(ngModel)]="categorie.description" required [style]="{ 'width': '100%' }"></textarea>
-                <small class="text-red-500" *ngIf="submitted && !categorie.description">La description est obligatoire.</small>
+<!-- Dialog Créer/Modifier Catégorie -->
+<p-dialog 
+    [(visible)]="categorieDialog" 
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="true"
+    styleClass="categorie-dialog"
+    [style]="{ width: '600px', maxWidth: '90vw' }">
+    
+    <!-- Header personnalisé -->
+    <ng-template #header>
+        <div class="dialog-custom-header">
+            <div class="header-content">
+                <div class="dialog-header-icon">
+                    <i class="pi pi-tags"></i>
+                </div>
+                <div class="dialog-header-text">
+                    <h2 class="text-xl font-bold m-0">
+                        {{ categorie.id ? 'Modifier la catégorie' : 'Nouvelle catégorie' }}
+                    </h2>
+                    <p class="text-sm m-0 mt-1 opacity-90">
+                        {{ categorie.id ? 'Modifiez les informations de la catégorie' : 'Créez une nouvelle catégorie d\'emploi' }}
+                    </p>
+                </div>
             </div>
         </div>
     </ng-template>
 
+    <ng-template #content>
+        <div class="form-container">
+            
+            <!-- Section Informations -->
+            <div class="form-section">
+                <div class="section-header">
+                    <i class="pi pi-info-circle text-blue-600 mr-2"></i>
+                    <h3 class="section-title">Informations de la catégorie</h3>
+                </div>
+                
+                <div class="form-grid">
+                    <!-- Nom -->
+                    <div class="form-field full-width">
+                        <label for="nom" class="field-label">
+                            Nom de la catégorie <span class="required">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <i class="pi pi-tag input-icon"></i>
+                            <input 
+                                type="text" 
+                                pInputText 
+                                id="nom" 
+                                [(ngModel)]="categorie.nom" 
+                                placeholder="Ex: Informatique et Technologies"
+                                [class.input-error]="submitted && !categorie.nom"
+                                class="field-input pl-10"
+                                autofocus />
+                        </div>
+                        <small class="error-message" *ngIf="submitted && !categorie.nom">
+                            Le nom de la catégorie est obligatoire
+                        </small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-field full-width">
+                        <label for="description" class="field-label">
+                            Description <span class="required">*</span>
+                        </label>
+                        <div class="textarea-wrapper">
+                            <textarea 
+                                pInputTextarea
+                                id="description" 
+                                [(ngModel)]="categorie.description" 
+                                rows="5"
+                                placeholder="Décrivez cette catégorie d'emplois..."
+                                [class.input-error]="submitted && !categorie.description"
+                                class="field-input">
+                            </textarea>
+                        </div>
+                        <small class="error-message" *ngIf="submitted && !categorie.description">
+                            La description est obligatoire
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </ng-template>
+
     <ng-template #footer>
-        <p-button label="Annuler" icon="pi pi-times" text (click)="hideDialog()" />
-        <p-button label="Enregistrer" icon="pi pi-check" (click)="saveCategorie()" />
+        <div class="dialog-footer-custom">
+            <p-button 
+                label="Annuler" 
+                icon="pi pi-times" 
+                severity="secondary"
+                [outlined]="true"
+                styleClass="footer-btn-cancel"
+                (click)="hideDialog()">
+            </p-button>
+            <p-button 
+                [label]="categorie.id ? 'Mettre à jour' : 'Créer la catégorie'"
+                [icon]="categorie.id ? 'pi pi-check' : 'pi pi-plus'"
+                styleClass="footer-btn-submit"
+                (click)="saveCategorie()">
+            </p-button>
+        </div>
     </ng-template>
 </p-dialog>
+
+<style>
+/* ============================================
+   STYLES DU DIALOG CATÉGORIE
+   ============================================ */
+
+/* Dialog personnalisé */
+::ng-deep .categorie-dialog .p-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+::ng-deep .categorie-dialog .p-dialog-header {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+::ng-deep .categorie-dialog .p-dialog-content {
+  padding: 0 !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Header avec dégradé bleu - FULL WIDTH */
+.dialog-custom-header {
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.5rem 2rem;
+}
+
+.dialog-header-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.dialog-header-icon i {
+  font-size: 1.75rem;
+}
+
+.dialog-header-text {
+  flex: 1;
+}
+
+/* Container du formulaire */
+.form-container {
+  padding: 1.5rem 2rem;
+  background: #f9fafb;
+}
+
+/* Section */
+.form-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Grid de formulaire */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Labels */
+.field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+/* Inputs */
+.field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Input avec icône */
+.input-with-icon {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 14px;
+  z-index: 1;
+}
+
+.pl-10 {
+  padding-left: 40px !important;
+}
+
+/* Textarea */
+.textarea-wrapper {
+  position: relative;
+}
+
+/* Footer */
+.dialog-footer-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+  padding: 1rem 2rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+::ng-deep .footer-btn-submit {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 600 !important;
+}
+
+::ng-deep .footer-btn-submit:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+::ng-deep .footer-btn-cancel {
+  padding: 10px 24px !important;
+}
+
+/* Personnalisation PrimeNG */
+::ng-deep .categorie-dialog .p-inputtext {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .categorie-dialog .p-inputtext:enabled:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+::ng-deep .categorie-dialog .p-inputtextarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+::ng-deep .categorie-dialog .p-inputtextarea:enabled:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .header-content {
+    padding: 1.25rem 1.5rem;
+  }
+  
+  .dialog-footer-custom {
+    flex-direction: column;
+  }
+  
+  .form-container {
+    padding: 1rem 1.25rem;
+  }
+}
+
+/* Utilitaires */
+.text-gray-400 {
+  color: #9ca3af;
+}
+
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+</style>

@@ -86,13 +86,20 @@ export class AppMenu {
                     label: 'Offres',
                     icon: 'pi pi-fw pi-tags',
                     routerLink: ['/pages/offre'],
-                    roles: ['Administrateur']  // ← Changez "canSee" en "roles"
+                    roles: ['Administrateur', 'Recruteur']  // ← Changez "canSee" en "roles"
                 },
                 {
                     label: 'Candidatures',
                     icon: 'pi pi-fw pi-file',
                     routerLink: ['/pages/candidature'],
                     roles: ['Administrateur', 'Recruteur', 'Candidat']  // ← Ajoutez les rôles requis
+                },
+                {
+                    label: 'Mon Entreprise',
+                    icon: 'pi pi-fw pi-building',
+                    routerLink: ['/pages/mon-entreprise'],
+                    roles: ['Recruteur']  
+                     
                 },
                 {
                     label: 'Entreprises',

@@ -270,9 +270,15 @@ export class ConseilComponent implements OnInit {
             return;
         }
 
+        // Normaliser le contenu avant l'envoi
+        const conseilToSave = {
+            ...this.conseil,
+            contenu: this.normalizeEditorHtml(this.conseil.contenu || '')
+        };
+
         const operation = this.isEditMode
-            ? this.conseilService.updateConseil(this.conseil)
-            : this.conseilService.createConseil(this.conseil);
+            ? this.conseilService.updateConseil(conseilToSave)
+            : this.conseilService.createConseil(conseilToSave);
 
         operation.subscribe({
             next: () => {
@@ -503,14 +509,25 @@ export class ConseilComponent implements OnInit {
     }
 
     /** Remplace les espaces insécables &nbsp; / \u00A0 par des espaces normaux sans casser le HTML */
-    normalizeEditorHtml(html: string): string {
-    if (!html) return html;
-    // Cas 1: entités &nbsp; (et &amp;nbsp; si doublement encodées)
-    let out = html.replace(/&amp;nbsp;|&nbsp;/g, ' ');
-    // Cas 2: caractère NBSP réel (U+00A0)
-    out = out.replace(/\u00A0/g, ' ');
-    // Optionnel: compacter les espaces multiples hors balises (léger)
-    return out.replace(/(\s){2,}/g, ' ');
+    /** Remplace les espaces insécables &nbsp; / \u00A0 par des espaces normaux sans casser le HTML */
+    normalizeEditorHtml(html: string | null | undefined): string {
+        if (!html) return '';
+        
+        let out = String(html);
+        
+        // Cas 1: entités &nbsp; (et &amp;nbsp; si doublement encodées)
+        out = out.replace(/&amp;nbsp;|&nbsp;/g, ' ');
+        
+        // Cas 2: caractère NBSP réel (U+00A0)
+        out = out.replace(/\u00A0/g, ' ');
+        
+        // Optionnel: compacter les espaces multiples (mais pas dans <pre> ou <code>)
+        out = out.replace(/(\s){2,}/g, ' ');
+        
+        // Nettoyer les paragraphes vides de Quill
+        out = out.replace(/<p><br><\/p>/g, '<p>&nbsp;</p>');
+        
+        return out;
     }
 
     /** Convertit du HTML → texte lisible (décodage entités, suppression balises) */
