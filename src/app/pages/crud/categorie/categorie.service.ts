@@ -9,7 +9,7 @@ import { BackendURL } from '../../../Share/const';
   providedIn: 'root'
 })
 export class CategorieService {
-    private apiUrl = `${BackendURL}categories/`; // URL de l'API pour les catégories
+    private apiUrl = `${BackendURL}categories`; // URL de l'API pour les catégories
 
     constructor(private http: HttpClient) {}
 
