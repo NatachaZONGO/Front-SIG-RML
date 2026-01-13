@@ -66,7 +66,6 @@ export class UserService {
   if (!userData.id) {
     throw new Error('❌ ID utilisateur manquant');
   }
-  
   const url = `${this.usersUrl}/${userData.id}`;
   console.log('  🌐 URL:', url);
   

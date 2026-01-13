@@ -249,6 +249,7 @@ export class OffreCreateDialogComponent {
   typeOffreOptions: { label: string; value: TypeOffre }[] = [
     { label: 'Stage', value: 'stage' },
     { label: 'Emploi', value: 'emploi' },
+    { label: 'Appel d\'offre', value: 'appel_offre' }
   ];
   typeContratOptions: { label: string; value: TypeContrat }[] = [
     { label: 'CDI', value: 'CDI' },

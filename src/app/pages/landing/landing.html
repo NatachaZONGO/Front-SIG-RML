@@ -13,147 +13,186 @@
     <!-- Hero (pas de menu ici) -->
     <app-accueil></app-accueil>
 
-     <!-- ===================== SECTION : OFFRES EN VEDETTE ===================== -->
-    <section id="offres-vedettes" class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">⭐ Offres en vedette</h2>
-        <p class="section-subtitle">Découvrez les opportunités premium sélectionnées spécialement pour vous</p>
+     <!-- ✅ SECTION : OFFRES EN VEDETTE -->
+<section id="offres-vedettes" class="section-container">
+  <div class="section-header">
+    <h2 class="section-title">⭐ Offres en vedette</h2>
+    <p class="section-subtitle">Découvrez les opportunités premium sélectionnées spécialement pour vous</p>
+  </div>
+
+  <div class="cards-grid featured-grid">
+    <!-- ✅ Utiliser directement job au lieu de conversion -->
+    <div *ngFor="let job of featuredJobs" class="featured-card">
+      <div class="card-ribbon">
+        <span>★ Vedette</span>
       </div>
-
-      <div class="cards-grid featured-grid">
-        <div *ngFor="let job of featuredJobs" class="featured-card">
-          <!-- Ruban vedette diagonal -->
-          <div class="card-ribbon">
-            <span>★ Vedette</span>
-          </div>
-          
-          <div class="card-header">
-            <div class="job-info">
-              <div class="job-title">{{ job.titre }}</div>
-              <div class="job-meta">
-                {{ job.entreprise }} • {{ job.ville }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Badge séparé pour éviter le conflit avec le ruban -->
-          <div class="badges-container-vedette">
-            <span class="type-badge"
-                 [ngClass]="{
-                  'cdi': job.type.toLowerCase() === 'cdi',
-                  'cdd': job.type.toLowerCase() === 'cdd', 
-                  'freelance': job.type.toLowerCase() === 'freelance',
-                  'stage': job.type.toLowerCase() === 'stage'
-                }">{{ job.type }}</span>
-          </div>
-
-          <p class="job-description">{{ job.resume }}</p>
-
-          <div class="card-footer">
-            <small class="publish-date">{{ job.publie_le | date:'mediumDate' }}</small>
-            <button pButton pRipple label="Voir plus" class="view-btn" [rounded]="true" (click)="openOffreDetails(job.id)"></button>
+      
+      <div class="card-header">
+        <div class="job-info">
+          <div class="job-title">{{ job.titre }}</div>
+          <div class="job-meta">
+            {{ job.entreprise?.nom_entreprise || 'Entreprise' }} • {{ job.localisation || '—' }}
           </div>
         </div>
       </div>
-    </section>
 
-    <div class="section-divider"></div>
-
-    <!-- ===================== SECTION : NOS PARTENAIRES ===================== -->
-    <section id="pubs" class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">🤝 Nos partenaires</h2>
-        <p class="section-subtitle">Ils nous font confiance pour leur recrutement et développement</p>
+      <div class="badges-container-vedette">
+        <span class="type-badge"
+             [ngClass]="{
+              'cdi': job.type_contrat?.toLowerCase() === 'cdi',
+              'cdd': job.type_contrat?.toLowerCase() === 'cdd', 
+              'freelance': job.type_contrat?.toLowerCase() === 'freelance',
+              'stage': job.type_contrat?.toLowerCase() === 'stage'
+            }">{{ job.type_contrat || '-' }}</span>
       </div>
 
-      <div class="carousel-container">
-        <p-carousel
-          [value]="adsRow"
-          [circular]="true"
-          [autoplayInterval]="3000"
-          [numVisible]="4"
-          [numScroll]="1"
-          [showNavigators]="true"
-          [showIndicators]="false"
-          [responsiveOptions]="[
-            { breakpoint: '1200px', numVisible: 3, numScroll: 1 },
-            { breakpoint: '992px',  numVisible: 3, numScroll: 1 },
-            { breakpoint: '768px',  numVisible: 2, numScroll: 1 },
-            { breakpoint: '560px',  numVisible: 1, numScroll: 1 }
-          ]"
-        >
-          <ng-template pTemplate="item" let-ad>
-  <div class="partner-card">
-    <!-- Image/Vidéo -->
-    <div class="partner-media">
-      <img *ngIf="ad.image && !ad.video" [src]="ad.image" [alt]="ad.titre || 'Partenaire'" />
-      <video *ngIf="ad.video" [src]="ad.video" muted autoplay loop playsinline></video>
-    </div>
+      <!-- ✅ Utiliser plain() pour la description -->
+      <p class="job-description">{{ plain(job.description || '') }}</p>
 
-    <!-- Contenu -->
-    <div class="partner-content">
-      <div class="partner-title">{{ ad.titre || 'Partenaire' }}</div>
-      
-      <!-- ✅ Aperçu de la description (3 lignes max avec ...) -->
-      <div class="partner-description" [innerHTML]="ad.description || 'Découvrez notre partenaire'"></div>
-
-      <!-- ✅ ZONE D'ACTIONS : Voir (gauche) + Découvrir (droite) -->
-      <div class="partner-actions">
-        <!-- Bouton "Voir" à GAUCHE (ouvre le dialog) -->
-        <a class="partner-link" (click)="openPubDialog(ad)">
-          <i class="pi pi-eye"></i>
-          <span>Voir</span>
-        </a>
-        
-        <!-- Bouton "Découvrir" à DROITE (lien externe) -->
-        <a *ngIf="ad.lien" [href]="ad.lien" target="_blank" class="partner-link" rel="noopener noreferrer">
-          Découvrir →
-        </a>
+      <div class="card-footer">
+        <small class="publish-date">{{ job.date_publication | date:'mediumDate' }}</small>
+        <!-- ✅ Passer directement l'ID -->
+        <button pButton pRipple label="Voir plus" class="view-btn" [rounded]="true" (click)="openOffreDetails(job.id!)"></button>
       </div>
     </div>
   </div>
-          </ng-template>
-        </p-carousel>
-      </div>
-    </section>
+</section>
 
-    <div class="section-divider"></div>
+<div class="section-divider"></div>
 
-    <!-- ===================== SECTION : DERNIÈRES OFFRES ===================== -->
-    <section id="offres-recents" class="section-container">
-      <div class="section-header">
-        <h2 class="section-title">🔥 Dernières offres</h2>
-        <p class="section-subtitle">Les opportunités fraîchement publiées qui n'attendent que vous</p>
-        <button pButton pRipple [text]="true" [rounded]="true" label="Voir toutes les offres →" class="see-all-btn" (click)="goAllJobs()"></button>
-      </div>
+<!-- ✅ SECTION : NOS PARTENAIRES -->
+<section id="pubs" class="section-container">
+  <div class="section-header">
+    <h2 class="section-title">🤝 Nos partenaires</h2>
+    <p class="section-subtitle">Ils nous font confiance pour leur recrutement et développement</p>
+  </div>
 
-      <div class="cards-grid recent-grid">
-        <div *ngFor="let o of recentOffers | slice:0:4" class="job-card">
-          <div class="card-header">
-            <div class="job-info">
-              <div class="job-title" [title]="o.titre">{{ o.titre }}</div>
-              <div class="job-meta">
-                {{ o.entreprise }} • {{ o.ville }}
-              </div>
-            </div>
-            <span class="type-badge">{{ o.type }}</span>
+  <div class="carousel-container">
+    <p-carousel
+      [value]="adsRow"
+      [circular]="true"
+      [autoplayInterval]="3000"
+      [numVisible]="4"
+      [numScroll]="1"
+      [showNavigators]="true"
+      [showIndicators]="false"
+      [responsiveOptions]="[
+        { breakpoint: '1200px', numVisible: 3, numScroll: 1 },
+        { breakpoint: '992px',  numVisible: 3, numScroll: 1 },
+        { breakpoint: '768px',  numVisible: 2, numScroll: 1 },
+        { breakpoint: '560px',  numVisible: 1, numScroll: 1 }
+      ]"
+    >
+      <!-- ✅ ad est maintenant de type Publicite -->
+      <ng-template pTemplate="item" let-ad>
+        <div class="partner-card">
+          <div class="partner-media">
+            <img *ngIf="ad.image && !ad.video" [src]="ad.image" [alt]="ad.titre || 'Partenaire'" />
+            <video *ngIf="ad.video" [src]="ad.video" muted autoplay loop playsinline></video>
           </div>
 
-          <p class="job-description">{{ o.resume }}</p>
+          <div class="partner-content">
+            <div class="partner-title">{{ ad.titre || 'Partenaire' }}</div>
+            <div class="partner-description" [innerHTML]="ad.description || 'Découvrez notre partenaire'"></div>
 
-          <div class="card-footer">
-            <small class="publish-date">{{ o.publie_le | date:'mediumDate' }}</small>
-            <button pButton pRipple label="Voir plus" class="view-btn" [rounded]="true" (click)="openOffreDetails(o.id)"></button>
+            <div class="partner-actions">
+              <a class="partner-link" (click)="openPubDialog(ad)">
+                <i class="pi pi-eye"></i>
+                <span>Voir</span>
+              </a>
+              
+              <!-- ✅ Utiliser lien_externe au lieu de lien -->
+              <a *ngIf="ad.lien_externe" [href]="ad.lien_externe" target="_blank" class="partner-link" rel="noopener noreferrer">
+                Découvrir →
+              </a>
+            </div>
           </div>
         </div>
+      </ng-template>
+    </p-carousel>
+  </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ✅ SECTION : DERNIÈRES OFFRES (4 cartes) -->
+<section id="offres-recents" class="section-container">
+  <div class="section-header">
+    <h2 class="section-title">🔥 Dernières offres</h2>
+    <p class="section-subtitle">Les opportunités fraîchement publiées qui n'attendent que vous</p>
+    <button pButton 
+            pRipple 
+            [text]="true" 
+            [rounded]="true" 
+            label="Voir toutes les offres →" 
+            class="see-all-btn" 
+            (click)="goAllJobs()">
+    </button>
+  </div>
+
+  <!-- ✅ Message si pas d'offres -->
+  <div *ngIf="recentOffers.length === 0" class="empty-state-offers">
+    <i class="pi pi-inbox"></i>
+    <p>Aucune offre disponible pour le moment</p>
+  </div>
+
+  <!-- ✅ GRILLE DES 4 OFFRES -->
+  <div *ngIf="recentOffers.length > 0" class="offers-grid-container">
+    <div *ngFor="let o of recentOffers | slice:0:4" class="offer-card-modern">
+      
+      <!-- Header avec badge -->
+      <div class="offer-card-header">
+        <div class="offer-info-section">
+          <h3 class="offer-title" [title]="o.titre">{{ o.titre }}</h3>
+          <div class="offer-meta">
+            <i class="pi pi-building"></i>
+            <span>{{ o.entreprise?.nom_entreprise || 'Entreprise' }}</span>
+          </div>
+          <div class="offer-meta">
+            <i class="pi pi-map-marker"></i>
+            <span>{{ o.localisation || '—' }}</span>
+          </div>
+        </div>
+        
+        <span class="contract-badge" 
+              [ngClass]="{
+                'cdi': (o.type_contrat || '').toLowerCase() === 'cdi',
+                'cdd': (o.type_contrat || '').toLowerCase() === 'cdd',
+                'stage': (o.type_contrat || '').toLowerCase() === 'stage',
+                'freelance': (o.type_contrat || '').toLowerCase() === 'freelance'
+              }">
+          {{ o.type_contrat || '-' }}
+        </span>
       </div>
-    </section>
+
+      <!-- Description -->
+      <p class="offer-description">{{ plain(o.description || '') }}</p>
+
+      <!-- Footer -->
+      <div class="offer-card-footer">
+        <div class="offer-date">
+          <i class="pi pi-calendar"></i>
+          <small>{{ o.date_publication | date:'mediumDate' }}</small>
+        </div>
+        <button pButton 
+                pRipple 
+                label="Voir plus" 
+                icon="pi pi-arrow-right" 
+                iconPos="right"
+                class="view-details-btn" 
+                [rounded]="true" 
+                (click)="openOffreDetails(o.id!)">
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
   </div>
 </div>
 
 <div class="section-divider"></div>
 
-<!-- ===================== SECTION : CONSEILS CARRIÈRE ===================== -->
+<!-- ✅ SECTION : CONSEILS CARRIÈRE -->
 <section id="conseils" class="section-container">
   <div class="section-header">
     <h2 class="section-title">💡 Conseils carrière</h2>
@@ -161,18 +200,20 @@
   </div>
 
   <div class="cards-grid tips-grid">
+    <!-- ✅ t est maintenant de type Conseil directement -->
     <div *ngFor="let t of tipsRow | slice:0:3" class="tip-card">
       <div class="tip-header">
         <h3 class="tip-title" [title]="t.titre">{{ t.titre }}</h3>
         <p-tag *ngIf="t.niveau" [value]="t.niveau" severity="secondary" styleClass="tip-level"></p-tag>
       </div>
 
-      <p class="tip-excerpt">{{ t.extrait }}</p>
+      <!-- ✅ Utiliser excerpt() pour l'extrait -->
+      <p class="tip-excerpt">{{ excerpt(t.contenu || '', 180) }}</p>
 
       <div class="tip-footer">
         <div class="tip-meta">
           <p-tag *ngIf="t.categorie" [value]="t.categorie" styleClass="tip-category" severity="success"></p-tag>
-          <span *ngIf="t.publie_le" class="tip-date">{{ t.publie_le | date:'mediumDate' }}</span>
+          <span *ngIf="t.date_publication" class="tip-date">{{ t.date_publication | date:'mediumDate' }}</span>
         </div>
         <button pButton pRipple label="Lire" class="read-btn" [rounded]="true" (click)="openConseilDialog(t)"></button>
       </div>
@@ -180,7 +221,7 @@
   </div>
 </section>
 
-<!-- ... Le reste des dialogs reste identique ... -->
+<!-- ======== DIALOG DÉTAILS OFFRE (VERSION AMÉLIORÉE) ======== -->
 <p-dialog
   [(visible)]="detailsVisible"
   [modal]="true"
@@ -190,67 +231,76 @@
   [style]="{ width: '900px', maxWidth: '95vw' }"
   [contentStyle]="{ 'max-height': '78vh', 'overflow-y': 'auto', 'overflow-x': 'hidden' }"
   [breakpoints]="{ '1200px': '900px', '960px': '95vw', '640px': '100vw' }"
-  styleClass="modern-dialog"
+  styleClass="elegant-dialog"
   [header]="selectedOffre?.titre || 'Détail de l\'offre'">
 
   <ng-container *ngIf="selectedOffre as d">
-    <div class="offer-details-container">
-      <!-- En-tête avec infos principales -->
-      <div class="offer-header-section">
-        <div class="offer-company-info">
-          <i class="pi pi-building text-2xl text-blue-600"></i>
-          <div class="ml-3">
-            <div class="text-lg font-semibold text-gray-800">
-              {{ d.entreprise?.nom_entreprise || 'Entreprise' }}
-            </div>
-            <div class="text-sm text-gray-500 flex items-center gap-2">
+    <div class="offer-details-wrapper">
+      <!-- En-tête élégant -->
+      <div class="offer-elegant-header">
+        <div class="offer-company-section">
+          <div class="company-icon">
+            <i class="pi pi-building"></i>
+          </div>
+          <div class="company-details">
+            <div class="company-name">{{ d.entreprise?.nom_entreprise || 'Entreprise' }}</div>
+            <div class="company-location">
               <i class="pi pi-map-marker"></i>
-              {{ d.localisation || '—' }}
+              <span>{{ d.localisation || '—' }}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Tags et badges -->
-      <div class="offer-tags-section">
-        <p-tag *ngIf="d.type_contrat" [value]="d.type_contrat" severity="info" styleClass="tag-modern"></p-tag>
+      <!-- Tags et informations -->
+      <div class="offer-tags-wrapper">
+        <p-tag *ngIf="d.type_contrat" [value]="d.type_contrat" severity="info" styleClass="elegant-tag"></p-tag>
         <p-tag *ngIf="$any(d.categorie)?.nom || d.categorie" 
                [value]="$any(d.categorie)?.nom ?? (typeof d.categorie === 'string' ? d.categorie : '')" 
                severity="success" 
-               styleClass="tag-modern"></p-tag>
-        <p-tag *ngIf="d.experience" [value]="'Expérience: ' + d.experience" severity="warning" styleClass="tag-modern"></p-tag>
-        <p-tag *ngIf="d.salaire" [value]="d.salaire + ' CFA'" severity="danger" styleClass="tag-modern"></p-tag>
+               styleClass="elegant-tag"></p-tag>
+        <p-tag *ngIf="d.experience" [value]="'Expérience: ' + d.experience" severity="warning" styleClass="elegant-tag"></p-tag>
+        <p-tag *ngIf="d.salaire" [value]="d.salaire + ' CFA'" styleClass="elegant-tag salary-tag"></p-tag>
+        <p-tag *ngIf="isFeaturedOffre(d)" value="⭐ Vedette" styleClass="elegant-tag featured-tag"></p-tag>
       </div>
 
-      <!-- Divider -->
-      <div class="dialog-divider"></div>
+      <!-- Séparateur élégant -->
+      <div class="elegant-divider"></div>
 
-      <!-- Description de l'offre -->
-      <div class="offer-description-section">
-        <h3 class="section-subtitle-dialog">
-          <i class="pi pi-info-circle"></i>
+      <!-- Description -->
+      <div class="offer-description-wrapper">
+        <h3 class="section-heading">
+          <i class="pi pi-file-edit"></i>
           Description du poste
         </h3>
-        <div class="offer-html-content" lang="fr" [innerHTML]="d.description || ''"></div>
+        <div class="offer-content-html" lang="fr" [innerHTML]="d.description || ''"></div>
       </div>
 
-      <!-- Footer avec action -->
-      <div class="offer-footer-section">
+      <!-- Footer avec actions -->
+      <div class="offer-actions-footer">
         <button 
           pButton 
           pRipple 
-          label="Postuler maintenant" 
-          icon="pi pi-send" 
-          class="apply-button-modern"
-          (click)="postuler(d)">
+          label="Partager" 
+          icon="pi pi-share-alt" 
+          class="p-button-text elegant-btn-secondary"
+          (click)="copyShortLink(d)">
         </button>
         <button 
           pButton 
           pRipple 
           label="Fermer" 
           icon="pi pi-times" 
-          class="p-button-text p-button-secondary"
+          class="p-button-text p-button-secondary elegant-btn-secondary"
           (click)="detailsVisible=false">
+        </button>
+        <button 
+          pButton 
+          pRipple 
+          label="Postuler maintenant" 
+          icon="pi pi-send" 
+          class="elegant-btn-primary"
+          (click)="postuler(d)">
         </button>
       </div>
     </div>
@@ -540,9 +590,9 @@
                severity="success" styleClass="tag-modern"></p-tag>
         <p-tag *ngIf="currentConseil.niveau" [value]="currentConseil.niveau" 
                severity="secondary" styleClass="tag-modern"></p-tag>
-        <span *ngIf="currentConseil.publie_le" class="conseil-date">
+        <span *ngIf="currentConseil.date_publication" class="conseil-date">
           <i class="pi pi-calendar"></i>
-          {{ currentConseil.publie_le | date:'mediumDate' }}
+          {{ currentConseil.date_publication | date:'mediumDate' }}
         </span>
       </div>
 
@@ -565,7 +615,7 @@
             class="p-button-text p-button-secondary" (click)="conseilDialogVisible=false"></button>
     <button *ngIf="currentConseil?.id" pButton type="button" label="Ouvrir la page complète" 
             icon="pi pi-external-link" class="p-button-text p-button-primary" 
-            (click)="goToConseil(currentConseil.id)"></button>
+            (click)="goToConseil(currentConseil?.id)"></button>
   </ng-template>
 </p-dialog>
 
@@ -837,15 +887,21 @@
   }
 
   .job-description {
-    font-size: 0.875rem;
-    color: var(--text-medium);
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    overflow: hidden;
-  }
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+  
+  /* ✅ Ellipsis après 3 lignes */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  word-break: normal;
+}
 
   .card-footer {
     display: flex;
@@ -1087,7 +1143,6 @@
     font-size: 0.9rem;
   }
 }
-
   /* ===== CARTES CONSEILS ===== */
   .tip-card {
     background: white;
@@ -1965,6 +2020,723 @@ html, body { overflow-x: hidden; }
   
   .pub-media-large {
     max-height: 300px;
+  }
+}
+
+/* ===== STYLES DIALOG DÉTAILS OFFRE (VERSION ÉLÉGANTE) ===== */
+
+/* Dialog élégant */
+:host ::ng-deep .elegant-dialog .p-dialog {
+  border-radius: 0.875rem !important;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+:host ::ng-deep .elegant-dialog .p-dialog-header {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+:host ::ng-deep .elegant-dialog .p-dialog-content {
+  padding: 0 !important;
+  max-height: 78vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+:host ::ng-deep .elegant-dialog .p-dialog-header .p-dialog-title {
+  display: none; /* Masquer le titre par défaut */
+}
+
+/* Wrapper principal */
+.offer-details-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* En-tête élégant avec gradient bleu */
+.offer-elegant-header {
+  background: linear-gradient(135deg, #111d9d 0%, #0a6c34 100%);
+  padding: 2rem;
+  color: white;
+}
+
+.offer-company-section {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.company-icon {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.company-details {
+  flex: 1;
+}
+
+.company-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.company-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.company-location i {
+  font-size: 0.875rem;
+}
+
+/* Tags wrapper */
+.offer-tags-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  padding: 0 2rem;
+}
+
+.elegant-tag {
+  font-weight: 600 !important;
+  padding: 0.5rem 1.125rem !important;
+  border-radius: 1.5rem !important;
+  font-size: 0.875rem !important;
+  letter-spacing: 0.01em !important;
+}
+
+.salary-tag {
+  background: #111d9d !important;
+  color: #ffffff !important;
+}
+
+.featured-tag {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  color: #92400e !important;
+  font-weight: 700 !important;
+}
+
+/* Séparateur */
+.elegant-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
+  margin: 0.5rem 2rem;
+}
+
+/* Description */
+.offer-description-wrapper {
+  padding: 0 2rem 1.5rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
+}
+
+.section-heading i {
+  color: #111d9d;
+  font-size: 1rem;
+}
+
+.offer-content-html {
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: #475569;
+  font-weight: 400;
+  
+  /* Empêcher le débordement */
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  hyphens: auto !important;
+}
+
+.offer-content-html p {
+  margin: 0.875rem 0;
+}
+
+.offer-content-html ul,
+.offer-content-html ol {
+  margin: 0.875rem 0 0.875rem 1.75rem;
+}
+
+.offer-content-html li {
+  margin: 0.625rem 0;
+}
+
+.offer-content-html h1,
+.offer-content-html h2,
+.offer-content-html h3 {
+  margin: 1.75rem 0 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+.offer-content-html h1 {
+  font-size: 1.5rem;
+}
+
+.offer-content-html h2 {
+  font-size: 1.25rem;
+}
+
+.offer-content-html h3 {
+  font-size: 1.0625rem;
+}
+
+/* Footer avec 3 boutons */
+.offer-actions-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+/* Bouton Partager à gauche */
+.offer-actions-footer > button:first-child {
+  margin-right: auto;
+}
+
+/* Boutons élégants */
+.elegant-btn-primary {
+  background: #111d9d !important;
+  border: none !important;
+  padding: 0.875rem 2rem !important;
+  font-weight: 700 !important;
+  font-size: 0.9375rem !important;
+  letter-spacing: 0.01em !important;
+  border-radius: 0.625rem !important;
+  box-shadow: 0 4px 12px rgba(17, 29, 157, 0.25) !important;
+  transition: all 0.3s ease !important;
+  color: #ffffff !important;
+}
+
+.elegant-btn-primary:not([disabled]):hover {
+  background: #0d1784 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(17, 29, 157, 0.35) !important;
+}
+
+.elegant-btn-secondary {
+  color: #64748b !important;
+  font-weight: 600 !important;
+  font-size: 0.9375rem !important;
+}
+
+.elegant-btn-secondary:hover {
+  color: #1e293b !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .offer-elegant-header {
+    padding: 1.5rem;
+  }
+
+  .company-icon {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.25rem;
+  }
+
+  .company-name {
+    font-size: 1.25rem;
+  }
+
+  .offer-tags-wrapper,
+  .offer-description-wrapper {
+    padding: 0 1.5rem;
+  }
+
+  .offer-actions-footer {
+    flex-direction: column;
+    padding: 1.5rem;
+  }
+
+  .offer-actions-footer > button:first-child {
+    margin-right: 0;
+    order: 3; /* Mettre "Partager" en dernier sur mobile */
+  }
+}
+
+/* ===== SECTION DERNIÈRES OFFRES : GRILLE 4 CARTES ===== */
+.offers-grid-container {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  
+  /* Par défaut : 1 colonne (mobile) */
+  grid-template-columns: 1fr;
+}
+
+/* Tablette : 2 colonnes */
+@media (min-width: 768px) {
+  .offers-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop : 4 colonnes */
+@media (min-width: 1200px) {
+  .offers-grid-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Large écran : 4 colonnes avec max-width */
+@media (min-width: 1400px) {
+  .offers-grid-container {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ===== CARTE OFFRE MODERNE ===== */
+.offer-card-modern {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  height: 100%;
+  min-height: 320px;
+}
+
+.offer-card-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  border-color: #111d9d;
+}
+
+/* Header de la carte */
+.offer-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.offer-info-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.offer-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+  margin: 0;
+  
+  /* Ellipsis après 2 lignes */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+}
+
+.offer-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.offer-meta i {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.offer-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badge contrat */
+.contract-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.875rem;
+  border-radius: 1.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  
+  /* Couleur par défaut */
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.contract-badge.cdi {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.contract-badge.cdd {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.contract-badge.stage {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.contract-badge.freelance {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  color: #6b21a8;
+  border: 1px solid #d8b4fe;
+}
+
+/* Description */
+.offer-description {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #475569;
+  flex: 1;
+  margin: 0;
+  
+  /* Ellipsis après 3 lignes */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+}
+
+/* Footer de la carte */
+.offer-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+}
+
+.offer-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.offer-date i {
+  font-size: 0.875rem;
+}
+
+.view-details-btn {
+  font-size: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+    background-color: #111d9d !important;
+    border-color: #111d9d !important;
+    transition: all 0.3s ease !important;
+}
+
+.view-details-btn:hover {
+  background-color: #0d1784 !important;
+    border-color: #0d1784 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(17, 29, 157, 0.3) !important;
+}
+/* État vide */
+.empty-state-offers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 2px dashed #e2e8f0;
+  margin-top: 2rem;
+}
+
+.empty-state-offers i {
+  font-size: 4rem;
+  color: #cbd5e1;
+  margin-bottom: 1rem;
+}
+
+.empty-state-offers p {
+  color: #64748b;
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 767px) {
+  .offer-card-modern {
+    padding: 1rem;
+    min-height: 280px;
+  }
+
+  .offer-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .contract-badge {
+    align-self: flex-start;
+  }
+
+  .offer-title {
+    font-size: 1rem;
+  }
+
+  .offer-meta {
+    font-size: 0.8125rem;
+  }
+
+  .offer-description {
+  font-size: 0.8125rem;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+  .offer-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .view-details-btn {
+    width: 100%;
+  }
+}
+
+/* ===== RESPONSIVE MOBILE FIXES ===== */
+@media (max-width: 768px) {
+  /* Header de section */
+  .section-title {
+    font-size: 1.75rem !important;
+  }
+
+  .section-subtitle {
+    font-size: 1rem !important;
+  }
+
+  /* Container général */
+  .section-container {
+    padding: 2rem 1rem !important;
+  }
+
+  /* Grilles */
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  /* Carrousel wrapper */
+  .carousel-wrapper {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+  }
+
+  /* Cartes partenaires */
+  .partner-card {
+    height: auto !important;
+    min-height: 400px;
+  }
+
+  .partner-media {
+    height: 180px !important;
+  }
+
+  .partner-content {
+    padding: 1rem !important;
+  }
+
+  .partner-title {
+    font-size: 0.95rem !important;
+  }
+
+  .partner-description {
+  font-size: 0.85rem !important;
+  -webkit-line-clamp: 2 !important;
+  line-clamp: 2;
+}
+
+  .partner-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .partner-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Cartes offres */
+  .job-card, .featured-card, .tip-card {
+    padding: 1rem !important;
+  }
+
+  .job-title, .tip-title {
+    font-size: 0.95rem !important;
+  }
+
+  /* Dialogs */
+  :host ::ng-deep .p-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  :host ::ng-deep .p-dialog-content {
+    padding: 1rem !important;
+  }
+
+  /* Footer actions */
+  .offer-actions-footer {
+    flex-direction: column !important;
+    padding: 1rem !important;
+  }
+
+  .form-footer {
+    flex-direction: column-reverse !important;
+  }
+
+  .form-footer button {
+    width: 100%;
+  }
+}
+
+/* ===== CARROUSEL : Fix navigation buttons ===== */
+.carousel-wrapper {
+  position: relative;
+  padding: 0 3rem;
+}
+
+:host ::ng-deep .custom-carousel .p-carousel-prev,
+:host ::ng-deep .custom-carousel .p-carousel-next {
+  background: linear-gradient(135deg, #111d9d 0%, #0a6c34 100%) !important;
+  color: white !important;
+  border: none !important;
+  width: 3rem !important;
+  height: 3rem !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 12px rgba(17, 29, 157, 0.3) !important;
+  transition: all 0.3s ease !important;
+  z-index: 100 !important;
+}
+
+:host ::ng-deep .custom-carousel .p-carousel-prev {
+  left: 0 !important;
+}
+
+:host ::ng-deep .custom-carousel .p-carousel-next {
+  right: 0 !important;
+}
+
+:host ::ng-deep .custom-carousel .p-carousel-prev:hover,
+:host ::ng-deep .custom-carousel .p-carousel-next:hover {
+  background: linear-gradient(135deg, #0d1784 0%, #166534 100%) !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 6px 20px rgba(17, 29, 157, 0.4) !important;
+}
+
+/* Indicateurs */
+:host ::ng-deep .custom-carousel .p-carousel-indicators {
+  margin-top: 1.5rem;
+}
+
+:host ::ng-deep .custom-carousel .p-carousel-indicator button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+
+:host ::ng-deep .custom-carousel .p-carousel-indicator.p-carousel-indicator-active button {
+  background: #111d9d;
+}
+
+/* Empty state */
+.empty-carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 2px dashed #e2e8f0;
+}
+
+.empty-carousel i {
+  font-size: 3rem;
+  color: #94a3b8;
+  margin-bottom: 1rem;
+}
+
+.empty-carousel p {
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* Mobile carrousel */
+@media (max-width: 768px) {
+  .carousel-wrapper {
+    padding: 0 2.5rem;
+  }
+
+  :host ::ng-deep .custom-carousel .p-carousel-prev,
+  :host ::ng-deep .custom-carousel .p-carousel-next {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
   }
 }
 </style>

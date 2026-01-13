@@ -25,8 +25,7 @@ import { TopbarWidget } from "./topbarwidget.component";
   imports: [
     CommonModule, FormsModule,
     ButtonModule, DropdownModule, CalendarModule, InputNumberModule, InputTextModule, EditorModule,
-    ToastModule, ProgressBarModule,
-    TopbarWidget
+    ToastModule, ProgressBarModule, TopbarWidget 
   ],
   providers: [MessageService],
   template: `
@@ -369,6 +368,7 @@ export class PublishOffreComponent implements OnInit {
   typeOffreOptions: { label: string; value: TypeOffre }[] = [
     { label: 'Stage', value: 'stage' },
     { label: 'Emploi', value: 'emploi' },
+    { label: 'Appel d\'offre', value: 'appel_offre' }
   ];
   
   typeContratOptions: { label: string; value: TypeContrat }[] = [

@@ -435,7 +435,6 @@ saveUser() {
     const role = this.roles.find(r => r.value === roleId);
     return role ? role.label : 'Inconnu';
   }
-
   /** Nettoyer l'URL de prévisualisation lors de la fermeture du dialog */
   hideDialog() {
   this.userDialog = false;

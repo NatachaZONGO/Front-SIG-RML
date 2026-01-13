@@ -19,6 +19,13 @@ import { BackendURL } from '../../../Share/const';
 interface Cat { id: number; nom: string; }
 interface Pays { id: number; nom: string; }
 
+// ✅ Interface pour l'indicatif téléphonique
+interface PhoneCode {
+  code: string;
+  country: string;
+  flag: string;
+}
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -45,11 +52,31 @@ export class RegisterComponent implements OnInit {
     { label: 'Recruteur', value: 'recruteur' }
   ];
 
+  // ✅ Liste des indicatifs téléphoniques
+  phoneCodes: PhoneCode[] = [
+    { code: '+226', country: 'Burkina Faso', flag: '🇧🇫' },
+    { code: '+225', country: 'Côte d\'Ivoire', flag: '🇨🇮' },
+    { code: '+223', country: 'Mali', flag: '🇲🇱' },
+    { code: '+227', country: 'Niger', flag: '🇳🇪' },
+    { code: '+228', country: 'Togo', flag: '🇹🇬' },
+    { code: '+229', country: 'Bénin', flag: '🇧🇯' },
+    { code: '+221', country: 'Sénégal', flag: '🇸🇳' },
+    { code: '+237', country: 'Cameroun', flag: '🇨🇲' },
+    { code: '+33', country: 'France', flag: '🇫🇷' },
+    { code: '+1', country: 'USA/Canada', flag: '🇺🇸' },
+    { code: '+44', country: 'Royaume-Uni', flag: '🇬🇧' },
+    { code: '+213', country: 'Algérie', flag: '🇩🇿' },
+    { code: '+212', country: 'Maroc', flag: '🇲🇦' },
+    { code: '+216', country: 'Tunisie', flag: '🇹🇳' },
+    { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
+    { code: '+243', country: 'RD Congo', flag: '🇨🇩' },
+  ];
+
   // Dropdowns dynamiques
   categories: Cat[] = [];
   paysList: Pays[] = [];
 
-  // Options niveau d’étude
+  // Options niveau d'étude
   niveauEtudeOptions = [
     { label: 'Sans diplôme', value: 'Sans diplôme' },
     { label: 'BEPC',         value: 'BEPC' },
@@ -61,14 +88,14 @@ export class RegisterComponent implements OnInit {
   ];
 
   disponibiliteOptions = [
-  { label: 'Immédiate',       value: 'immediate' },
-  { label: 'Sous 1 semaine',  value: 'sous_1_semaine' },
-  { label: 'Sous 2 semaines', value: 'sous_2_semaines' },
-  { label: 'Sous 1 mois',     value: 'sous_1_mois' },
-  { label: 'Autre',           value: 'autre' },
-];
+    { label: 'Immédiate',       value: 'immediate' },
+    { label: 'Sous 1 semaine',  value: 'sous_1_semaine' },
+    { label: 'Sous 2 semaines', value: 'sous_2_semaines' },
+    { label: 'Sous 1 mois',     value: 'sous_1_mois' },
+    { label: 'Autre',           value: 'autre' },
+  ];
 
-  // Secteurs d’activité
+  // Secteurs d'activité
   secteursActivite = [
     { label: 'Primaire',     value: 'primaire' },
     { label: 'Secondaire',   value: 'secondaire' },
@@ -96,31 +123,30 @@ export class RegisterComponent implements OnInit {
         nom: ['', Validators.required],
         prenom: ['', Validators.required],
         email: ['', [Validators.required, Validators.email]],
-        telephone: ['', Validators.required],
+        phone_code: ['+226', Validators.required], // ✅ Indicatif par défaut
+        telephone: ['', Validators.required],      // ✅ Numéro sans indicatif
         password: ['', [Validators.required, Validators.minLength(8)]],
         confirmPassword: ['', Validators.required],
 
         // candidat
         sexe: ['Homme'],
         date_naissance: [null],
-        categorie_id: [null],          // <- value = id (dropdown)
+        categorie_id: [null],
         ville: [''],
-        niveau_etude: [null],          // <- value = string (dropdown)
-        disponibilite: ['immediate'],  // <- value = string (radios)
+        niveau_etude: [null],
+        disponibilite: ['immediate'],
         disponibilite_autre: [''],
-        pays_id: [null],               // <- value = id (dropdown)
+        pays_id: [null],
 
         // recruteur
         nom_entreprise: [''],
-        secteur_activite: [null],      // <- value = string (dropdown)
-        pays_id_recruteur: [null],     // <- value = id (dropdown)
+        secteur_activite: [null],
+        pays_id_recruteur: [null],
         description: [''],
         site_web: ['']
       },
       { validators: this.passwordsMatchValidator }
     );
-
-    
 
     // Ajuste validators selon type
     this.formulaireInscription.get('type')!.valueChanges.subscribe((t: CompteType) => {
@@ -135,7 +161,6 @@ export class RegisterComponent implements OnInit {
 
   // --- Chargements ---
   private loadCategories(): void {
-    // adapte l’URL si différent: `${BackendURL}categories`
     this.http.get<{success?: boolean; data?: Cat[]; }>(`${BackendURL}categories`)
       .subscribe({
         next: (res) => {
@@ -147,7 +172,6 @@ export class RegisterComponent implements OnInit {
   }
 
   private loadPays(): void {
-    // adapte l’URL si différent: `${BackendURL}pays`
     this.http.get<{success?: boolean; data?: Pays[]; }>(`${BackendURL}pays`)
       .subscribe({
         next: (res) => {
@@ -177,7 +201,6 @@ export class RegisterComponent implements OnInit {
     setReq(this.formulaireInscription.get('disponibilite'), candRequired);
     setReq(this.formulaireInscription.get('pays_id'), candRequired);
 
-    // Si “autre” => le champ “disponibilite_autre” devient requis
     const dispo = this.formulaireInscription.get('disponibilite')?.value;
     setReq(this.formulaireInscription.get('disponibilite_autre'), candRequired && dispo === 'autre');
 
@@ -203,6 +226,10 @@ export class RegisterComponent implements OnInit {
     this.isSubmitting.set(true);
 
     const v = this.formulaireInscription.value;
+    
+    // ✅ Combiner l'indicatif + numéro
+    const fullPhone = `${v.phone_code}${v.telephone}`;
+
     try {
       if (v.type === 'candidat') {
         const dateStr = this.asISODate(v.date_naissance);
@@ -215,7 +242,6 @@ export class RegisterComponent implements OnInit {
           return;
         }
 
-        // Si "autre", on remplace disponibilite par le texte saisi
         const dispoFinal = v.disponibilite === 'autre'
           ? (v.disponibilite_autre || 'autre')
           : v.disponibilite;
@@ -224,7 +250,7 @@ export class RegisterComponent implements OnInit {
           nom: v.nom,
           prenom: v.prenom,
           email: v.email,
-          telephone: v.telephone,
+          telephone: fullPhone, // ✅ Numéro complet avec indicatif
           password: v.password,
           confirmPassword: v.confirmPassword,
 
@@ -241,7 +267,7 @@ export class RegisterComponent implements OnInit {
           nom: v.nom,
           prenom: v.prenom,
           email: v.email,
-          telephone: v.telephone,
+          telephone: fullPhone, // ✅ Numéro complet avec indicatif
           password: v.password,
           confirmPassword: v.confirmPassword,
 
@@ -275,8 +301,7 @@ export class RegisterComponent implements OnInit {
     this.router.navigate(['/connexion']);
   }
 
-  // Ajoutez cette méthode dans votre component (optionnel)
-setAccountType(type: 'candidat' | 'recruteur'): void {
-  this.formulaireInscription.patchValue({ type });
-}
+  setAccountType(type: 'candidat' | 'recruteur'): void {
+    this.formulaireInscription.patchValue({ type });
+  }
 }

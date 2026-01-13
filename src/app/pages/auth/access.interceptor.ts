@@ -17,8 +17,10 @@ const PUBLIC_API_ENDPOINTS = [
   '/auth/reset-password',
   '/auth/verify-reset-token',
   '/categories',
-  // ✅ /pays et /conseils RETIRÉS (nécessitent authentification)
+  '/pays',       
+  '/conseils',    
 ];
+
 
 function isApiUrl(url: string): boolean {
   const base = String(BackendURL).replace(/\/+$/, '');

@@ -10,7 +10,7 @@ export type StatutOffre =
   | 'fermee'
   | 'expiree';
 
-export type TypeOffre = 'stage' | 'emploi';
+export type TypeOffre = 'stage' | 'emploi' | 'appel_offre';
 
 export type TypeContrat =
   | 'CDI'

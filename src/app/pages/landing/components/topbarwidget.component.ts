@@ -1,15 +1,16 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { StyleClassModule } from 'primeng/styleclass';
-
+import { TooltipModule } from 'primeng/tooltip';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'topbar-widget',
   standalone: true,
-  imports: [RouterModule, CommonModule, ButtonModule, RippleModule, StyleClassModule],
+  imports: [RouterModule, CommonModule, ButtonModule, RippleModule, StyleClassModule, TooltipModule],
   template: `
     <header class="fixed top-0 inset-x-0 z-50 bg-white/95 dark:bg-surface-900/95 backdrop-blur">
       <div class="w-full h-[72px] px-4 md:px-6 lg:px-8 flex items-center">
@@ -30,35 +31,48 @@ import { StyleClassModule } from 'primeng/styleclass';
             <a (click)="router.navigate(['/about'])" class="nav-link" [class.active]="isActiveRoute('/about')">À propos</a>
           </nav>
 
-          <div class="flex items-center gap-2">
+          <!-- ✅ SI NON CONNECTÉ -->
+          <div class="flex items-center gap-2" *ngIf="!authService.isAuthenticated()">
             <button pButton pRipple label="Se connecter" [rounded]="true" class="brand-outline" (click)="router.navigate(['/connexion'])"></button>
             <button pButton pRipple label="S'inscrire"   [rounded]="true" class="brand-solid"   (click)="router.navigate(['/register'])"></button>
           </div>
+
+          <!-- ✅ SI CONNECTÉ -->
+          <div class="flex items-center gap-2" *ngIf="authService.isAuthenticated()">
+            <button pButton pRipple label="Dashboard" icon="pi pi-th-large" [rounded]="true" class="brand-solid" (click)="goToDashboard()"></button>
+            <button pButton pRipple icon="pi pi-sign-out" [rounded]="true" class="brand-outline-danger" (click)="logout()" pTooltip="Déconnexion" tooltipPosition="bottom"></button>
+          </div>
         </div>
 
-        <!-- Burger -->
-        <a pButton [text]="true" severity="secondary" [rounded]="true" pRipple
-           class="lg:!hidden ml-auto"
-           pStyleClass="@next" enterClass="hidden" leaveToClass="hidden"
-           [hideOnOutsideClick]="true">
-          <i class="pi pi-bars !text-2xl"></i>
-        </a>
+        <!-- ✅ Burger - Version améliorée -->
+        <button pButton [text]="true" severity="secondary" [rounded]="true" pRipple
+                class="lg:!hidden ml-auto"
+                (click)="toggleMobileMenu()">
+          <i class="pi" [ngClass]="mobileMenuOpen ? 'pi-times' : 'pi-bars'" [style.fontSize]="'1.5rem'"></i>
+        </button>
       </div>
 
       <!-- Ligne bleue décorative -->
       <div class="blue-decorative-line"></div>
 
-      <!-- Menu mobile -->
-      <div class="hidden lg:hidden absolute left-0 right-0 top-full z-50 bg-white dark:bg-surface-900 border-b px-4 md:px-6 py-4 shadow-md">
+      <!-- ✅ Menu mobile - Version améliorée -->
+      <div class="mobile-menu" [class.mobile-menu-open]="mobileMenuOpen">
         <ul class="list-none m-0 p-0 flex flex-col gap-4">
-          <li><a (click)="router.navigate(['/landing'])" class="nav-link" [class.active]="isActiveRoute('/landing') || isActiveRoute('/')">Accueil</a></li>
-          <li><a (click)="router.navigate(['/offres'])" class="nav-link" [class.active]="isActiveRoute('/offres')">Offres</a></li>
-          <li><a (click)="router.navigate(['/candidatures'])" class="nav-link" [class.active]="isActiveRoute('/suivre-candidature')">Suivre candidature</a></li>
-          <li><a (click)="router.navigate(['/about'])" class="nav-link" [class.active]="isActiveRoute('/about')">À propos</a></li>
-          <li><a (click)="createOffer.emit()" class="nav-link">Publier une offre</a></li>
-          <li class="flex gap-2 pt-2">
-            <button pButton pRipple label="Se connecter" [rounded]="true" class="brand-outline" (click)="router.navigate(['/connexion'])"></button>
-            <button pButton pRipple label="S'inscrire"   [rounded]="true" class="brand-solid"   (click)="router.navigate(['/register'])"></button>
+          <li><a (click)="navigateAndClose('/landing')" class="nav-link" [class.active]="isActiveRoute('/landing') || isActiveRoute('/')">Accueil</a></li>
+          <li><a (click)="navigateAndClose('/offres')" class="nav-link" [class.active]="isActiveRoute('/offres')">Offres</a></li>
+          <li><a (click)="navigateAndClose('/suivre-candidature')" class="nav-link" [class.active]="isActiveRoute('/suivre-candidature')">Suivre candidature</a></li>
+          <li><a (click)="navigateAndClose('/about')" class="nav-link" [class.active]="isActiveRoute('/about')">À propos</a></li>
+          
+          <!-- ✅ MOBILE : SI NON CONNECTÉ -->
+          <li class="flex flex-col gap-2 pt-2" *ngIf="!authService.isAuthenticated()">
+            <button pButton pRipple label="Se connecter" [rounded]="true" class="brand-outline w-full" (click)="navigateAndClose('/connexion')"></button>
+            <button pButton pRipple label="S'inscrire"   [rounded]="true" class="brand-solid w-full"   (click)="navigateAndClose('/register')"></button>
+          </li>
+
+          <!-- ✅ MOBILE : SI CONNECTÉ -->
+          <li class="flex flex-col gap-2 pt-2" *ngIf="authService.isAuthenticated()">
+            <button pButton pRipple label="Dashboard" icon="pi pi-th-large" [rounded]="true" class="brand-solid w-full" (click)="goToDashboardAndClose()"></button>
+            <button pButton pRipple label="Déconnexion" icon="pi pi-sign-out" [rounded]="true" class="brand-outline-danger w-full" (click)="logout()"></button>
           </li>
         </ul>
       </div>
@@ -92,6 +106,8 @@ import { StyleClassModule } from 'primeng/styleclass';
         cursor: pointer;
         transition: all 0.3s ease;
         position: relative;
+        display: block;
+        padding: 0.5rem 0;
       }
       
       .nav-link:hover {
@@ -101,7 +117,7 @@ import { StyleClassModule } from 'primeng/styleclass';
       .nav-link::after {
         content: '';
         position: absolute;
-        bottom: -4px;
+        bottom: 0;
         left: 0;
         width: 0;
         height: 2px;
@@ -113,7 +129,6 @@ import { StyleClassModule } from 'primeng/styleclass';
         width: 100%;
       }
       
-      /* Style pour la page active */
       .nav-link.active {
         color: var(--brand-blue);
         font-weight: 700;
@@ -150,12 +165,25 @@ import { StyleClassModule } from 'primeng/styleclass';
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(10, 108, 52, 0.3);
       }
+
+      .brand-outline-danger.p-button {
+        background: transparent;
+        border-color: #ef4444;
+        color: #ef4444;
+        transition: all 0.3s ease;
+      }
+      
+      .brand-outline-danger.p-button:hover {
+        background: #ef4444;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+      }
       
       .p-button:focus {
         box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-green) 25%, transparent);
       }
       
-      /* Ligne bleue uniforme en bas */
       .blue-decorative-line {
         position: absolute;
         bottom: 0;
@@ -164,23 +192,125 @@ import { StyleClassModule } from 'primeng/styleclass';
         height: 3px;
         background-color: var(--brand-blue);
       }
+
+      /* ===== MENU MOBILE ===== */
+      .mobile-menu {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        z-index: 50;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        
+        /* Animation */
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease-in-out;
+      }
+
+      .mobile-menu-open {
+        max-height: 600px;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Desktop : cache complètement le menu */
+      @media (min-width: 1024px) {
+        .mobile-menu {
+          display: none !important;
+        }
+      }
+
+      /* Mobile : améliore l'affichage */
+      @media (max-width: 1023px) {
+        .mobile-menu ul {
+          padding: 0.5rem 0;
+        }
+
+        .mobile-menu li {
+          border-bottom: 1px solid #f3f4f6;
+          padding-bottom: 0.5rem;
+        }
+
+        .mobile-menu li:last-child {
+          border-bottom: none;
+        }
+      }
     </style>
   `
 })
-export class TopbarWidget {
-  /** Ouvre le suivi de candidature (modal) */
+export class TopbarWidget implements OnInit {
   @Output() openReservationModalEvent = new EventEmitter<void>();
-  /** NEW: demande au parent d'ouvrir le p-dialog de création d'offre */
   @Output() publish = new EventEmitter<void>();
   @Output() createOffer = new EventEmitter<void>();
   
+  authService = inject(AuthService);
+  
+  // ✅ État du menu mobile
+  mobileMenuOpen = false;
+  
   constructor(public router: Router) {}
+
+  ngOnInit(): void {
+    console.log('🎯 TopbarWidget - État auth:', this.authService.isAuthenticated());
+  }
+
+  /**
+   * ✅ Toggle le menu mobile
+   */
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+    console.log('🍔 Menu mobile:', this.mobileMenuOpen ? 'OUVERT' : 'FERMÉ');
+  }
+
+  /**
+   * ✅ Navigue ET ferme le menu mobile
+   */
+  navigateAndClose(path: string): void {
+    this.mobileMenuOpen = false;
+    this.router.navigate([path]);
+  }
+
+  /**
+   * ✅ Va au dashboard ET ferme le menu
+   */
+  goToDashboardAndClose(): void {
+    this.mobileMenuOpen = false;
+    this.goToDashboard();
+  }
+
+  /**
+   * ✅ Redirige vers /dashboard
+   */
+  goToDashboard(): void {
+    const userStr = localStorage.getItem('utilisateur');
+    
+    if (!userStr) {
+      this.router.navigate(['/connexion']);
+      return;
+    }
+
+    this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * ✅ Déconnexion
+   */
+  logout(): void {
+    console.log('🚪 Déconnexion via AuthService...');
+    this.mobileMenuOpen = false; // Ferme le menu
+    this.authService.logout();
+  }
 
   openTrackModal(): void { 
     this.openReservationModalEvent.emit(); 
   }
 
-  /** Vérifie si la route actuelle correspond au chemin donné */
   isActiveRoute(path: string): boolean {
     return this.router.url === path || this.router.url.startsWith(path + '/');
   }

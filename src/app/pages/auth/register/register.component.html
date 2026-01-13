@@ -129,20 +129,63 @@
                                         class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
                                 </div>
                             </div>
-
-                            <!-- Téléphone -->
+                            <!-- Téléphone avec indicatif -->
                             <div class="space-y-2">
                                 <label class="block font-semibold text-gray-700">
                                     Téléphone <span class="text-red-500">*</span>
                                 </label>
-                                <div class="relative">
-                                    <i class="pi pi-phone absolute left top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
-                                    <input 
-                                        pInputText 
-                                        formControlName="telephone" 
-                                        placeholder="+226 XX XX XX XX"
-                                        class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                <div class="flex gap-2">
+                                    <!-- ✅ Dropdown pour l'indicatif -->
+                                    <p-dropdown
+                                        formControlName="phone_code"
+                                        [options]="phoneCodes"
+                                        optionLabel="code"
+                                        optionValue="code"
+                                        [filter]="true"
+                                        filterBy="country,code"
+                                        placeholder="+226"
+                                        styleClass="w-32"
+                                        [style]="{'min-width': '140px'}">
+                                        
+                                        <!-- Template pour l'item sélectionné -->
+                                        <ng-template pTemplate="selectedItem" let-item>
+                                            <div class="flex items-center gap-2" *ngIf="item">
+                                                <span class="text-xl">{{ item.flag }}</span>
+                                                <span class="font-semibold">{{ item.code }}</span>
+                                            </div>
+                                        </ng-template>
+                                        
+                                        <!-- Template pour chaque item dans la liste -->
+                                        <ng-template pTemplate="item" let-item>
+                                            <div class="flex items-center justify-between gap-3 py-2">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-2xl">{{ item.flag }}</span>
+                                                    <div>
+                                                        <div class="font-semibold">{{ item.code }}</div>
+                                                        <div class="text-xs text-gray-500">{{ item.country }}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </ng-template>
+                                    </p-dropdown>
+
+                                    <!-- ✅ Input pour le numéro -->
+                                    <div class="flex-1 relative">
+                                        <i class="pi pi-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                                        <input 
+                                            pInputText 
+                                            formControlName="telephone" 
+                                            placeholder="XX XX XX XX"
+                                            class="w-full pl-14 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 transition-colors"/>
+                                    </div>
                                 </div>
+                                
+                                <!-- ✅ Prévisualisation du numéro complet -->
+                                <small class="text-gray-500 flex items-center" 
+                                    *ngIf="formulaireInscription.value.phone_code && formulaireInscription.value.telephone">
+                                    <i class="pi pi-check-circle text-green-600 mr-2"></i>
+                                    Numéro complet: <strong class="ml-1">{{ formulaireInscription.value.phone_code }} {{ formulaireInscription.value.telephone }}</strong>
+                                </small>
                             </div>
                         </div>
                     </div>
@@ -504,4 +547,22 @@
     ::ng-deep .p-inputtext {
         border-radius: 0.75rem !important;
     }
+
+    /* Styles pour le dropdown d'indicatif téléphonique */
+::ng-deep .p-dropdown-panel .p-dropdown-items .p-dropdown-item {
+    padding: 0.75rem 1rem !important;
+}
+
+::ng-deep .p-dropdown .p-dropdown-label {
+    padding: 0.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+/* Amélioration du filtre du dropdown */
+::ng-deep .p-dropdown-filter {
+    border-radius: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
 </style>

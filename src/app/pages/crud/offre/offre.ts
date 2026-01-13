@@ -128,8 +128,9 @@ export class OffreComponent implements OnInit, OnDestroy {
   ];
 
   typeOffreOptions: { label: string; value: TypeOffre }[] = [
-    { label: 'Stage', value: 'stage' },
-    { label: 'Emploi', value: 'emploi' },
+    { label: 'stage', value: 'stage' },
+    { label: 'emploi', value: 'emploi' },
+    { label: 'appel_offre', value: 'appel_offre' }
   ];
 
   typeContratOptions: { label: string; value: TypeContrat }[] = [
@@ -386,42 +387,16 @@ export class OffreComponent implements OnInit, OnDestroy {
   }
 
   // ✅ MODIFIÉ : Ouvrir le dialog de création
-  openNew(): void {
+  /** ✅ CORRIGÉ : Ouvrir le dialog de création */
+openNew(): void {
   const currentUser = this.authService.getCurrentUser();
+  const role = (this.role || '').toLowerCase().trim();
   
-  let recruteurId: number | null = null;
-  let entrepriseId: number | null = null;
+  console.log('📝 Création offre - Rôle:', role);
+  console.log('  - User actuel:', currentUser);
   
-  if (this.role.toLowerCase() === 'recruteur') {
-    recruteurId = currentUser?.id || null;
-  } else if (this.role.toLowerCase() === 'community_manager') {
-    if (!this.selectedEntrepriseCM) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Aucune entreprise sélectionnée',
-        detail: 'Veuillez d\'abord gérer une entreprise depuis la page "Entreprises"',
-        life: 3000
-      });
-      return;
-    }
-    // ✅ IMPORTANT : Utiliser user_id (propriétaire), pas l'ID du CM
-    recruteurId = this.selectedEntrepriseCM.user_id; // ← Devrait être 22
-    entrepriseId = this.selectedEntrepriseCM.id; // ← Devrait être 9
-    
-    // ✅ AJOUTÉ : Log de débogage
-    console.log('🔍 Debug CM:');
-    console.log('  - selectedEntrepriseCM:', this.selectedEntrepriseCM);
-    console.log('  - user_id (recruteur):', this.selectedEntrepriseCM.user_id);
-    console.log('  - id (entreprise):', this.selectedEntrepriseCM.id);
-    console.log('  - CM actuel:', currentUser?.id);
-  }
-  
-  console.log('✅ Création offre');
-  console.log('  - Entreprise:', this.selectedEntrepriseCM?.nom_entreprise || 'N/A');
-  console.log('  - entreprise_id:', entrepriseId);
-  console.log('  - recruteur_id:', recruteurId); // ← Devrait afficher 22
-  
-  this.offre = {
+  // ✅ BASE COMMUNE (tous les rôles)
+  const baseOffre = {
     titre: '',
     description: '',
     experience: '',
@@ -432,10 +407,54 @@ export class OffreComponent implements OnInit, OnDestroy {
     date_publication: new Date(),
     date_expiration: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     salaire: 0,
-    recruteur_id: recruteurId, // ← Devrait être 22
-    entreprise_id: entrepriseId, // ← Devrait être 9
     categorie_id: undefined
-  } as Offre;
+  };
+  
+  if (role === 'administrateur') {
+    // ✅ ADMIN : Ne définit NI recruteur_id NI entreprise_id
+    this.offre = {
+      ...baseOffre
+      // PAS de recruteur_id
+      // PAS d'entreprise_id
+    } as any;
+    
+    console.log('✅ Admin : Offre sans entreprise ni recruteur');
+    
+  } else if (role === 'recruteur') {
+    // ✅ RECRUTEUR : Son propre ID
+    this.offre = {
+      ...baseOffre,
+      recruteur_id: currentUser?.id || null
+    } as any;
+    
+    console.log('✅ Recruteur : recruteur_id =', currentUser?.id);
+    
+  } else if (role === 'community_manager') {
+    // ✅ CM : Doit avoir une entreprise sélectionnée
+    if (!this.selectedEntrepriseCM) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Aucune entreprise sélectionnée',
+        detail: 'Veuillez d\'abord gérer une entreprise depuis la page "Entreprises"',
+        life: 3000
+      });
+      return;
+    }
+    
+    this.offre = {
+      ...baseOffre,
+      entreprise_id: this.selectedEntrepriseCM.id
+      // PAS de recruteur_id (le backend le déduira)
+    } as any;
+    
+    console.log('✅ CM : entreprise_id =', this.selectedEntrepriseCM.id);
+    
+  } else {
+    // ✅ Rôle inconnu
+    this.offre = {
+      ...baseOffre
+    } as any;
+  }
 
   this.submitted = false;
   this.offreDialog = true;
@@ -460,35 +479,58 @@ export class OffreComponent implements OnInit, OnDestroy {
 
   // ✅ MODIFIÉ : Sauvegarder l'offre
  // ✅ MODIFIÉ : Sauvegarder l'offre
+/** ✅ CORRIGÉ : Sauvegarder l'offre */
 saveOffre(): void {
   this.submitted = true;
 
-  // Champs obligatoires communs
+  // Validation minimale
   if (!this.offre?.titre?.trim() || !this.offre.type_offre || !this.offre.type_contrat) {
     this.showWarnMessage('Veuillez remplir les champs obligatoires');
     return;
   }
 
-  // ✅ Ne bloquer sur recruteur_id QUE pour recruteur / CM
   const role = (this.role || '').toLowerCase().trim();
-  const needRecruteurId = role === 'recruteur' || role === 'community_manager';
+  
+  console.log('📤 Sauvegarde offre');
+  console.log('  - Rôle:', role);
+  console.log('  - Offre brute:', { ...this.offre });
 
-  if (needRecruteurId && !this.offre.recruteur_id) {
-    this.showWarnMessage('Impossible de créer une offre sans recruteur pour ce rôle.');
-    return;
+  // ✅ CONSTRUCTION DU PAYLOAD PROPRE
+  const payload: any = {
+    titre: this.offre.titre,
+    description: this.offre.description,
+    experience: this.offre.experience,
+    localisation: this.offre.localisation,
+    type_offre: this.offre.type_offre,
+    type_contrat: this.offre.type_contrat,
+    statut: this.offre.statut,
+    date_publication: this.offre.date_publication,
+    date_expiration: this.offre.date_expiration,
+    salaire: this.offre.salaire,
+    categorie_id: this.offre.categorie_id
+  };
+
+  // ✅ Ajouter l'ID si modification
+  if (this.offre.id) {
+    payload.id = this.offre.id;
   }
 
-  console.log('📤 Sauvegarde offre');
-  console.log('  - role:', role);
-  console.log('  - recruteur_id:', this.offre.recruteur_id);
-  console.log('  - entreprise_id:', this.offre.entreprise_id);
-  console.log('  - Payload:', this.offre);
+  // ✅ AJOUT CONDITIONNEL DES IDs (seulement si définis)
+  if (this.offre.recruteur_id !== undefined && this.offre.recruteur_id !== null) {
+    payload.recruteur_id = this.offre.recruteur_id;
+  }
+
+  if (this.offre.entreprise_id !== undefined && this.offre.entreprise_id !== null) {
+    payload.entreprise_id = this.offre.entreprise_id;
+  }
+
+  console.log('📤 Payload final:', payload);
 
   this.loading.set(true);
 
-  const req$ = this.offre.id
-    ? this.offreService.updateOffre(this.offre.id, this.offre)
-    : this.offreService.createOffre(this.offre);
+  const req$ = payload.id
+    ? this.offreService.updateOffre(payload.id, payload)
+    : this.offreService.createOffre(payload);
 
   req$
     .pipe(
@@ -498,10 +540,10 @@ saveOffre(): void {
     .subscribe({
       next: (response) => {
         console.log('✅ Offre sauvegardée:', response);
-        this.showSuccessMessage(this.offre.id ? 'Offre mise à jour' : 'Offre créée');
+        this.showSuccessMessage(payload.id ? 'Offre mise à jour' : 'Offre créée');
         this.loadOffres();
         this.offreDialog = false;
-        this.offre = {} as Offre;
+        this.offre = {} as any;
       },
       error: err => {
         console.error('❌ Erreur saveOffre:', err);

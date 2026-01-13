@@ -16,7 +16,7 @@ import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TopbarWidget } from '../topbarwidget.component';
 import { OffreService } from '../../../crud/offre/offre.service';
 import { enrichOffreForUi, Offre } from '../../../crud/offre/offre.model';
@@ -30,7 +30,7 @@ import { FooterWidget } from '../footerwidget';
   imports: [
     CommonModule, FormsModule, ButtonModule, TagModule, PaginatorModule,
     InputTextModule, DialogModule, InputNumberModule, TextareaModule,
-    CheckboxModule, RadioButtonModule, SelectModule, ToastModule, TopbarWidget, FooterWidget
+    CheckboxModule, RadioButtonModule, SelectModule, ToastModule, FooterWidget, TopbarWidget
   ],
   templateUrl: './offres-list.component.html',
   providers: [MessageService],
@@ -72,6 +72,9 @@ export class OffresListComponent implements OnInit {
   today = new Date().toISOString().slice(0, 10);
   cvFile?: File | null;
   lmFile?: File | null;
+  routeOfferId: string | null = null;
+  highlightId: number | null = null;
+
 
   apply: any = {
     nom: '', prenom: '', email: '', ville: '', date_naissance: '',
@@ -99,7 +102,8 @@ export class OffresListComponent implements OnInit {
     private router: Router,
     private messageService: MessageService,
     private authService: AuthService,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+    private ar: ActivatedRoute
   ) {
     console.log('%c🏗️ CONSTRUCTION', 'background: #222; color: #bada55; font-size: 16px; padding: 4px;');
   }
@@ -107,6 +111,15 @@ export class OffresListComponent implements OnInit {
   ngOnInit(): void {
     console.log('%c🚀 ===== NG ON INIT =====', 'background: blue; color: white; font-size: 18px; padding: 8px;');
     this.detectAuthentication();
+    this.loadOffres();
+
+     // 1) écouter l'ID dans l'URL
+    this.ar.paramMap.subscribe(pm => {
+      this.routeOfferId = pm.get('id');
+      this.tryOpenOfferFromRoute(); // ✅ Tente maintenant
+    });
+
+    // 2) charger la liste
     this.loadOffres();
   }
 
@@ -177,6 +190,8 @@ export class OffresListComponent implements OnInit {
           .filter(o => o.statut === 'publiee' && !o.isExpired)
           .map(o => ({ ...o, _plainDescription: this.decodeHtml(o.description || '') }));
         this.all.set(enriched);
+
+        this.tryOpenOfferFromRoute();
       },
       error: () => this.all.set([])
     });
@@ -376,4 +391,78 @@ export class OffresListComponent implements OnInit {
     this.cvFile = null;
     this.lmFile = null;
   }
+
+  getShortOffreLink(o: any): string {
+  if (!o?.id) return window.location.origin;
+
+  const title = String(o.titre || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  return `${window.location.origin}/o/${o.id}-${title}`;
+}
+
+copyShortLink(o: any) {
+  const link = this.getShortOffreLink(o);
+
+  navigator.clipboard.writeText(link).then(() => {
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Copié',
+      detail: 'Lien de l’offre copié',
+      life: 2000
+    });
+  }).catch(() => {
+    // fallback si clipboard bloqué
+    const input = document.createElement('input');
+    input.value = link;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Copié',
+      detail: 'Lien de l’offre copié',
+      life: 2000
+    });
+  });
+}
+
+private tryOpenOfferFromRoute(): void {
+  const id = this.routeOfferId;
+  if (!id) return;
+
+  // si la liste n'est pas encore chargée
+  const list = this.all();
+  if (!list?.length) return;
+
+  // on cherche dans la liste complète (pas filtered() car q peut filtrer)
+  const offer = list.find(o => String(o.id) === String(id));
+  if (!offer) return;
+
+  // ✅ pour être sûr qu’elle soit visible: on enlève le filtre et on calcule la page
+  this.q = '';
+  const idx = list.findIndex(o => String(o.id) === String(id));
+  if (idx >= 0) this.page = Math.floor(idx / this.rows);
+
+  // highlight + scroll
+  this.highlightId = Number(id);
+
+  setTimeout(() => {
+    document.getElementById('offer-' + id)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // ✅ ouvre automatiquement le "Voir plus"
+    this.openOffreDetails(offer);
+
+    // option: enlever le highlight après 6s
+    setTimeout(() => (this.highlightId = null), 6000);
+  }, 150);
+}
+
 }

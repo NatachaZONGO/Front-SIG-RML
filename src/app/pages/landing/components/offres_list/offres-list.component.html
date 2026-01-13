@@ -1,3 +1,4 @@
+<p-toast></p-toast>
 <topbar-widget></topbar-widget>
 
 <!-- Hero Section -->
@@ -81,7 +82,10 @@
 
     <!-- Job Cards Grid -->
     <div class="jobs-grid">
-      <div *ngFor="let o of pageRows()" class="job-card">
+      <div *ngFor="let o of pageRows()" 
+     class="job-card"
+     [id]="'offer-' + o.id"
+     [class.highlighted]="highlightId === o.id">
         <div class="card-ribbon" *ngIf="isFeatured(o)">
           <span>★ Vedette</span>
         </div>
@@ -131,6 +135,7 @@
             [rounded]="true" 
             (click)="openOffreDetails(o)"
           ></button>
+          
         </div>
       </div>
     </div>
@@ -216,6 +221,14 @@
 
       <!-- Footer avec actions -->
       <div class="offer-actions-footer">
+        <button 
+          pButton 
+          pRipple 
+          label="Partager" 
+          icon="pi pi-share-alt" 
+          class="p-button-text elegant-btn-secondary"
+          (click)="copyShortLink(selectedOffre)">
+        </button>
         <button 
           pButton 
           pRipple 
@@ -1719,6 +1732,20 @@ html, body { overflow-x: hidden; }
   white-space: nowrap;
   max-width: calc(100vw - 8rem);
 }
+/* Animation de highlight pour l'offre ciblée */
+.job-card.highlighted {
+  animation: highlight-pulse 2s ease-in-out;
+  border-color: var(--accent-orange) !important;
+  box-shadow: 0 0 0 3px rgba(255, 113, 4, 0.2) !important;
+}
 
+@keyframes highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(255, 113, 4, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 113, 4, 0.4);
+  }
+}
 </style>
 <app-footer-widget></app-footer-widget>
