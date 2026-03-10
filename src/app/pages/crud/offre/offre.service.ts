@@ -45,11 +45,13 @@ export class OffreService {
   // ================== MÉTHODES AVEC AUTH ==================
 
   /** ADMIN – lister toutes les offres (paginées) */
-  getAdminOffres(): Observable<Offre[]> {
+  getAdminOffres(page = 1, perPage = 100): Observable<any> {
     const headers = this.getAuthHeaders();
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('per_page', perPage.toString());
     return this.http
-      .get<{ success: boolean; data: any }>(`${this.api}`, { headers })
-      .pipe(map(r => r?.data?.data ?? r?.data ?? []));
+      .get<{ success: boolean; data: any }>(`${this.api}`, { headers, params });
   }
 
   /** Mes offres (Recruteur uniquement) */

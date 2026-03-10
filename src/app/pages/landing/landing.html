@@ -273,7 +273,7 @@
           <i class="pi pi-file-edit"></i>
           Description du poste
         </h3>
-        <div class="offer-content-html" lang="fr" [innerHTML]="d.description || ''"></div>
+        <div class="offer-content-html" lang="fr" [innerHTML]="getSafeHtml(d.description || '')"></div>
       </div>
 
       <!-- Footer avec actions -->
@@ -1674,14 +1674,27 @@ html, body { overflow-x: hidden; }
   height: auto !important;
 }
 .offer-content-html table {
-  display: block !important;          /* autorise le wrap + scroll X interne si très large */
-  overflow-x: auto !important;
-  border-collapse: collapse;
+  display: table !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+  margin: 12px 0 !important;
 }
-.offer-content-html th,
+.offer-content-html thead { display: table-header-group !important; }
+.offer-content-html tbody { display: table-row-group !important; }
+.offer-content-html tr    { display: table-row !important; }
+.offer-content-html th {
+  display: table-cell !important;
+  border: 2px solid #94a3b8 !important;
+  padding: 8px 12px !important;
+  background: #e2e8f0 !important;
+  font-weight: 700 !important;
+}
 .offer-content-html td {
-  border: 1px solid #e2e8f0;
-  padding: .5rem .75rem;
+  display: table-cell !important;
+  border: 2px solid #94a3b8 !important;
+  padding: 8px 12px !important;
+  background: #ffffff !important;
 }
 
 /* 8) Titre du dialog : une seule ligne + ellipsis propre */

@@ -153,7 +153,8 @@ export class Landing implements OnInit {
     private http: HttpClient,
     private sanitizer: DomSanitizer,
     private authService: AuthService,
-    private profileService: ProfileService
+    private profileService: ProfileService,
+
   ) {
     console.log('🏗️ Landing component construit');
   }
@@ -167,6 +168,9 @@ export class Landing implements OnInit {
     this.loadPays();
   }
 
+  getSafeHtml(html: string): SafeHtml {
+  return this.sanitizer.bypassSecurityTrustHtml(html || '');
+}
   /**
    * ✅ Initialisation de l'authentification
    */
@@ -209,41 +213,50 @@ export class Landing implements OnInit {
 
   // ✅ Chargement des offres
   private loadOffres(): void {
-    this.offreApi.getAdminOffres().subscribe({
-      next: (rows: Offre[]) => {
-        const allOffres: Offre[] = (rows || [])
-          .map(enrichOffreForUi)
-          .filter(o => o.statut === 'publiee' && !o.isExpired);
-        
-        this.offresById = new Map(allOffres.filter(x => x?.id != null).map(x => [x.id!, x]));
-        
-        const featured = allOffres.filter(o => this.isFeaturedOffre(o));
-        const normal = allOffres.filter(o => !this.isFeaturedOffre(o));
+  this.offreApi.getAdminOffres(1, 100).subscribe({
+    next: (response: any) => {
+      let rows: Offre[] = [];
 
-        const featuredSorted = [...featured].sort((a, b) => {
-          const lvlA = Number((a as any).sponsored_level ?? 0);
-          const lvlB = Number((b as any).sponsored_level ?? 0);
-          if (lvlB !== lvlA) return lvlB - lvlA;
-          const pa = new Date(a.date_publication as any).getTime() || 0;
-          const pb = new Date(b.date_publication as any).getTime() || 0;
-          return pb - pa;
-        });
-
-        const normalSorted = [...normal].sort((a, b) => {
-          const pa = new Date(a.date_publication as any).getTime() || 0;
-          const pb = new Date(b.date_publication as any).getTime() || 0;
-          return pb - pa;
-        });
-
-        this.featuredJobs = featuredSorted.slice(0, 6);
-        this.recentOffers = normalSorted.slice(0, 4);
-      },
-      error: () => {
-        this.recentOffers = [];
-        this.featuredJobs = [];
+      if (Array.isArray(response)) {
+        rows = response;
+      } else if (Array.isArray(response?.data)) {
+        rows = response.data;
+      } else if (response?.data?.data) {
+        rows = response.data.data;
       }
-    });
-  }
+
+      const allOffres = rows
+        .map(enrichOffreForUi)
+        .filter(o => o.statut === 'publiee' && !o.isExpired);
+
+      this.offresById = new Map(
+        allOffres.filter(x => x?.id != null).map(x => [x.id!, x])
+      );
+
+      const featured = allOffres.filter(o => this.isFeaturedOffre(o));
+      const normal   = allOffres.filter(o => !this.isFeaturedOffre(o));
+
+      this.featuredJobs = [...featured]
+        .sort((a, b) =>
+          new Date(b.date_publication as any).getTime() -
+          new Date(a.date_publication as any).getTime()
+        )
+        .slice(0, 6);
+
+      // ✅ Limité à 4 pour la landing
+      this.recentOffers = [...normal]
+        .sort((a, b) =>
+          new Date(b.date_publication as any).getTime() -
+          new Date(a.date_publication as any).getTime()
+        )
+        .slice(0, 4);
+    },
+    error: () => {
+      this.recentOffers = [];
+      this.featuredJobs = [];
+    }
+  });
+}
 
 
   // ✅ Chargement des publicités

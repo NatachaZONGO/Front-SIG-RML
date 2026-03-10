@@ -23,6 +23,7 @@ import { enrichOffreForUi, Offre } from '../../../crud/offre/offre.model';
 import { AuthService } from '../../../auth/auth.service';
 import { ProfileService } from '../../../crud/profil/profil.service';
 import { FooterWidget } from '../footerwidget';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-offres-list',
@@ -103,26 +104,27 @@ export class OffresListComponent implements OnInit {
     private messageService: MessageService,
     private authService: AuthService,
     private profileService: ProfileService,
-    private ar: ActivatedRoute
+    private ar: ActivatedRoute,
+    private sanitizer: DomSanitizer
   ) {
     console.log('%c🏗️ CONSTRUCTION', 'background: #222; color: #bada55; font-size: 16px; padding: 4px;');
   }
 
   ngOnInit(): void {
-    console.log('%c🚀 ===== NG ON INIT =====', 'background: blue; color: white; font-size: 18px; padding: 8px;');
-    this.detectAuthentication();
-    this.loadOffres();
+  this.detectAuthentication();
+  
+  this.loadOffres();
 
-     // 1) écouter l'ID dans l'URL
-    this.ar.paramMap.subscribe(pm => {
-      this.routeOfferId = pm.get('id');
-      this.tryOpenOfferFromRoute(); // ✅ Tente maintenant
-    });
+  this.ar.paramMap.subscribe(pm => {
+    this.routeOfferId = pm.get('id');
+    this.tryOpenOfferFromRoute();
+  });
+  
+}
 
-    // 2) charger la liste
-    this.loadOffres();
-  }
-
+  getSafeHtml(html: string): SafeHtml {
+  return this.sanitizer.bypassSecurityTrustHtml(html || '');
+}
   private detectAuthentication(): void {
     console.log('%c🔍 DÉTECTION AUTHENTIFICATION', 'background: purple; color: white; font-size: 14px; padding: 4px;');
     
@@ -182,20 +184,53 @@ export class OffresListComponent implements OnInit {
     });
   }
 
-  private loadOffres(): void {
-    this.api.getAdminOffres().subscribe({
-      next: (rows) => {
-        const enriched = (rows || [])
-          .map(enrichOffreForUi)
-          .filter(o => o.statut === 'publiee' && !o.isExpired)
-          .map(o => ({ ...o, _plainDescription: this.decodeHtml(o.description || '') }));
-        this.all.set(enriched);
+private loadOffres(): void {
+  this.fetchAllPages(1, []);
+}
 
-        this.tryOpenOfferFromRoute();
-      },
-      error: () => this.all.set([])
-    });
-  }
+private fetchAllPages(page: number, accumulated: Offre[]): void {
+  this.api.getAdminOffres(page, 100).subscribe({
+    next: (response: any) => {
+      let rows: Offre[] = [];
+      let lastPage = 1;
+
+      if (Array.isArray(response)) {
+        rows = response;
+      } else if (Array.isArray(response?.data)) {
+        rows = response.data;
+      } else if (response?.data?.data) {
+        rows = response.data.data;
+        lastPage = response.data.last_page ?? 1;
+      }
+
+      const enriched = rows
+        .map(enrichOffreForUi)
+        .filter((o: Offre) => o.statut === 'publiee' && !o.isExpired)
+        .map((o: Offre) => ({
+          ...o,
+          _plainDescription: this.decodeHtml(o.description || '')
+        }));
+
+      const allSoFar = [...accumulated, ...enriched];
+
+      // ✅ Afficher immédiatement ce qu'on a déjà
+      this.all.set(allSoFar);
+      this.tryOpenOfferFromRoute();
+
+      if (page < lastPage) {
+        // ✅ Continuer à charger en arrière-plan
+        this.fetchAllPages(page + 1, allSoFar);
+      }
+    },
+    error: () => {
+      if (accumulated.length > 0) {
+        this.all.set(accumulated);
+      } else {
+        this.all.set([]);
+      }
+    }
+  });
+}
 
   /**
    * ✅ POSTULER - Avec pré-remplissage forcé
