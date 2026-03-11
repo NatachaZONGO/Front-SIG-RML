@@ -30,10 +30,10 @@ import { Router, RouterModule } from '@angular/router';
               <a href="https://instagram.com" target="_blank" rel="noopener" class="social-icon instagram" aria-label="Instagram">
                 <i class="pi pi-instagram"></i>
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-icon linkedin" aria-label="LinkedIn">
+              <a href="1)	https://www.linkedin.com/company/alerte-emploi-et-offres-burkina/" target="_blank" rel="noopener" class="social-icon linkedin" aria-label="LinkedIn">
                 <i class="pi pi-linkedin"></i>
               </a>
-              <a href="https://tiktok.com" target="_blank" rel="noopener" class="social-icon tiktok" aria-label="TikTok">
+              <a href="https://www.tiktok.com/@alerteemploibf?_r=1&_t=ZS-93Z15xOvrCj" target="_blank" rel="noopener" class="social-icon tiktok" aria-label="TikTok">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
                 </svg>
@@ -112,7 +112,7 @@ import { Router, RouterModule } from '@angular/router';
       <div class="footer-bottom">
         <div class="footer-bottom-content">
           <p class="copyright">
-            Copyright © {{ currentYear }} <strong>JobPlatform</strong> - Tous droits réservés
+            Copyright © {{ currentYear }} <strong>Alerte Emploi et Offres </strong> - Tous droits réservés
           </p>
         
           <p class="powered-by">
@@ -125,8 +125,8 @@ import { Router, RouterModule } from '@angular/router';
   styles: [`
     /* ===== VARIABLES ===== */
     :host {
-      --footer-bg: #3d3d8e;
-      --footer-bg-dark: #2d2d6e;
+      --footer-bg: #1040b0;
+      --footer-bg-dark: #0a30a0;
       --footer-text: #e5e7eb;
       --footer-text-muted: #cbd5e1;
       --footer-heading: #ff7104;

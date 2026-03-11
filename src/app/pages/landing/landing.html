@@ -60,6 +60,17 @@
 
 <div class="section-divider"></div>
 
+<!-- ✅ BANNIÈRE PUBLICITAIRE 1 -->
+<div class="static-banner-wrapper">
+  <img 
+    src="assets/images/BANDE I_Plan de travail 1.jpeg"  
+    alt="Bannière publicitaire 1"
+    class="static-banner-img"
+  />
+</div>
+
+<div class="section-divider"></div>
+
 <!-- ✅ SECTION : NOS PARTENAIRES -->
 <section id="pubs" class="section-container">
   <div class="section-header">
@@ -112,6 +123,17 @@
     </p-carousel>
   </div>
 </section>
+
+<div class="section-divider"></div>
+
+<!-- ✅ BANNIÈRE PUBLICITAIRE 2 -->
+<div class="static-banner-wrapper">
+  <img 
+   src="assets/images/BANDE II_Plan de travail 1.jpeg" 
+    alt="Bannière publicitaire 2"
+    class="static-banner-img"
+  />
+</div>
 
 <div class="section-divider"></div>
 
@@ -188,6 +210,17 @@
   </div>
 </section>
   </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ✅ BANNIÈRE PUBLICITAIRE 3 -->
+<div class="static-banner-wrapper">
+  <img 
+    src="assets/images/BANDE III_Plan de travail 1.jpeg" 
+    alt="Bannière publicitaire 3"
+    class="static-banner-img"
+  />
 </div>
 
 <div class="section-divider"></div>
@@ -2752,7 +2785,39 @@ html, body { overflow-x: hidden; }
     height: 2.5rem !important;
   }
 }
+
+/* ===== BANNIÈRES STATIQUES ===== */
+.static-banner-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.static-banner-img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.875rem;
+  display: block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.static-banner-img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 768px) {
+  .static-banner-wrapper {
+    padding: 0 1rem;
+  }
+  .static-banner-img {
+    border-radius: 0.5rem;
+  }
+}
 </style>
+
 
 <!-- Footer -->
 <app-footer-widget></app-footer-widget>
+

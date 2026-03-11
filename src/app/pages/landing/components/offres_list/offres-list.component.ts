@@ -500,4 +500,25 @@ private tryOpenOfferFromRoute(): void {
   }, 150);
 }
 
+// ✅ Découpe les offres en groupes de 6 (2 lignes × 3 colonnes)
+chunks(): Offre[][] {
+  const rows = this.pageRows();
+  const result: Offre[][] = [];
+  for (let i = 0; i < rows.length; i += 6) {
+    result.push(rows.slice(i, i + 6));
+  }
+  return result;
+}
+
+// ✅ Rotation des bannières selon l'index du groupe
+getBannerSrc(index: number): string {
+  const banners = [
+    'assets/images/AJ COVER_Plan de travail 1.jpeg',
+    'assets/images/BANDE I_Plan de travail 1.jpeg',
+    'assets/images/BANDE II_Plan de travail 1.jpeg',
+    'assets/images/BANDE III_Plan de travail 1.jpeg',
+    
+  ];
+  return banners[index % banners.length];
+}
 }

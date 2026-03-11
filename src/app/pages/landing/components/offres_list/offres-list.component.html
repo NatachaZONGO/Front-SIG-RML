@@ -80,65 +80,75 @@
       </div>
     </div>
 
-    <!-- Job Cards Grid -->
-    <div class="jobs-grid">
-      <div *ngFor="let o of pageRows()" 
-     class="job-card"
-     [id]="'offer-' + o.id"
-     [class.highlighted]="highlightId === o.id">
-        <div class="card-ribbon" *ngIf="isFeatured(o)">
-          <span>★ Vedette</span>
-        </div>
-        
-        <div class="card-header">
-          <div class="job-info">
-            <h4 class="job-title" [title]="o.titre">{{ o.titre }}</h4>
-            <div class="job-company">
-              <i class="pi pi-building"></i>
-              <span>{{ o.entreprise?.nom_entreprise || 'Entreprise' }}</span>
-            </div>
-            <div class="job-location">
-              <i class="pi pi-map-marker"></i>
-              <span>{{ o.localisation || '—' }}</span>
-            </div>
-          </div>
+    <!-- ✅ GRILLE AVEC BANNIÈRES ENTRE CHAQUE 2 LIGNES -->
+<ng-container *ngFor="let chunk of chunks(); let i = index; let last = last">
+  
+  <!-- Groupe de 6 offres (2 lignes × 3 colonnes) -->
+  <div class="jobs-grid">
+    <div *ngFor="let o of chunk"
+         class="job-card"
+         [id]="'offer-' + o.id"
+         [class.highlighted]="highlightId === o.id">
 
-          <div class="job-badges">
-            <span class="contract-badge" 
-                  [ngClass]="{
-                    'cdi': o.type_contrat?.toLowerCase() === 'cdi',
-                    'cdd': o.type_contrat?.toLowerCase() === 'cdd', 
-                    'freelance': o.type_contrat?.toLowerCase() === 'freelance',
-                    'stage': o.type_contrat?.toLowerCase() === 'stage'
-                  }">
-              {{ o.type_contrat || '-' }}
-            </span>
+      <div class="card-ribbon" *ngIf="isFeatured(o)">
+        <span>★ Vedette</span>
+      </div>
+      
+      <div class="card-header">
+        <div class="job-info">
+          <h4 class="job-title" [title]="o.titre">{{ o.titre }}</h4>
+          <div class="job-company">
+            <i class="pi pi-building"></i>
+            <span>{{ o.entreprise?.nom_entreprise || 'Entreprise' }}</span>
+          </div>
+          <div class="job-location">
+            <i class="pi pi-map-marker"></i>
+            <span>{{ o.localisation || '—' }}</span>
           </div>
         </div>
-
-        <div class="card-body">
-          <p class="job-description">{{ plain(o.description || '') }}</p>
-        </div>
-
-        <div class="card-footer">
-          <div class="job-meta">
-            <div class="publish-date" *ngIf="o.date_publication">
-              <i class="pi pi-calendar"></i>
-              <span>{{ $any(o.date_publication) | date:'mediumDate' }}</span>
-            </div>
-          </div>
-          <button 
-            pButton 
-            pRipple 
-            label="Voir plus" 
-            class="view-job-btn" 
-            [rounded]="true" 
-            (click)="openOffreDetails(o)"
-          ></button>
-          
+        <div class="job-badges">
+          <span class="contract-badge" 
+                [ngClass]="{
+                  'cdi': o.type_contrat?.toLowerCase() === 'cdi',
+                  'cdd': o.type_contrat?.toLowerCase() === 'cdd', 
+                  'freelance': o.type_contrat?.toLowerCase() === 'freelance',
+                  'stage': o.type_contrat?.toLowerCase() === 'stage'
+                }">
+            {{ o.type_contrat || '-' }}
+          </span>
         </div>
       </div>
+
+      <div class="card-body">
+        <p class="job-description">{{ plain(o.description || '') }}</p>
+      </div>
+
+      <div class="card-footer">
+        <div class="job-meta">
+          <div class="publish-date" *ngIf="o.date_publication">
+            <i class="pi pi-calendar"></i>
+            <span>{{ $any(o.date_publication) | date:'mediumDate' }}</span>
+          </div>
+        </div>
+        <button 
+          pButton pRipple label="Voir plus" 
+          class="view-job-btn" [rounded]="true" 
+          (click)="openOffreDetails(o)">
+        </button>
+      </div>
     </div>
+  </div>
+
+  <!-- ✅ BANNIÈRE entre chaque groupe (pas après le dernier) -->
+  <div *ngIf="!last" class="static-banner-wrapper banner-in-offers">
+    <img 
+      [src]="getBannerSrc(i)" 
+      alt="Bannière publicitaire" 
+      class="static-banner-img"
+    />
+  </div>
+
+</ng-container>
 
     <!-- Pagination -->
     <div class="pagination-section">
@@ -1759,6 +1769,36 @@ html, body { overflow-x: hidden; }
   }
   50% {
     box-shadow: 0 0 0 6px rgba(255, 113, 4, 0.4);
+  }
+}
+
+/* ✅ Bannière dans la liste d'offres */
+.banner-in-offers {
+  margin: 2rem auto;
+  max-width: 1200px;
+  padding: 0 1.5rem;
+}
+
+.banner-in-offers .static-banner-img {
+  width: 100%;
+  height: auto;
+  border-radius: 0.875rem;
+  display: block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.banner-in-offers .static-banner-img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 768px) {
+  .banner-in-offers {
+    padding: 0 1rem;
+  }
+  .banner-in-offers .static-banner-img {
+    border-radius: 0.5rem;
   }
 }
 </style>
