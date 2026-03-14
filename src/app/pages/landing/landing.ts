@@ -143,7 +143,7 @@ export class Landing implements OnInit {
   private readonly MAX_FILE_BYTES = 5 * 1024 * 1024;
 
   constructor(
-    private router: Router,
+    public router: Router,
     private offreApi: OffreService,
     private pubApi: Publiciteservice,
     private conseilApi: ConseilService,

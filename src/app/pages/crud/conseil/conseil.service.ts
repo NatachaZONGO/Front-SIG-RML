@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { BackendURL } from '../../../Share/const';
+import { BackendURL, LocalStorageFields } from '../../../Share/const';
 import { Conseil } from './conseil.model';
 
 export interface ApiResponse<T> {
@@ -19,16 +19,19 @@ export interface ApiResponse<T> {
 export class ConseilService {
   private readonly apiUrl = `${BackendURL}conseils`;
 
-  private readonly httpOptions = {
+ // ✅ APRÈS — headers dynamiques avec token
+// ✅ Remplace httpOptions par ceci
+private get httpOptions() {
+  const token = localStorage.getItem(LocalStorageFields.accessToken) ?? '';
+  return {
     headers: new HttpHeaders({
-      // IMPORTANT: force la réponse JSON côté Laravel
       Accept: 'application/json',
       'Content-Type': 'application/json',
-    }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    })
   };
-
-  constructor(private http: HttpClient) {}
-
+}
+constructor(private http: HttpClient) {}
   /** Liste paginée → renvoie ApiResponse<Conseil[]> avec content = tableau mappé */
   getConseils(page?: number, size?: number): Observable<ApiResponse<Conseil[]>> {
     let params = new HttpParams();

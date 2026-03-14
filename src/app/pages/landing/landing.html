@@ -230,11 +230,20 @@
   <div class="section-header">
     <h2 class="section-title">💡 Conseils carrière</h2>
     <p class="section-subtitle">Boostez votre parcours professionnel avec nos experts</p>
+    <!-- ✅ BOUTON VOIR TOUS LES CONSEILS -->
+    <button pButton 
+            pRipple 
+            [text]="true" 
+            [rounded]="true" 
+            label="Voir tous les conseils →" 
+            class="see-all-btn" 
+            (click)="router.navigate(['/conseils'])">
+    </button>
   </div>
 
   <div class="cards-grid tips-grid">
     <!-- ✅ t est maintenant de type Conseil directement -->
-    <div *ngFor="let t of tipsRow | slice:0:3" class="tip-card">
+    <div *ngFor="let t of tipsRow | slice:0:4" class="tip-card">
       <div class="tip-header">
         <h3 class="tip-title" [title]="t.titre">{{ t.titre }}</h3>
         <p-tag *ngIf="t.niveau" [value]="t.niveau" severity="secondary" styleClass="tip-level"></p-tag>

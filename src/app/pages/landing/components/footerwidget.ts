@@ -114,7 +114,9 @@ import { Router, RouterModule } from '@angular/router';
           <p class="copyright">
             Copyright © {{ currentYear }} <strong>Alerte Emploi et Offres </strong> - Tous droits réservés
           </p>
-        
+          <p class="version">
+            V4.0.0
+          </p>
           <p class="powered-by">
             Développé avec <i class="pi pi-heart"></i> par <span class="brand">Tacha</span>
           </p>

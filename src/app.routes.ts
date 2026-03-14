@@ -14,6 +14,7 @@ import { ForgotPasswordComponent } from './app/pages/auth/forgot-password/forgot
 import { ResetPasswordComponent } from './app/pages/auth/reset-password/reset-password.component';
 import { AboutComponent } from './app/pages/about/about.component';
 import { OffreRedirectComponent } from './app/pages/crud/offre/offre-redirect.component';
+import { ConseillsListComponent } from './app/pages/landing/components/conseil_list/conseils-list.component';
 
 export const appRoutes: Routes = [
   { path: '', component: Landing },
@@ -48,10 +49,10 @@ export const appRoutes: Routes = [
 
   { path: 'offres/:id', component: OffresListComponent }, 
   { path: 'o/:slug', component: OffreRedirectComponent },  
+  { path: 'conseils', component: ConseillsListComponent },
   { path: 'suivre-candidature', component: SuiviCandidatureComponent },
   { path: 'about', component: AboutComponent },
   { path: 'acces-refuse', component: Notfound },
-
   { path: 'notfound', component: Notfound },
   { path: '**', redirectTo: '/notfound' },
 ];
