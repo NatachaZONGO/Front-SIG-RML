@@ -4,27 +4,12 @@
 <!-- Toolbar -->
 <p-toolbar styleClass="mb-6">
   <ng-template pTemplate="start">
-    <p-button 
-      label="Nouveau conseil" 
-      icon="pi pi-plus" 
-      severity="success" 
-      class="mr-2" 
-      (onClick)="openNew()" />
-    <p-button 
-      severity="danger" 
-      label="Supprimer sélection" 
-      icon="pi pi-trash" 
-      [outlined]="true"
-      (onClick)="deleteSelectedConseils()" 
-      [disabled]="!hasSelectedConseils" />
+    <p-button label="Nouveau conseil" icon="pi pi-plus" severity="success" class="mr-2" (onClick)="openNew()" />
+    <p-button severity="danger" label="Supprimer sélection" icon="pi pi-trash" [outlined]="true"
+      (onClick)="deleteSelectedConseils()" [disabled]="!hasSelectedConseils" />
   </ng-template>
-
   <ng-template pTemplate="end">
-    <p-button 
-      label="Exporter CSV" 
-      icon="pi pi-download" 
-      severity="help" 
-      (onClick)="exportCSV()" />
+    <p-button label="Exporter CSV" icon="pi pi-download" severity="help" (onClick)="exportCSV()" />
   </ng-template>
 </p-toolbar>
 
@@ -49,12 +34,8 @@
       <h2 class="m-0 text-xl font-semibold">Gestion des Conseils</h2>
       <p-iconField>
         <p-inputIcon styleClass="pi pi-search"></p-inputIcon>
-        <input 
-          pInputText 
-          type="text" 
-          (input)="onGlobalFilter(dt, $event)" 
-          placeholder="Rechercher un conseil..." 
-          class="w-full" />
+        <input pInputText type="text" (input)="onGlobalFilter(dt, $event)"
+               placeholder="Rechercher un conseil..." class="w-full" />
       </p-iconField>
     </div>
   </ng-template>
@@ -65,6 +46,8 @@
       <th pSortableColumn="titre" style="min-width: 250px">
         Titre <p-sortIcon field="titre"></p-sortIcon>
       </th>
+      <!-- ✅ NOUVEAU — Miniature -->
+      <th style="min-width: 80px">Image</th>
       <th pSortableColumn="categorie" style="min-width: 180px">
         Catégorie <p-sortIcon field="categorie"></p-sortIcon>
       </th>
@@ -95,99 +78,68 @@
         <div class="flex flex-col">
           <span class="font-semibold text-primary">{{ conseil.titre || '-' }}</span>
           <small class="text-gray-500" *ngIf="conseil.contenu"
-                 pTooltip="{{ getApercuFrom(conseil.contenu, 250) }}"
-                 tooltipPosition="top">
+                 pTooltip="{{ getApercuFrom(conseil.contenu, 250) }}" tooltipPosition="top">
             Aperçu : {{ getApercuFrom(conseil.contenu, 250) }}
           </small>
         </div>
       </td>
 
+      <!-- ✅ NOUVEAU — Miniature dans le tableau -->
+      <td style="min-width:80px">
+        <img *ngIf="conseil.image" [src]="conseil.image" [alt]="conseil.titre"
+             class="table-thumbnail" />
+        <span *ngIf="!conseil.image" class="text-gray-300">
+          <i class="pi pi-image" style="font-size:1.5rem"></i>
+        </span>
+      </td>
+
       <td style="min-width:180px">
         <span class="text-sm">{{ getCategorieLabel(conseil.categorie || '') }}</span>
       </td>
-
       <td style="min-width:140px">
         <span class="text-sm">{{ getTypeLabel(conseil.type_conseil || '') }}</span>
       </td>
-
       <td style="min-width:120px">
         <p-tag [value]="getNiveauLabel(conseil.niveau || '')"
                [severity]="conseil.niveau === 'debutant' ? 'success' : conseil.niveau === 'intermediaire' ? 'info' : conseil.niveau === 'avance' ? 'warn' : 'secondary'"
                styleClass="text-xs"></p-tag>
       </td>
-
       <td style="min-width:120px">
         <p-tag [value]="getStatutLabel(conseil.statut || '')"
                [severity]="getStatutSeverity(conseil.statut || '')"
                styleClass="text-xs"></p-tag>
       </td>
-
       <td style="min-width:100px">
         <div class="flex items-center gap-1">
           <i class="pi pi-eye text-gray-500"></i>
           <span class="text-sm">{{ conseil.vues ?? 0 }}</span>
         </div>
       </td>
-
       <td style="min-width:160px">
         <span class="text-sm" *ngIf="conseil.date_publication">
           {{ conseil.date_publication | date:'dd/MM/yyyy' }}
         </span>
         <span class="text-gray-400 text-sm" *ngIf="!conseil.date_publication">Non publié</span>
       </td>
-
       <td>
         <div class="flex gap-1">
-          <p-button 
-            icon="pi pi-eye" 
-            [rounded]="true" 
-            [outlined]="true" 
-            size="small"
-            severity="info" 
-            (onClick)="openConseilDetail(conseil)" 
-            pTooltip="Voir les détails"
-            tooltipPosition="top"></p-button>
-          <p-button 
-            icon="pi pi-pencil" 
-            [rounded]="true" 
-            [outlined]="true" 
-            size="small"
-            severity="secondary"
-            (onClick)="editConseil(conseil)" 
-            pTooltip="Modifier"
-            tooltipPosition="top"></p-button>
-
-          <p-button 
-            icon="pi pi-send" 
-            [rounded]="true" 
-            [outlined]="true" 
-            size="small"
-            severity="success" 
-            (onClick)="publierConseil(conseil)"
-            *ngIf="(conseil.statut || 'brouillon') === 'brouillon'" 
-            pTooltip="Publier"
-            tooltipPosition="top"></p-button>
-
-          <p-button 
-            icon="pi pi-envelope" 
-            [rounded]="true" 
-            [outlined]="true" 
-            size="small"
-            severity="secondary" 
-            (onClick)="archiverConseil(conseil)"
-            *ngIf="conseil.statut === 'publie'" 
-            pTooltip="Archiver"
-            tooltipPosition="top"></p-button>
-
-          <p-button 
-            icon="pi pi-trash" 
-            severity="danger" 
-            [rounded]="true" 
-            [outlined]="true" 
-            size="small"
-            (onClick)="deleteConseil(conseil)" 
-            pTooltip="Supprimer"
-            tooltipPosition="top"></p-button>
+          <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" size="small"
+            severity="info" (onClick)="openConseilDetail(conseil)"
+            pTooltip="Voir les détails" tooltipPosition="top"></p-button>
+          <p-button icon="pi pi-pencil" [rounded]="true" [outlined]="true" size="small"
+            severity="secondary" (onClick)="editConseil(conseil)"
+            pTooltip="Modifier" tooltipPosition="top"></p-button>
+          <p-button icon="pi pi-send" [rounded]="true" [outlined]="true" size="small"
+            severity="success" (onClick)="publierConseil(conseil)"
+            *ngIf="(conseil.statut || 'brouillon') === 'brouillon'"
+            pTooltip="Publier" tooltipPosition="top"></p-button>
+          <p-button icon="pi pi-envelope" [rounded]="true" [outlined]="true" size="small"
+            severity="secondary" (onClick)="archiverConseil(conseil)"
+            *ngIf="conseil.statut === 'publie'"
+            pTooltip="Archiver" tooltipPosition="top"></p-button>
+          <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"
+            size="small" (onClick)="deleteConseil(conseil)"
+            pTooltip="Supprimer" tooltipPosition="top"></p-button>
         </div>
       </td>
     </tr>
@@ -195,32 +147,28 @@
 
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td colspan="9" class="text-center py-8">
+      <td colspan="10" class="text-center py-8">
         <div class="flex flex-col items-center gap-2">
           <i class="pi pi-lightbulb text-4xl text-gray-400"></i>
           <p class="text-gray-500">Aucun conseil trouvé</p>
-          <p-button 
-            label="Créer le premier conseil" 
-            icon="pi pi-plus" 
-            (onClick)="openNew()" 
-            size="small"></p-button>
+          <p-button label="Créer le premier conseil" icon="pi pi-plus"
+                    (onClick)="openNew()" size="small"></p-button>
         </div>
       </td>
     </tr>
   </ng-template>
 </p-table>
 
-<!-- Dialog Créer/Modifier Conseil - MODERNISÉ -->
-<p-dialog 
-  [(visible)]="conseilDialog" 
+<!-- Dialog Créer/Modifier -->
+<p-dialog
+  [(visible)]="conseilDialog"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
   [closable]="true"
   styleClass="conseil-dialog-moderne"
   [style]="{ width: '950px', maxWidth: '95vw', height: '90vh' }">
-  
-  <!-- Header personnalisé -->
+
   <ng-template pTemplate="header">
     <div class="dialog-custom-header">
       <div class="header-content">
@@ -241,14 +189,14 @@
 
   <ng-template pTemplate="content">
     <div class="form-container-scroll">
-      
-      <!-- Section 1 : Informations principales -->
+
+      <!-- ===== Section 1 : Informations principales ===== -->
       <div class="form-section">
         <div class="section-header">
           <i class="pi pi-info-circle text-blue-600 mr-2"></i>
           <h3 class="section-title">Informations principales</h3>
         </div>
-        
+
         <!-- Titre -->
         <div class="form-field full-width mb-4">
           <label for="titre" class="field-label">
@@ -256,164 +204,116 @@
           </label>
           <div class="input-with-icon">
             <i class="pi pi-bookmark input-icon"></i>
-            <input 
-              type="text" 
-              pInputText 
-              id="titre" 
-              [(ngModel)]="conseil.titre" 
-              placeholder="Ex: 10 conseils pour réussir son entretien d'embauche"
-              [class.input-error]="isFieldInvalid('titre')"
-              class="field-input pl-10"
-              autofocus />
+            <input type="text" pInputText id="titre" [(ngModel)]="conseil.titre"
+                   placeholder="Ex: 10 conseils pour réussir son entretien d'embauche"
+                   [class.input-error]="isFieldInvalid('titre')"
+                   class="field-input pl-10" autofocus />
           </div>
           <small class="error-message" *ngIf="isFieldInvalid('titre')">
             Le titre est obligatoire (5-255 caractères)
           </small>
         </div>
 
+        <!-- ✅ NOUVEAU — Image miniature -->
+        <div class="form-field full-width mb-4">
+          <label class="field-label">Image miniature</label>
+
+          <!-- Preview : nouvelle image sélectionnée OU image existante -->
+          <div class="image-preview-box" *ngIf="imagePreview || conseil.image">
+            <img [src]="imagePreview || conseil.image" alt="Miniature" class="image-preview" />
+            <button type="button" class="remove-image-btn"
+                    (click)="imageFile=null; imagePreview=null; conseil.image=null">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+
+          <!-- Zone upload si pas d'image -->
+          <div class="image-upload-zone" *ngIf="!imagePreview && !conseil.image">
+            <i class="pi pi-image upload-icon"></i>
+            <span class="text-gray-500 text-sm">Glissez une image ou</span>
+            <label class="upload-label">
+              Parcourir
+              <input type="file" accept="image/*" (change)="onImageChange($event)" hidden />
+            </label>
+            <small class="text-gray-400 text-xs">JPG, PNG, WEBP — 2 Mo max.</small>
+          </div>
+        </div>
+
         <!-- Métadonnées en grille -->
         <div class="form-grid-4">
-          <!-- Catégorie -->
           <div class="form-field">
-            <label for="categorie" class="field-label">
-              Catégorie <span class="required">*</span>
-            </label>
-            <p-select 
-              id="categorie" 
-              [(ngModel)]="conseil.categorie" 
-              [options]="categorieOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez"
-              styleClass="w-full"
+            <label for="categorie" class="field-label">Catégorie <span class="required">*</span></label>
+            <p-select id="categorie" [(ngModel)]="conseil.categorie" [options]="categorieOptions"
+              optionLabel="label" optionValue="value" placeholder="Sélectionnez" styleClass="w-full"
               [class.input-error]="isFieldInvalid('categorie')" />
-            <small class="error-message" *ngIf="isFieldInvalid('categorie')">
-              Catégorie obligatoire
-            </small>
+            <small class="error-message" *ngIf="isFieldInvalid('categorie')">Catégorie obligatoire</small>
           </div>
-
-          <!-- Type -->
           <div class="form-field">
-            <label for="type_conseil" class="field-label">
-              Type <span class="required">*</span>
-            </label>
-            <p-select 
-              id="type_conseil" 
-              [(ngModel)]="conseil.type_conseil" 
-              [options]="typeOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez"
-              styleClass="w-full"
+            <label for="type_conseil" class="field-label">Type <span class="required">*</span></label>
+            <p-select id="type_conseil" [(ngModel)]="conseil.type_conseil" [options]="typeOptions"
+              optionLabel="label" optionValue="value" placeholder="Sélectionnez" styleClass="w-full"
               [class.input-error]="isFieldInvalid('type_conseil')" />
-            <small class="error-message" *ngIf="isFieldInvalid('type_conseil')">
-              Type obligatoire
-            </small>
+            <small class="error-message" *ngIf="isFieldInvalid('type_conseil')">Type obligatoire</small>
           </div>
-
-          <!-- Niveau -->
           <div class="form-field">
-            <label for="niveau" class="field-label">
-              Niveau <span class="required">*</span>
-            </label>
-            <p-select 
-              id="niveau" 
-              [(ngModel)]="conseil.niveau" 
-              [options]="niveauOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez"
-              styleClass="w-full"
+            <label for="niveau" class="field-label">Niveau <span class="required">*</span></label>
+            <p-select id="niveau" [(ngModel)]="conseil.niveau" [options]="niveauOptions"
+              optionLabel="label" optionValue="value" placeholder="Sélectionnez" styleClass="w-full"
               [class.input-error]="isFieldInvalid('niveau')" />
-            <small class="error-message" *ngIf="isFieldInvalid('niveau')">
-              Niveau obligatoire
-            </small>
+            <small class="error-message" *ngIf="isFieldInvalid('niveau')">Niveau obligatoire</small>
           </div>
-
-          <!-- Statut -->
           <div class="form-field">
-            <label for="statut" class="field-label">
-              Statut <span class="required">*</span>
-            </label>
-            <p-select 
-              id="statut" 
-              [(ngModel)]="conseil.statut" 
-              [options]="statutOptions"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Sélectionnez"
-              styleClass="w-full"
+            <label for="statut" class="field-label">Statut <span class="required">*</span></label>
+            <p-select id="statut" [(ngModel)]="conseil.statut" [options]="statutOptions"
+              optionLabel="label" optionValue="value" placeholder="Sélectionnez" styleClass="w-full"
               [class.input-error]="isFieldInvalid('statut')" />
-            <small class="error-message" *ngIf="isFieldInvalid('statut')">
-              Statut obligatoire
-            </small>
+            <small class="error-message" *ngIf="isFieldInvalid('statut')">Statut obligatoire</small>
           </div>
         </div>
       </div>
 
-      <!-- Section 2 : Métadonnées -->
+      <!-- ===== Section 2 : Métadonnées ===== -->
       <div class="form-section">
         <div class="section-header">
           <i class="pi pi-tags text-blue-600 mr-2"></i>
           <h3 class="section-title">Métadonnées et auteur</h3>
         </div>
-        
         <div class="form-grid-2">
-          <!-- Tags -->
           <div class="form-field">
             <label for="tags" class="field-label">Tags</label>
             <div class="input-with-icon">
               <i class="pi pi-hashtag input-icon"></i>
-              <input 
-                type="text" 
-                pInputText 
-                id="tags" 
-                [(ngModel)]="conseil.tags" 
-                placeholder="cv, entretien, conseils"
-                class="field-input pl-10" />
+              <input type="text" pInputText id="tags" [(ngModel)]="conseil.tags"
+                     placeholder="cv, entretien, conseils" class="field-input pl-10" />
             </div>
-            <small class="text-gray-500 text-xs mt-1">
-              Séparez les tags par des virgules
-            </small>
+            <small class="text-gray-500 text-xs mt-1">Séparez les tags par des virgules</small>
           </div>
-
-          <!-- Auteur -->
           <div class="form-field">
             <label for="auteur" class="field-label">Auteur</label>
             <div class="input-with-icon">
               <i class="pi pi-user input-icon"></i>
-              <input 
-                type="text" 
-                pInputText 
-                id="auteur" 
-                [(ngModel)]="conseil.auteur" 
-                placeholder="Nom de l'auteur"
-                class="field-input pl-10" />
+              <input type="text" pInputText id="auteur" [(ngModel)]="conseil.auteur"
+                     placeholder="Nom de l'auteur" class="field-input pl-10" />
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Section 3 : Contenu -->
+      <!-- ===== Section 3 : Contenu ===== -->
       <div class="form-section">
         <div class="section-header">
           <i class="pi pi-file-edit text-blue-600 mr-2"></i>
           <h3 class="section-title">Contenu du conseil</h3>
         </div>
-        
         <div class="form-field full-width">
-          <label for="contenu" class="field-label">
-            Contenu <span class="required">*</span>
-          </label>
-          <p-editor 
-            [(ngModel)]="conseil.contenu" 
-            [style]="{ height: '400px' }"
-            [class.input-error]="isFieldInvalid('contenu')">
+          <label for="contenu" class="field-label">Contenu <span class="required">*</span></label>
+          <p-editor [(ngModel)]="conseil.contenu" [style]="{ height: '400px' }"
+                    [class.input-error]="isFieldInvalid('contenu')">
             <ng-template pTemplate="toolbar">
               <span class="ql-formats">
-                <button class="ql-bold" aria-label="Bold"></button>
-                <button class="ql-italic" aria-label="Italic"></button>
-                <button class="ql-underline" aria-label="Underline"></button>
+                <button class="ql-bold"></button>
+                <button class="ql-italic"></button>
+                <button class="ql-underline"></button>
               </span>
               <span class="ql-formats">
                 <select class="ql-header">
@@ -451,31 +351,19 @@
   <ng-template pTemplate="footer">
     <div class="dialog-footer-custom">
       <div class="flex gap-2">
-        <p-button 
-          label="Annuler" 
-          icon="pi pi-times" 
-          severity="secondary"
-          [outlined]="true"
-          (click)="hideDialog()" />
-        <p-button 
-          label="Sauvegarder brouillon" 
-          icon="pi pi-save" 
-          severity="secondary"
-          [outlined]="true"
-          (click)="saveConseil()"
-          *ngIf="!isEditMode || conseil.statut === 'brouillon'" />
+        <p-button label="Annuler" icon="pi pi-times" severity="secondary"
+                  [outlined]="true" (click)="hideDialog()" />
+        <p-button label="Sauvegarder brouillon" icon="pi pi-save" severity="secondary"
+                  [outlined]="true" (click)="saveConseil()"
+                  *ngIf="!isEditMode || conseil.statut === 'brouillon'" />
       </div>
-      <p-button 
-        label="Publier" 
-        icon="pi pi-send" 
-        severity="success"
-        styleClass="footer-btn-publish"
-        (click)="saveConseil()" />
+      <p-button label="Publier" icon="pi pi-send" severity="success"
+                styleClass="footer-btn-publish" (click)="saveConseil()" />
     </div>
   </ng-template>
 </p-dialog>
 
-<!-- Dialog détails - INCHANGÉ (déjà beau !) -->
+<!-- Dialog détails -->
 <p-dialog
   [(visible)]="detailConseilDialog"
   [modal]="true"
@@ -485,13 +373,10 @@
   styleClass="conseil-detail-dialog"
   [style]="{ width: '980px', maxWidth: '95vw' }">
 
-  <!-- HEADER -->
   <ng-template pTemplate="header">
     <div class="cd-header">
       <div class="cd-header-left">
-        <div class="cd-icon">
-          <i class="pi pi-lightbulb"></i>
-        </div>
+        <div class="cd-icon"><i class="pi pi-lightbulb"></i></div>
         <div>
           <h2 class="cd-title">{{ conseilDetail?.titre || 'Conseil' }}</h2>
           <div class="cd-sub">
@@ -507,34 +392,32 @@
           </div>
         </div>
       </div>
-
-      <p-tag
-        [value]="getStatutLabel(conseilDetail?.statut || '')"
-        [severity]="getStatutSeverity(conseilDetail?.statut || '')"
-        styleClass="px-3 py-2">
-      </p-tag>
+      <p-tag [value]="getStatutLabel(conseilDetail?.statut || '')"
+             [severity]="getStatutSeverity(conseilDetail?.statut || '')"
+             styleClass="px-3 py-2"></p-tag>
     </div>
   </ng-template>
 
-  <!-- CONTENT -->
   <ng-template pTemplate="content">
     <div *ngIf="conseilDetail" class="cd-content">
+
+      <!-- ✅ NOUVEAU — Miniature dans le dialog détail -->
+      <div class="cd-image-banner" *ngIf="conseilDetail.image">
+        <img [src]="conseilDetail.image" [alt]="conseilDetail.titre" class="cd-banner-img" />
+      </div>
 
       <!-- Méta & stats -->
       <div class="cd-card grid grid-cols-1 md:grid-cols-3 gap-4">
         <div class="cd-meta">
           <div class="cd-meta-label">Niveau</div>
-          <p-tag
-            [value]="getNiveauLabel(conseilDetail.niveau || '')"
-            [severity]="conseilDetail.niveau === 'debutant' ? 'success' : conseilDetail.niveau === 'intermediaire' ? 'info' : conseilDetail.niveau === 'avance' ? 'warn' : 'secondary'">
+          <p-tag [value]="getNiveauLabel(conseilDetail.niveau || '')"
+                 [severity]="conseilDetail.niveau === 'debutant' ? 'success' : conseilDetail.niveau === 'intermediaire' ? 'info' : conseilDetail.niveau === 'avance' ? 'warn' : 'secondary'">
           </p-tag>
         </div>
-
         <div class="cd-meta">
           <div class="cd-meta-label">Vues</div>
           <div class="cd-meta-value"><i class="pi pi-eye mr-1"></i>{{ conseilDetail.vues ?? 0 }}</div>
         </div>
-
         <div class="cd-meta">
           <div class="cd-meta-label">Auteur</div>
           <div class="cd-meta-value">{{ conseilDetail.auteur || '—' }}</div>
@@ -543,9 +426,7 @@
 
       <!-- Tags -->
       <div *ngIf="conseilDetail.tags" class="cd-card">
-        <div class="cd-section-title">
-          <i class="pi pi-hashtag mr-2"></i> Tags
-        </div>
+        <div class="cd-section-title"><i class="pi pi-hashtag mr-2"></i> Tags</div>
         <div class="cd-tags">
           <span class="cd-tag" *ngFor="let t of splitTags(conseilDetail.tags)">{{ t }}</span>
         </div>
@@ -553,19 +434,15 @@
 
       <!-- Aperçu -->
       <div class="cd-card" *ngIf="conseilDetail.contenu">
-        <div class="cd-section-title">
-          <i class="pi pi-align-left mr-2"></i> Aperçu
-        </div>
-        <div class="cd-excerpt">
-          {{ getApercuFrom(conseilDetail.contenu, 250) }}
-        </div>
+        <div class="cd-section-title"><i class="pi pi-align-left mr-2"></i> Aperçu</div>
+        <div class="cd-excerpt">{{ getApercuFrom(conseilDetail.contenu, 250) }}</div>
       </div>
 
-      <!-- Contenu complet -->
+      <!-- Contenu -->
       <div class="cd-card">
         <div class="cd-section-title">
           <i class="pi pi-book mr-2"></i> Contenu
-          <span class="cd-reading ml-2">• Temps de lecture estimé : {{ getTempsLectureFrom(conseilDetail?.contenu) }} min</span>
+          <span class="cd-reading ml-2">• {{ getTempsLectureFrom(conseilDetail?.contenu) }} min de lecture</span>
         </div>
         <div class="cd-content-html" [innerHTML]="safeHtml(conseilDetail.contenu)"></div>
       </div>
@@ -573,368 +450,179 @@
     </div>
   </ng-template>
 
-  <!-- FOOTER -->
   <ng-template pTemplate="footer">
     <div class="flex justify-between w-full items-center">
       <div class="text-sm text-gray-500">
-        ID: {{ conseilDetail?.id }} • Statut: {{ getStatutLabel(conseilDetail?.statut || '') }}
+        ID: {{ conseilDetail?.id }} • {{ getStatutLabel(conseilDetail?.statut || '') }}
       </div>
       <div class="flex gap-2">
-        <p-button
-          label="Modifier"
-          icon="pi pi-pencil"
-          severity="info"
-          (onClick)="editConseil(conseilDetail!)">
-        </p-button>
-
-        <p-button
-          *ngIf="(conseilDetail?.statut || 'brouillon') === 'brouillon'"
-          label="Publier"
-          icon="pi pi-send"
-          severity="success"
-          (onClick)="publierConseil(conseilDetail!)">
-        </p-button>
-
-        <p-button
-          *ngIf="conseilDetail?.statut === 'publie'"
-          label="Archiver"
-          icon="pi pi-archive"
-          severity="secondary"
-          (onClick)="archiverConseil(conseilDetail!)">
-        </p-button>
-
-        <p-button
-          label="Fermer"
-          icon="pi pi-times"
-          class="p-button-secondary"
-          (onClick)="detailConseilDialog=false">
-        </p-button>
+        <p-button label="Modifier" icon="pi pi-pencil" severity="info"
+                  (onClick)="editConseil(conseilDetail!)"></p-button>
+        <p-button *ngIf="(conseilDetail?.statut || 'brouillon') === 'brouillon'"
+                  label="Publier" icon="pi pi-send" severity="success"
+                  (onClick)="publierConseil(conseilDetail!)"></p-button>
+        <p-button *ngIf="conseilDetail?.statut === 'publie'"
+                  label="Archiver" icon="pi pi-archive" severity="secondary"
+                  (onClick)="archiverConseil(conseilDetail!)"></p-button>
+        <p-button label="Fermer" icon="pi pi-times" class="p-button-secondary"
+                  (onClick)="detailConseilDialog=false"></p-button>
       </div>
     </div>
   </ng-template>
 </p-dialog>
 
 <style>
-/* ============================================
-   STYLES DU DIALOG MODERNE
-   ============================================ */
-
-::ng-deep .conseil-dialog-moderne .p-dialog {
-  border-radius: 12px;
-  overflow: hidden;
+/* ===== TABLEAU : Miniature ===== */
+.table-thumbnail {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
 }
 
-::ng-deep .conseil-dialog-moderne .p-dialog-header {
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-}
-
-::ng-deep .conseil-dialog-moderne .p-dialog-content {
-  padding: 0 !important;
-  height: calc(90vh - 180px);
-  overflow: hidden;
-}
-
-/* Header avec dégradé bleu - FULL WIDTH */
-.dialog-custom-header {
-  width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-}
-
-.header-content {
+/* ===== DIALOG FORM : Zone upload image ===== */
+.image-upload-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 1.5rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.5rem 2rem;
+  gap: 0.5rem;
+  background: #f9fafb;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.image-upload-zone:hover { border-color: #3b82f6; background: #eff6ff; }
+
+.upload-icon  { font-size: 2rem; color: #9ca3af; }
+.upload-label {
+  color: #3b82f6;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.875rem;
 }
 
-.dialog-header-icon {
-  width: 56px;
-  height: 56px;
+.image-preview-box {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  max-height: 200px;
+}
+.image-preview {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+.remove-image-btn {
+  position: absolute;
+  top: 0.5rem; right: 0.5rem;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 2rem; height: 2rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
+  transition: background 0.2s;
+}
+.remove-image-btn:hover { background: #ef4444; }
+
+/* ===== DIALOG DÉTAIL : Bannière image ===== */
+.cd-image-banner {
+  width: 100%;
+  height: 200px;
   border-radius: 12px;
-  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
 }
-
-.dialog-header-icon i {
-  font-size: 1.75rem;
-}
-
-.dialog-header-text {
-  flex: 1;
-}
-
-/* Container scrollable */
-.form-container-scroll {
+.cd-banner-img {
+  width: 100%;
   height: 100%;
-  overflow-y: auto;
-  padding: 1.5rem 2rem;
-  background: #f9fafb;
-}
-
-/* Section */
-.form-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  margin-bottom: 1.5rem;
-}
-
-.form-section:last-child {
-  margin-bottom: 0;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #f3f4f6;
-}
-
-.section-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #111827;
-}
-
-/* Grilles */
-.form-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-}
-
-.form-grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-field.full-width {
-  grid-column: 1 / -1;
-}
-
-/* Labels */
-.field-label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 14px;
-}
-
-.required {
-  color: #ef4444;
-}
-
-/* Inputs */
-.field-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.field-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.input-error {
-  border-color: #ef4444 !important;
-}
-
-.error-message {
-  color: #ef4444;
-  font-size: 13px;
-  margin-top: 4px;
-}
-
-/* Input avec icône */
-.input-with-icon {
-  position: relative;
-}
-
-.input-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  font-size: 14px;
-  z-index: 1;
-}
-
-.pl-10 {
-  padding-left: 40px !important;
-}
-
-/* Editor */
-::ng-deep .conseil-dialog-moderne .p-editor-container {
-  border-radius: 8px;
-  border: 1px solid #d1d5db;
-}
-
-::ng-deep .conseil-dialog-moderne .p-editor-content {
-  border-radius: 0 0 8px 8px;
-}
-
-::ng-deep .conseil-dialog-moderne .p-editor-content .ql-editor {
-  min-height: 350px;
-  font-size: 14px;
-}
-
-/* Footer */
-.dialog-footer-custom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  gap: 12px;
-  padding: 1rem 2rem;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
-}
-
-::ng-deep .footer-btn-publish {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  border: none !important;
-  padding: 10px 24px !important;
-  font-weight: 600 !important;
-}
-
-::ng-deep .footer-btn-publish:hover {
-  background: linear-gradient(135deg, #059669, #047857) !important;
-}
-
-/* Dropdown personnalisé */
-::ng-deep .conseil-dialog-moderne .p-select {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-}
-
-::ng-deep .conseil-dialog-moderne .p-select:not(.p-disabled).p-focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .form-grid-4 {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .form-grid-2,
-  .form-grid-4 {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-section {
-    padding: 1rem;
-  }
-  
-  .header-content {
-    padding: 1.25rem 1.5rem;
-  }
-  
-  .dialog-footer-custom {
-    flex-direction: column;
-  }
-  
-  .form-container-scroll {
-    padding: 1rem 1.25rem;
-  }
+  object-fit: cover;
 }
 
 /* ============================================
-   STYLES DU DIALOG DÉTAILS (INCHANGÉ)
+   STYLES DIALOG MODERNE (inchangés)
    ============================================ */
+::ng-deep .conseil-dialog-moderne .p-dialog { border-radius: 12px; overflow: hidden; }
+::ng-deep .conseil-dialog-moderne .p-dialog-header { padding: 0 !important; border: 0 !important; background: transparent !important; }
+::ng-deep .conseil-dialog-moderne .p-dialog-content { padding: 0 !important; height: calc(90vh - 180px); overflow: hidden; }
 
-::ng-deep .conseil-detail-dialog .p-dialog-header {
-  padding: 0 !important;
-  border: 0 !important;
-}
+.dialog-custom-header { width: 100%; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+.header-content { display: flex; align-items: center; gap: 1.25rem; padding: 1.5rem 2rem; }
+.dialog-header-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); border-radius: 12px; flex-shrink: 0; }
+.dialog-header-icon i { font-size: 1.75rem; }
+.dialog-header-text { flex: 1; }
 
-.cd-header {
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 18px 24px;
-  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
-  color:#fff;
-}
+.form-container-scroll { height: 100%; overflow-y: auto; padding: 1.5rem 2rem; background: #f9fafb; }
+.form-section { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; }
+.form-section:last-child { margin-bottom: 0; }
+.section-header { display: flex; align-items: center; margin-bottom: 1.5rem; padding-bottom: 12px; border-bottom: 2px solid #f3f4f6; }
+.section-title { margin: 0; font-size: 18px; font-weight: 700; color: #111827; }
 
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+.form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.form-field { display: flex; flex-direction: column; gap: 8px; }
+.form-field.full-width { grid-column: 1 / -1; }
+
+.field-label { font-weight: 600; color: #374151; font-size: 14px; }
+.required { color: #ef4444; }
+
+.field-input { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
+.field-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.input-error { border-color: #ef4444 !important; }
+.error-message { color: #ef4444; font-size: 13px; margin-top: 4px; }
+
+.input-with-icon { position: relative; }
+.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 14px; z-index: 1; }
+.pl-10 { padding-left: 40px !important; }
+
+::ng-deep .conseil-dialog-moderne .p-editor-container { border-radius: 8px; border: 1px solid #d1d5db; }
+::ng-deep .conseil-dialog-moderne .p-editor-content .ql-editor { min-height: 350px; font-size: 14px; }
+
+.dialog-footer-custom { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 12px; padding: 1rem 2rem; background: #f9fafb; border-top: 1px solid #e5e7eb; }
+::ng-deep .footer-btn-publish { background: linear-gradient(135deg, #10b981, #059669) !important; border: none !important; padding: 10px 24px !important; font-weight: 600 !important; }
+
+::ng-deep .conseil-dialog-moderne .p-select { border: 1px solid #d1d5db; border-radius: 8px; }
+::ng-deep .conseil-dialog-moderne .p-select:not(.p-disabled).p-focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+/* ===== DIALOG DÉTAILS ===== */
+::ng-deep .conseil-detail-dialog .p-dialog-header { padding: 0 !important; border: 0 !important; }
+.cd-header { display:flex; align-items:center; justify-content:space-between; padding: 18px 24px; background: linear-gradient(90deg, #0ea5e9, #38bdf8); color:#fff; }
 .cd-header-left { display:flex; gap:14px; align-items:center; }
-
-.cd-icon {
-  width:48px; height:48px; border-radius:12px; background:#ffffff22;
-  display:flex; align-items:center; justify-content:center; font-size:20px;
-}
-
+.cd-icon { width:48px; height:48px; border-radius:12px; background:#ffffff22; display:flex; align-items:center; justify-content:center; font-size:20px; }
 .cd-title { margin:0; font-size:20px; font-weight:700; }
 .cd-sub { opacity:.95; font-size:12px; margin-top:2px; }
 
-::ng-deep .conseil-detail-dialog .p-dialog-content { 
-  padding: 16px 24px 8px;
-  max-height: 72vh;
-  overflow: auto;
-}
-
+::ng-deep .conseil-detail-dialog .p-dialog-content { padding: 16px 24px 8px; max-height: 72vh; overflow: auto; }
 .cd-content { display:flex; flex-direction:column; gap:16px; }
 .cd-card { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; }
 .cd-meta { display:flex; flex-direction:column; gap:6px; }
 .cd-meta-label { font-size:12px; color:#6b7280; }
 .cd-meta-value { font-weight:600; color:#111827; }
-
 .cd-section-title { font-weight:700; color:#111827; margin-bottom:8px; display:flex; align-items:center; }
 .cd-reading { color:#6b7280; font-weight:500; font-size:12px; }
 .cd-excerpt { color:#374151; line-height:1.6; }
-
 .cd-tags { display:flex; gap:8px; flex-wrap:wrap; }
-.cd-tag {
-  background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0;
-  padding:4px 8px; border-radius:9999px; font-size:12px; font-weight:600;
-}
-
-.cd-content-html { 
-  color:#111827; 
-  line-height:1.7;
-  white-space: normal !important;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
+.cd-tag { background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; padding:4px 8px; border-radius:9999px; font-size:12px; font-weight:600; }
+.cd-content-html { color:#111827; line-height:1.7; white-space:normal !important; overflow-wrap:anywhere; word-break:break-word; }
 .cd-content-html h1,.cd-content-html h2,.cd-content-html h3 { margin:12px 0 6px; }
 .cd-content-html p { margin: 0 0 10px; }
 .cd-content-html ul { padding-left: 20px; margin: 8px 0; }
-.cd-content-html a { color:#2563eb; text-decoration:none; }
-.cd-content-html a:hover { text-decoration:underline; }
+.cd-content-html img,.cd-content-html video,.cd-content-html iframe { max-width:100% !important; height:auto !important; display:block; }
 
-.cd-content-html img,
-.cd-content-html video,
-.cd-content-html iframe {
-  max-width: 100% !important;
-  height: auto !important;
-  display: block;
+/* Responsive */
+@media (max-width: 1024px) { .form-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) {
+  .form-grid-2, .form-grid-4 { grid-template-columns: 1fr; }
+  .form-section, .form-container-scroll { padding: 1rem 1.25rem; }
+  .dialog-footer-custom { flex-direction: column; }
 }
-
-/* Utilitaires */
-.text-gray-400 { color: #9ca3af; }
-.text-gray-500 { color: #6b7280; }
-.text-blue-600 { color: #2563eb; }
 </style>

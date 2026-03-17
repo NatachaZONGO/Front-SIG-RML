@@ -1,0 +1,249 @@
+<p-toast></p-toast>
+<topbar-widget></topbar-widget>
+
+<!-- ===== HERO ===== -->
+<section class="contact-hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="pi pi-envelope"></i>
+      <span>Contact</span>
+    </div>
+    <h1 class="hero-title">
+      Parlons de votre<br>
+      <span class="hero-accent">projet ensemble</span>
+    </h1>
+    <p class="hero-subtitle">
+      Notre équipe est disponible pour répondre à toutes vos questions.
+      N'hésitez pas à nous contacter.
+    </p>
+  </div>
+</section>
+
+<!-- ===== CONTENU PRINCIPAL ===== -->
+<div class="contact-main">
+
+  <!-- ===== INFOS DE CONTACT ===== -->
+  <div class="contact-info-col">
+
+    <!-- Carte info -->
+    <div class="info-card">
+      <h2 class="info-title">Nos coordonnées</h2>
+      <p class="info-desc">
+        Retrouvez-nous sur nos différents canaux de communication.
+        Nous sommes disponibles du lundi au vendredi.
+      </p>
+
+      <div class="info-items">
+
+        <div class="info-item">
+          <div class="info-icon-wrapper blue">
+            <i class="pi pi-phone"></i>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Téléphone</span>
+            <a href="tel:+22656573131" class="info-value">+226 56 57 31 31</a>
+            <a href="tel:+22650133131" class="info-value">+226 50 13 31 31</a>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-icon-wrapper orange">
+            <i class="pi pi-envelope"></i>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Email</span>
+            <a href="mailto:lahcom20@gmail.com" class="info-value">
+              lahcom20&#64;gmail.com
+            </a>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-icon-wrapper green">
+            <i class="pi pi-map-marker"></i>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Localisation</span>
+            <span class="info-value">Ouagadougou, Burkina Faso</span>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="info-icon-wrapper purple">
+            <i class="pi pi-clock"></i>
+          </div>
+          <div class="info-text">
+            <span class="info-label">Horaires</span>
+            <span class="info-value">Lun – Ven : 8h00 – 18h00</span>
+            <span class="info-value">Sam : 9h00 – 13h00</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Réseaux sociaux -->
+    <div class="social-card">
+      <h3 class="social-title">Suivez-nous</h3>
+      <div class="social-links">
+        <a href="https://www.facebook.com/share/1BC8vUQG6Y/"
+           target="_blank" rel="noopener" class="social-link facebook">
+          <i class="pi pi-facebook"></i>
+          <span>Facebook</span>
+        </a>
+        <a href="https://www.linkedin.com/company/alerte-emploi-et-offres-burkina/"
+           target="_blank" rel="noopener" class="social-link linkedin">
+          <i class="pi pi-linkedin"></i>
+          <span>LinkedIn</span>
+        </a>
+        <a href="https://www.tiktok.com/@alerteemploibf"
+           target="_blank" rel="noopener" class="social-link tiktok">
+          <i class="pi pi-mobile"></i>
+          <span>TikTok</span>
+        </a>
+        <a href="https://instagram.com"
+           target="_blank" rel="noopener" class="social-link instagram">
+          <i class="pi pi-instagram"></i>
+          <span>Instagram</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- SMS info -->
+    <div class="sms-card">
+      <div class="sms-icon"><i class="pi pi-mobile"></i></div>
+      <div class="sms-text">
+        <h4>Alertes SMS</h4>
+        <p>Composez <strong>*3584#</strong> pour recevoir les offres par SMS</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== FORMULAIRE ===== -->
+  <div class="contact-form-col">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h2 class="form-title">Envoyez-nous un message</h2>
+        <p class="form-subtitle">
+          Remplissez le formulaire ci-dessous, nous vous répondrons
+          dans les plus brefs délais.
+        </p>
+      </div>
+
+      <form #contactForm="ngForm" (ngSubmit)="send(contactForm)" novalidate
+            class="contact-form">
+
+        <!-- Nom + Email -->
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Nom complet *</label>
+            <div class="input-wrapper">
+              <i class="pi pi-user input-icon"></i>
+              <input pInputText
+                name="nom"
+                [(ngModel)]="form.nom"
+                required
+                placeholder="Ex: Kaboré Jean"
+                class="form-input"
+                [class.input-error]="submitted && contactForm.controls['nom']?.invalid" />
+            </div>
+            <small class="error-msg"
+              *ngIf="submitted && contactForm.controls['nom']?.invalid">
+              Le nom est obligatoire.
+            </small>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Email *</label>
+            <div class="input-wrapper">
+              <i class="pi pi-envelope input-icon"></i>
+              <input pInputText
+                type="email"
+                name="email"
+                [(ngModel)]="form.email"
+                required email
+                placeholder="votre@email.com"
+                class="form-input"
+                [class.input-error]="submitted && contactForm.controls['email']?.invalid" />
+            </div>
+            <small class="error-msg"
+              *ngIf="submitted && contactForm.controls['email']?.invalid">
+              Veuillez saisir un email valide.
+            </small>
+          </div>
+        </div>
+
+        <!-- Téléphone + Sujet -->
+        <div class="form-row">
+          <div class="form-field">
+            <label class="form-label">Téléphone</label>
+            <div class="input-wrapper">
+              <i class="pi pi-phone input-icon"></i>
+              <input pInputText
+                name="telephone"
+                [(ngModel)]="form.telephone"
+                placeholder="+226 70 00 00 00"
+                class="form-input" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label class="form-label">Sujet *</label>
+            <p-select
+              name="sujet"
+              [(ngModel)]="form.sujet"
+              required
+              [options]="sujetOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Choisir un sujet"
+              [style]="{ width: '100%' }"
+              styleClass="form-select"
+              [class.input-error]="submitted && contactForm.controls['sujet']?.invalid">
+            </p-select>
+            <small class="error-msg"
+              *ngIf="submitted && contactForm.controls['sujet']?.invalid">
+              Veuillez choisir un sujet.
+            </small>
+          </div>
+        </div>
+
+        <!-- Message -->
+        <div class="form-field full">
+          <label class="form-label">Message *</label>
+          <textarea pTextarea
+            name="message"
+            [(ngModel)]="form.message"
+            required
+            rows="6"
+            placeholder="Décrivez votre demande en détail..."
+            class="form-textarea"
+            [class.input-error]="submitted && contactForm.controls['message']?.invalid"
+            autoResize="true">
+          </textarea>
+          <small class="error-msg"
+            *ngIf="submitted && contactForm.controls['message']?.invalid">
+            Le message est obligatoire.
+          </small>
+          <small class="char-count">
+            {{ form.message.length }} caractères
+          </small>
+        </div>
+
+        <!-- Submit -->
+        <button pButton pRipple
+          type="submit"
+          label="Envoyer le message"
+          icon="pi pi-send"
+          class="submit-btn"
+          [loading]="sending">
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<app-footer-widget></app-footer-widget>

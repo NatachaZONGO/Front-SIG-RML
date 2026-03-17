@@ -1,0 +1,202 @@
+<topbar-widget></topbar-widget>
+
+<!-- ===== HERO ===== -->
+<section class="services-hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <i class="pi pi-th-large"></i>
+      <span>Nos Services</span>
+    </div>
+    <h1 class="hero-title">
+      Des solutions adaptées<br>
+      <span class="hero-accent">à chaque besoin</span>
+    </h1>
+    <p class="hero-subtitle">
+      Que vous soyez candidat ou entreprise, nous avons les outils
+      pour vous accompagner vers le succès.
+    </p>
+  </div>
+</section>
+
+<!-- ===== SERVICE 1 : Publication d'offres ===== -->
+<section class="service-section">
+  <div class="service-container">
+    <div class="service-image-wrapper">
+      <div class="service-img-bg bg-blue">
+        <i class="pi pi-briefcase service-big-icon"></i>
+      </div>
+      <div class="service-img-badge badge-blue">
+        <i class="pi pi-check"></i>
+        <span>100% en ligne</span>
+      </div>
+    </div>
+
+    <div class="service-content">
+      <div class="service-number">01</div>
+      <span class="service-badge badge-blue-light">Pour les recruteurs</span>
+      <h2 class="service-title">Publication d'offres d'emploi</h2>
+      <p class="service-desc">
+        Publiez vos offres d'emploi en quelques minutes et atteignez des milliers
+        de candidats qualifiés au Burkina Faso et en Afrique de l'Ouest.
+        Notre plateforme vous offre une visibilité maximale.
+      </p>
+      <ul class="service-points">
+        <li><i class="pi pi-check-circle"></i> Publication rapide et simple</li>
+        <li><i class="pi pi-check-circle"></i> Diffusion auprès de milliers de candidats</li>
+        <li><i class="pi pi-check-circle"></i> Gestion des candidatures en temps réel</li>
+        <li><i class="pi pi-check-circle"></i> Offres mises en avant (vedette)</li>
+      </ul>
+      <button pButton pRipple
+        label="Publier une offre"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        class="service-btn btn-blue"
+        (click)="router.navigate(['/publier-offre'])">
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICE 2 : Recrutement ===== -->
+<section class="service-section alt">
+  <div class="service-container reverse">
+    <div class="service-image-wrapper">
+      <div class="service-img-bg bg-green">
+        <i class="pi pi-users service-big-icon"></i>
+      </div>
+      <div class="service-img-badge badge-green">
+        <i class="pi pi-star"></i>
+        <span>Profils vérifiés</span>
+      </div>
+    </div>
+
+    <div class="service-content">
+      <div class="service-number">02</div>
+      <span class="service-badge badge-green-light">Pour les entreprises</span>
+      <h2 class="service-title">Recrutement ciblé</h2>
+      <p class="service-desc">
+        Trouvez les meilleurs profils grâce à notre base de données de candidats qualifiés.
+        Notre système de filtrage avancé vous permet de cibler exactement les compétences
+        dont vous avez besoin.
+      </p>
+      <ul class="service-points">
+        <li><i class="pi pi-check-circle"></i> Base de données de candidats qualifiés</li>
+        <li><i class="pi pi-check-circle"></i> Filtres avancés (compétences, expérience)</li>
+        <li><i class="pi pi-check-circle"></i> Notifications automatiques de nouvelles candidatures</li>
+        <li><i class="pi pi-check-circle"></i> Export des candidatures en CSV/PDF</li>
+      </ul>
+      <button pButton pRipple
+        label="Accéder au recrutement"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        class="service-btn btn-green"
+        (click)="router.navigate(['/connexion'])">
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICE 3 : Accompagnement candidats ===== -->
+<section class="service-section">
+  <div class="service-container">
+    <div class="service-image-wrapper">
+      <div class="service-img-bg bg-orange">
+        <i class="pi pi-user service-big-icon"></i>
+      </div>
+      <div class="service-img-badge badge-orange">
+        <i class="pi pi-heart"></i>
+        <span>Gratuit</span>
+      </div>
+    </div>
+
+    <div class="service-content">
+      <div class="service-number">03</div>
+      <span class="service-badge badge-orange-light">Pour les candidats</span>
+      <h2 class="service-title">Accompagnement des candidats</h2>
+      <p class="service-desc">
+        Nous vous accompagnons à chaque étape de votre recherche d'emploi.
+        Des conseils de carrière, un suivi de vos candidatures et des alertes
+        personnalisées pour ne manquer aucune opportunité.
+      </p>
+      <ul class="service-points">
+        <li><i class="pi pi-check-circle"></i> Conseils carrière rédigés par des experts</li>
+        <li><i class="pi pi-check-circle"></i> Suivi en temps réel de vos candidatures</li>
+        <li><i class="pi pi-check-circle"></i> Alertes SMS et email personnalisées</li>
+        <li><i class="pi pi-check-circle"></i> Profil candidat complet et visible</li>
+      </ul>
+      <button pButton pRipple
+        label="Créer mon profil"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        class="service-btn btn-orange"
+        (click)="router.navigate(['/register'])">
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SERVICE 4 : Publicité & Visibilité ===== -->
+<section class="service-section alt">
+  <div class="service-container reverse">
+    <div class="service-image-wrapper">
+      <div class="service-img-bg bg-purple">
+        <i class="pi pi-megaphone service-big-icon"></i>
+      </div>
+      <div class="service-img-badge badge-purple">
+        <i class="pi pi-chart-line"></i>
+        <span>ROI garanti</span>
+      </div>
+    </div>
+
+    <div class="service-content">
+      <div class="service-number">04</div>
+      <span class="service-badge badge-purple-light">Pour tous</span>
+      <h2 class="service-title">Publicité & Visibilité</h2>
+      <p class="service-desc">
+        Boostez la visibilité de votre entreprise ou de vos offres grâce à nos
+        espaces publicitaires stratégiques. Atteignez une audience ciblée et
+        qualifiée sur notre plateforme très fréquentée.
+      </p>
+      <ul class="service-points">
+        <li><i class="pi pi-check-circle"></i> Bannières publicitaires premium</li>
+        <li><i class="pi pi-check-circle"></i> Offres mises en avant (sponsorisées)</li>
+        <li><i class="pi pi-check-circle"></i> Campagnes SMS vers les candidats</li>
+        <li><i class="pi pi-check-circle"></i> Rapports de performance détaillés</li>
+      </ul>
+      <button pButton pRipple
+        label="Nous contacter"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        class="service-btn btn-purple"
+        (click)="router.navigate(['/about'])">
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA FINAL ===== -->
+<section class="cta-section">
+  <div class="cta-content">
+    <h2 class="cta-title">Prêt à démarrer ?</h2>
+    <p class="cta-desc">
+      Rejoignez des milliers d'utilisateurs qui font confiance à Alerte Emploi & Offres
+      pour leurs besoins en recrutement et en emploi.
+    </p>
+    <div class="cta-actions">
+      <button pButton pRipple
+        label="Créer un compte gratuit"
+        icon="pi pi-user-plus"
+        class="cta-btn-primary"
+        (click)="router.navigate(['/register'])">
+      </button>
+      <button pButton pRipple
+        label="Voir les offres"
+        icon="pi pi-briefcase"
+        class="cta-btn-secondary"
+        (click)="router.navigate(['/offres'])">
+      </button>
+    </div>
+  </div>
+</section>
+
+<app-footer-widget></app-footer-widget>

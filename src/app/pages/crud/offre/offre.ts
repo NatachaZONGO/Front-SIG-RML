@@ -326,7 +326,6 @@ insertTable(): void {
   getSafeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html || '');
   }
-
   // ========== LIFECYCLE ==========
 
   ngOnInit(): void {

@@ -27,9 +27,11 @@ import { AuthService } from '../../auth/auth.service';
           <nav class="flex items-center gap-8">
             <a (click)="router.navigate(['/landing'])" class="nav-link" [class.active]="isActiveRoute('/landing') || isActiveRoute('/')">Accueil</a>
             <a (click)="router.navigate(['/offres'])" class="nav-link" [class.active]="isActiveRoute('/offres')">Offres</a>
+            <a (click)="router.navigate(['/services'])" class="nav-link" [class.active]="isActiveRoute('/services')">Nos Services</a>
             <a (click)="router.navigate(['/conseils'])" class="nav-link" [class.active]="isActiveRoute('/conseils')">Conseils</a>
             <a (click)="router.navigate(['/suivre-candidature'])" class="nav-link" [class.active]="isActiveRoute('/suivre-candidature')">Suivre candidature</a>
             <a (click)="router.navigate(['/about'])" class="nav-link" [class.active]="isActiveRoute('/about')">À propos</a>
+            <a (click)="router.navigate(['/contact'])" class="nav-link" [class.active]="isActiveRoute('/contact')">Contact</a>
           </nav>
 
           <!-- ✅ SI NON CONNECTÉ -->
@@ -61,9 +63,11 @@ import { AuthService } from '../../auth/auth.service';
         <ul class="list-none m-0 p-0 flex flex-col gap-4">
           <li><a (click)="navigateAndClose('/landing')" class="nav-link" [class.active]="isActiveRoute('/landing') || isActiveRoute('/')">Accueil</a></li>
           <li><a (click)="navigateAndClose('/offres')" class="nav-link" [class.active]="isActiveRoute('/offres')">Offres</a></li>
+          <li><a (click)="router.navigate(['/services'])" class="nav-link" [class.active]="isActiveRoute('/services')">Nos Services</a></li>
           <li><a (click)="navigateAndClose('/conseils')" class="nav-link" [class.active]="isActiveRoute('/conseils')">Conseils</a></li>
           <li><a (click)="navigateAndClose('/suivre-candidature')" class="nav-link" [class.active]="isActiveRoute('/suivre-candidature')">Suivre candidature</a></li>
           <li><a (click)="navigateAndClose('/about')" class="nav-link" [class.active]="isActiveRoute('/about')">À propos</a></li>
+          <li><a (click)="navigateAndClose('/contact')" class="nav-link" [class.active]="isActiveRoute('/contact')">Contact</a></li>
           
           <!-- ✅ MOBILE : SI NON CONNECTÉ -->
           <li class="flex flex-col gap-2 pt-2" *ngIf="!authService.isAuthenticated()">

@@ -64,6 +64,12 @@ import { Router, RouterModule } from '@angular/router';
                 </a>
               </li>
               <li>
+                <a routerLink="/contact" class="footer-link" routerLinkActive="active">
+                  <i class="pi pi-envelope"></i>
+                  <span>Contact</span>
+                </a>
+              </li>
+              <li>
                 <a routerLink="/connexion" class="footer-link" routerLinkActive="active">
                   <i class="pi pi-sign-in"></i>
                   <span>Se connecter</span>

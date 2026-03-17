@@ -9,6 +9,7 @@ export interface Conseil {
   tags?: string;
   auteur?: string;
   vues?: number;
+  image?: string | null;
   date_publication?: Date | string | null;
   date_creation?: Date | string | null;
   date_modification?: Date | string | null;

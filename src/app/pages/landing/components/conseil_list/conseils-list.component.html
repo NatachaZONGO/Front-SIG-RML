@@ -66,6 +66,11 @@
         'bar-avance':        t.niveau === 'avance'
       }"></div>
 
+      <!-- ✅ Miniature -->
+      <div class="conseil-thumbnail" *ngIf="t.image">
+        <img [src]="t.image" [alt]="t.titre" class="conseil-thumbnail-img" />
+      </div>
+
       <div class="conseil-card-body">
         <div class="conseil-card-header">
           <h3 class="conseil-titre" [title]="t.titre">{{ t.titre }}</h3>
@@ -136,7 +141,12 @@
       <span>Chargement...</span>
     </div>
 
-    <div *ngIf="!loadingConseil && currentConseil" class="conseil-dialog-content">
+        <div *ngIf="!loadingConseil && currentConseil" class="conseil-dialog-content">
+      <!-- ✅ Bannière image -->
+      <div class="conseil-dialog-banner" *ngIf="currentConseil.image">
+        <img [src]="currentConseil.image" [alt]="currentConseil.titre"
+            class="conseil-dialog-banner-img" />
+      </div>
       <div class="conseil-dialog-meta">
         <p-tag *ngIf="currentConseil.categorie" [value]="currentConseil.categorie" severity="success"></p-tag>
         <p-tag *ngIf="currentConseil.niveau"    [value]="currentConseil.niveau"    severity="secondary"></p-tag>
@@ -683,6 +693,41 @@
     .search-bar { flex-direction: column; }
     .search-input-container { max-width: 100%; width: 100%; }
   }
+
+  /* ===== MINIATURE CARTE CONSEIL ===== */
+.conseil-thumbnail {
+  width: 100%;
+  height: 160px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.conseil-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.conseil-card:hover .conseil-thumbnail-img {
+  transform: scale(1.05);
+}
+
+/* ===== BANNIÈRE IMAGE DIALOG ===== */
+.conseil-dialog-banner {
+  width: 100%;
+  height: 220px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.conseil-dialog-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 </style>
 
 <app-footer-widget></app-footer-widget>

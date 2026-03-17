@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { BackendURL, LocalStorageFields } from '../../../Share/const';
+import { BackendURL, LocalStorageFields, imageUrl } from '../../../Share/const'; // ✅ imageUrl ajouté
 import { Conseil } from './conseil.model';
 
 export interface ApiResponse<T> {
@@ -19,24 +19,34 @@ export interface ApiResponse<T> {
 export class ConseilService {
   private readonly apiUrl = `${BackendURL}conseils`;
 
- // ✅ APRÈS — headers dynamiques avec token
-// ✅ Remplace httpOptions par ceci
-private get httpOptions() {
-  const token = localStorage.getItem(LocalStorageFields.accessToken) ?? '';
-  return {
-    headers: new HttpHeaders({
+  // ✅ Headers JSON (pour GET, DELETE)
+  private get httpOptions() {
+    const token = localStorage.getItem(LocalStorageFields.accessToken) ?? '';
+    return {
+      headers: new HttpHeaders({
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      })
+    };
+  }
+
+  // ✅ Headers FormData (pour POST/PUT avec image — PAS de Content-Type)
+  private get headersFormData() {
+    const token = localStorage.getItem(LocalStorageFields.accessToken) ?? '';
+    return new HttpHeaders({
       Accept: 'application/json',
-      'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {})
-    })
-  };
-}
-constructor(private http: HttpClient) {}
-  /** Liste paginée → renvoie ApiResponse<Conseil[]> avec content = tableau mappé */
+    });
+  }
+
+  constructor(private http: HttpClient) {}
+
+  /** Liste paginée */
   getConseils(page?: number, size?: number): Observable<ApiResponse<Conseil[]>> {
     let params = new HttpParams();
     if (page != null) params = params.set('page', String(page));
-    if (size != null) params = params.set('per_page', String(size)); // Laravel comprend per_page
+    if (size != null) params = params.set('per_page', String(size));
 
     return this.http.get<any>(this.apiUrl, { params, headers: this.httpOptions.headers }).pipe(
       map((resp) => this.toApiResponse(resp)),
@@ -48,25 +58,26 @@ constructor(private http: HttpClient) {}
   getConseilById(id: number): Observable<Conseil> {
     if (id == null) return throwError(() => new Error('ID conseil requis'));
     return this.http.get<any>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
-      map((c) => this.mapConseil(c?.data ?? c)), // tolère {data: {...}} ou {...}
-      catchError(this.handleError),
-    );
-  }
-
-  /** Création */
-  createConseil(conseil: Conseil): Observable<Conseil> {
-    const payload = this.serialize(conseil);
-    return this.http.post<any>(this.apiUrl, payload, this.httpOptions).pipe(
       map((c) => this.mapConseil(c?.data ?? c)),
       catchError(this.handleError),
     );
   }
 
-  /** Mise à jour */
-  updateConseil(conseil: Conseil): Observable<Conseil> {
+  /** ✅ Création avec image optionnelle */
+  createConseil(conseil: Conseil, imageFile?: File | null): Observable<Conseil> {
+    const fd = this.buildFormData(conseil, imageFile);
+    return this.http.post<any>(this.apiUrl, fd, { headers: this.headersFormData }).pipe(
+      map((c) => this.mapConseil(c?.data ?? c)),
+      catchError(this.handleError),
+    );
+  }
+
+  /** ✅ Mise à jour avec image optionnelle */
+  updateConseil(conseil: Conseil, imageFile?: File | null): Observable<Conseil> {
     if (conseil.id == null) return throwError(() => new Error('ID conseil requis pour la mise à jour'));
-    const payload = this.serialize(conseil);
-    return this.http.put<any>(`${this.apiUrl}/${conseil.id}`, payload, this.httpOptions).pipe(
+    const fd = this.buildFormData(conseil, imageFile);
+    fd.append('_method', 'PUT'); // ✅ Laravel method spoofing
+    return this.http.post<any>(`${this.apiUrl}/${conseil.id}`, fd, { headers: this.headersFormData }).pipe(
       map((c) => this.mapConseil(c?.data ?? c)),
       catchError(this.handleError),
     );
@@ -82,30 +93,54 @@ constructor(private http: HttpClient) {}
 
   // ----------------- Helpers -----------------
 
-  /** Mappe un item brut → Conseil (valeurs par défaut si champs manquants) */
+  /** ✅ Construction du FormData avec image optionnelle */
+private buildFormData(conseil: Conseil, imageFile?: File | null): FormData {
+  const fd = new FormData();
+  fd.append('titre',        (conseil.titre        ?? '').trim());
+  fd.append('contenu',      (conseil.contenu      ?? '').trim());
+  fd.append('categorie',    conseil.categorie     ?? '');
+  fd.append('type_conseil', conseil.type_conseil  ?? 'article');
+  fd.append('niveau',       conseil.niveau        ?? 'debutant');
+  fd.append('statut',       conseil.statut        ?? 'brouillon');
+  fd.append('tags',         conseil.tags          ?? '');
+  fd.append('auteur',       conseil.auteur        ?? '');
+
+  // ✅ Format YYYY-MM-DD attendu par Laravel
+  if (conseil.date_publication) {
+    const date = new Date(conseil.date_publication);
+    if (!isNaN(date.getTime())) {
+      fd.append('date_publication', date.toISOString().split('T')[0]);
+    }
+  }
+
+  if (imageFile) fd.append('image', imageFile);
+  return fd;
+}
+
+/** ✅ Mappe un item brut → Conseil avec image */
   private mapConseil(c: any): Conseil {
     if (!c) return {};
     return {
-      id: c.id != null ? Number(c.id) : undefined,
-      titre: c.titre ?? '',
-      contenu: c.contenu ?? '',
-      // Ces champs ne sont pas dans ta réponse actuelle, on met des défauts inoffensifs :
-      categorie: c.categorie ?? 'general',
-      type_conseil: c.type_conseil ?? 'article',
-      niveau: c.niveau ?? 'debutant',
-      statut: c.statut ?? (c.date_publication ? 'publie' : 'brouillon'),
-      tags: c.tags ?? '',
-      auteur: c.auteur ?? '',
-      vues: c.vues ?? 0,
+      id:               c.id != null ? Number(c.id) : undefined,
+      titre:            c.titre ?? '',
+      contenu:          c.contenu ?? '',
+      categorie:        c.categorie ?? 'general',
+      type_conseil:     c.type_conseil ?? 'article',
+      niveau:           c.niveau ?? 'debutant',
+      statut:           c.statut ?? (c.date_publication ? 'publie' : 'brouillon'),
+      tags:             c.tags ?? '',
+      auteur:           c.auteur ?? '',
+      vues:             c.vues ?? 0,
       date_publication: c.date_publication ?? null,
-      date_creation: c.created_at ?? null,
-      date_modification: c.updated_at ?? null,
+      date_creation:    c.created_at ?? null,
+      date_modification:c.updated_at ?? null,
+      image: c.image ? `${imageUrl}${c.image}` : null, // ✅ NOUVEAU
     };
   }
 
   /** Transforme la réponse Laravel paginée → ApiResponse<Conseil[]> */
   private toApiResponse(resp: any): ApiResponse<Conseil[]> {
-    const page = resp?.data; // pagination Laravel: { current_page, data, ... }
+    const page = resp?.data;
     const rawList: any[] =
       (Array.isArray(page?.data) && page.data) ||
       (Array.isArray(resp?.data) && resp.data) ||
@@ -115,39 +150,31 @@ constructor(private http: HttpClient) {}
     const content = rawList.map((c) => this.mapConseil(c));
     return {
       content,
-      success: resp?.success,
-      message: resp?.message,
+      success:       resp?.success,
+      message:       resp?.message,
       totalElements: page?.total,
-      totalPages: page?.last_page,
-      size: page?.per_page,
-      number: page?.current_page,
+      totalPages:    page?.last_page,
+      size:          page?.per_page,
+      number:        page?.current_page,
     };
   }
 
-  /** Nettoyage minimal des données à envoyer (évite d’envoyer des champs inutiles) */
-  private serialize(conseil: Conseil): any {
-    const out: any = {};
-    if (conseil.titre) out.titre = conseil.titre.trim();
-    if (conseil.contenu) out.contenu = conseil.contenu.trim();
-    if (conseil.categorie) out.categorie = conseil.categorie;
-    if (conseil.type_conseil) out.type_conseil = conseil.type_conseil;
-    if (conseil.niveau) out.niveau = conseil.niveau;
-    if (conseil.statut) out.statut = conseil.statut;
-    if (conseil.tags) out.tags = conseil.tags;
-    if (conseil.auteur) out.auteur = conseil.auteur;
-    if (conseil.date_publication) out.date_publication = conseil.date_publication;
-    return out;
-  }
-
-  /** Gestion d’erreur simple et claire */
+  /** Gestion d'erreur */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
-    let msg = 'Une erreur est survenue';
-    if (error.error instanceof ErrorEvent) {
-      msg = `Erreur client: ${error.error.message}`;
+  let msg = 'Une erreur est survenue';
+  if (error.error instanceof ErrorEvent) {
+    msg = `Erreur client: ${error.error.message}`;
+  } else {
+    // ✅ Affiche les erreurs de validation Laravel
+    if (error.status === 422 && error.error?.errors) {
+      console.error('❌ Erreurs de validation:', error.error.errors);
+      const firstError = Object.values(error.error.errors)[0] as string[];
+      msg = firstError?.[0] || 'Erreur de validation';
     } else {
       msg = error.error?.message || error.message || `Erreur HTTP ${error.status}`;
     }
-    console.error('Erreur API Conseil:', error);
-    return throwError(() => new Error(msg));
-  };
+  }
+  console.error('Erreur API Conseil:', error);
+  return throwError(() => new Error(msg));
+};
 }

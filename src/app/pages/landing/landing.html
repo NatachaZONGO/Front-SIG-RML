@@ -244,7 +244,11 @@
   <div class="cards-grid tips-grid">
     <!-- ✅ t est maintenant de type Conseil directement -->
     <div *ngFor="let t of tipsRow | slice:0:4" class="tip-card">
-      <div class="tip-header">
+    <div class="tip-thumbnail" *ngIf="t.image">
+      <img [src]="t.image" [alt]="t.titre" class="tip-thumbnail-img" />
+    </div>
+
+    <div class="tip-header">
         <h3 class="tip-title" [title]="t.titre">{{ t.titre }}</h3>
         <p-tag *ngIf="t.niveau" [value]="t.niveau" severity="secondary" styleClass="tip-level"></p-tag>
       </div>
@@ -626,6 +630,12 @@
 
     <!-- Contenu -->
     <div *ngIf="!loadingConseil && currentConseil" class="conseil-content">
+
+    <!-- ✅ Bannière image -->
+    <div class="conseil-dialog-banner" *ngIf="currentConseil.image">
+      <img [src]="currentConseil.image" [alt]="currentConseil.titre"
+          class="conseil-dialog-banner-img" />
+    </div>
       <!-- Meta informations -->
       <div class="conseil-meta">
         <p-tag *ngIf="currentConseil.categorie" [value]="currentConseil.categorie" 
@@ -2823,6 +2833,41 @@ html, body { overflow-x: hidden; }
   .static-banner-img {
     border-radius: 0.5rem;
   }
+}
+
+/* ===== MINIATURE CARTE CONSEIL ===== */
+.tip-thumbnail {
+  width: calc(100% + 2.5rem);
+  height: 160px;
+  margin: -1.25rem -1.25rem 1rem;
+  overflow: hidden;
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.tip-thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.tip-card:hover .tip-thumbnail-img {
+  transform: scale(1.05);
+}
+
+/* ===== BANNIÈRE IMAGE DIALOG CONSEIL ===== */
+.conseil-dialog-banner {
+  width: 100%;
+  height: 200px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.conseil-dialog-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>
 

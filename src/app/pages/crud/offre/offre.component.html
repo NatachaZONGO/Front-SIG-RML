@@ -46,6 +46,7 @@
   [(selection)]="selectedOffres"
   [globalFilterFields]="['titre','entreprise.nom_entreprise','type_offre','localisation','statut','experience']"
   [tableStyle]="{ 'min-width': '100rem' }"
+  styleClass="sticky-table"
   [rowHover]="true"
   dataKey="id"
   currentPageReportTemplate="Affichage de {first} à {last} sur {totalRecords} offres"
@@ -73,8 +74,10 @@
 
   <ng-template pTemplate="header">
     <tr>
-      <th style="width: 3rem"><p-tableHeaderCheckbox></p-tableHeaderCheckbox></th>
-      <th pSortableColumn="titre" style="min-width: 200px">
+      <th class="col-sticky-left col-sticky-check" style="width: 3rem">
+        <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+      </th>
+      <th pSortableColumn="titre" class="col-sticky-left col-sticky-titre" style="min-width: 180px; max-width: 220px; width: 220px">
         Titre <p-sortIcon field="titre"></p-sortIcon>
       </th>
       <th pSortableColumn="entreprise.nom_entreprise" style="min-width: 180px" *canSee="['Administrateur']">
@@ -107,25 +110,25 @@
       <th pSortableColumn="date_validation" style="min-width: 130px">
         Date Validation <p-sortIcon field="date_validation"></p-sortIcon>
       </th>
-      <th pSortableColumn="statut" style="min-width: 140px">
-        Statut <p-sortIcon field="statut"></p-sortIcon>
-      </th>
       <th pSortableColumn="vues" style="min-width: 100px">
         Vedettes <p-sortIcon field="vues"></p-sortIcon>
       </th>
       <th pSortableColumn="created_at" style="min-width: 130px">
         Créée le <p-sortIcon field="created_at"></p-sortIcon>
       </th>
-      <th style="min-width: 200px">Actions</th>
+      <th pSortableColumn="statut" class="col-sticky-right col-sticky-statut" style="min-width: 140px">
+        Statut <p-sortIcon field="statut"></p-sortIcon>
+      </th>
+      <th class="col-sticky-right col-sticky-actions" style="min-width: 200px">Actions</th>
     </tr>
   </ng-template>
 
   <ng-template pTemplate="body" let-offre>
     <tr>
-      <td style="width: 3rem">
+      <td class="col-sticky-left col-sticky-check" style="width: 3rem">
         <p-tableCheckbox [value]="offre" />
       </td>
-      <td style="min-width: 200px">
+      <td class="col-sticky-left col-sticky-titre" style="min-width: 180px; max-width: 220px; width: 220px">
         <div class="flex flex-col">
           <span class="font-semibold truncate" [title]="offre.titre">{{ offre.titre }}</span>
           <small class="text-gray-500 truncate" [title]="getPlainText(offre.description)">
@@ -186,18 +189,7 @@
         <span *ngIf="!offre.date_validation" class="text-gray-500 italic">Non validée</span>
       </td>
 
-      <td style="min-width: 140px">
-        <div class="flex flex-col gap-1">
-          <p-tag [value]="offre.statut" [severity]="getStatutSeverity(offre.statut)"></p-tag>
-          <div *ngIf="offre.motif_rejet && offre.statut === 'rejetee'" class="text-xs text-red-600 p-2 bg-red-50 rounded border">
-            <i class="pi pi-exclamation-circle mr-1"></i>
-            <span>{{ offre.motif_rejet }}</span>
-          </div>
-          <div *ngIf="offre.validateur" class="text-xs text-gray-500">
-            Validé par: {{ offre.validateur?.firstname }} {{ offre.validateur?.lastname }}
-          </div>
-        </div>
-      </td>
+      
 
       <td style="min-width: 120px">
         <div class="flex flex-col">
@@ -215,8 +207,19 @@
       <td style="min-width: 130px">
         <span class="text-sm text-gray-500">{{ offre.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
       </td>
-
-      <td style="min-width: 200px">
+      <td class="col-sticky-right col-sticky-statut" style="min-width: 140px">
+        <div class="flex flex-col gap-1">
+          <p-tag [value]="offre.statut" [severity]="getStatutSeverity(offre.statut)"></p-tag>
+          <div *ngIf="offre.motif_rejet && offre.statut === 'rejetee'" class="text-xs text-red-600 p-2 bg-red-50 rounded border">
+            <i class="pi pi-exclamation-circle mr-1"></i>
+            <span>{{ offre.motif_rejet }}</span>
+          </div>
+          <div *ngIf="offre.validateur" class="text-xs text-gray-500">
+            Validé par: {{ offre.validateur?.firstname }} {{ offre.validateur?.lastname }}
+          </div>
+        </div>
+      </td>
+      <td class="col-sticky-right col-sticky-actions" style="min-width: 200px">
         <div class="flex flex-wrap gap-1">
           <p-button *canSee="['Administrateur','Recruteur']"
             icon="pi pi-eye" [rounded]="true" [outlined]="true" size="small" severity="info"
@@ -937,5 +940,92 @@
 /* Responsive */
 @media (max-width: 640px) {
   ::ng-deep .offre-dialog-enhanced .p-dialog { margin: 0.5rem !important; width: calc(100% - 1rem) !important; }
+}
+
+/* ===== COLONNES STICKY ===== */
+
+/* Active le scroll horizontal sur le wrapper du tableau */
+::ng-deep .sticky-table .p-datatable-wrapper {
+  overflow-x: auto !important;
+}
+
+/* ===== GAUCHE : Checkbox + Titre ===== */
+::ng-deep .sticky-table .col-sticky-left {
+  position: sticky !important;
+  z-index: 3;
+  background: white;
+  box-shadow: 2px 0 4px rgba(0,0,0,0.06);
+}
+
+::ng-deep .sticky-table .col-sticky-check {
+  left: 0 !important;
+  width: 3rem;
+  min-width: 3rem;
+  max-width: 3rem;
+}
+
+::ng-deep .sticky-table .col-sticky-titre {
+  left: 3rem !important; /* après la checkbox */
+}
+/* Ajoute après .col-sticky-titre dans le style existant */
+::ng-deep .sticky-table .col-sticky-titre {
+  left: 3rem !important;
+  max-width: 220px !important;
+  width: 220px !important;
+}
+
+/* Tronquer le texte du titre trop long */
+::ng-deep .sticky-table .col-sticky-titre .truncate {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* ===== DROITE : Statut + Actions ===== */
+::ng-deep .sticky-table .col-sticky-right {
+  position: sticky !important;
+  z-index: 3;
+  background: white;
+  box-shadow: -2px 0 4px rgba(0,0,0,0.06);
+}
+
+::ng-deep .sticky-table .col-sticky-actions {
+  right: 0 !important;
+}
+
+::ng-deep .sticky-table .col-sticky-statut {
+  right: 200px !important; /* largeur de la colonne Actions */
+}
+
+/* Header sticky (z-index plus élevé pour passer au-dessus du body) */
+::ng-deep .sticky-table .p-datatable-thead > tr > .col-sticky-left,
+::ng-deep .sticky-table .p-datatable-thead > tr > .col-sticky-right {
+  z-index: 4 !important;
+  background: #f8fafc !important;
+}
+
+/* Hover sur les lignes — maintenir le fond sur les colonnes sticky */
+::ng-deep .sticky-table .p-datatable-tbody > tr:hover > .col-sticky-left,
+::ng-deep .sticky-table .p-datatable-tbody > tr:hover > .col-sticky-right {
+  background: #f8fafc !important;
+}
+
+/* Ligne sélectionnée */
+::ng-deep .sticky-table .p-datatable-tbody > tr.p-highlight > .col-sticky-left,
+::ng-deep .sticky-table .p-datatable-tbody > tr.p-highlight > .col-sticky-right {
+  background: #eff6ff !important;
+}
+
+/* ===== TOUTES LES EN-TÊTES : même fond gris ===== */
+::ng-deep .sticky-table .p-datatable-thead > tr > th {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  font-weight: 700 !important;
+  font-size: 0.8125rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  border-bottom: 2px solid #e2e8f0 !important;
 }
 </style>
