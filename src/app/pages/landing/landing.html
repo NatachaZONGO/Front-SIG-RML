@@ -319,7 +319,9 @@
           <i class="pi pi-file-edit"></i>
           Description du poste
         </h3>
-        <div class="offer-content-html" lang="fr" [innerHTML]="getSafeHtml(d.description || '')"></div>
+        <div class="offer-content-html" lang="fr"
+            [innerHTML]="selectedOffreSafeHtml">
+        </div>
       </div>
 
       <!-- Footer avec actions -->
@@ -2868,6 +2870,18 @@ html, body { overflow-x: hidden; }
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ✅ LIENS CLIQUABLES DANS CONTENU OFFRE */
+.offer-content-html a {
+  color: #111d9d !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
+
+.offer-content-html a:hover {
+  color: #ff7104 !important;
 }
 </style>
 

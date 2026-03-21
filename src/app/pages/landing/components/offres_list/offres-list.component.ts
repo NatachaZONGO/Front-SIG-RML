@@ -25,6 +25,7 @@ import { ProfileService } from '../../../crud/profil/profil.service';
 import { FooterWidget } from '../footerwidget';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
+
 @Component({
   selector: 'app-offres-list',
   standalone: true,
@@ -76,6 +77,7 @@ export class OffresListComponent implements OnInit {
   routeOfferId: string | null = null;
   highlightId: number | null = null;
 
+  selectedOffreSafeHtml: SafeHtml | null = null;
 
   apply: any = {
     nom: '', prenom: '', email: '', ville: '', date_naissance: '',
@@ -110,6 +112,8 @@ export class OffresListComponent implements OnInit {
     console.log('%c🏗️ CONSTRUCTION', 'background: #222; color: #bada55; font-size: 16px; padding: 4px;');
   }
 
+  private linksPatched = false;
+
   ngOnInit(): void {
   this.detectAuthentication();
   
@@ -122,8 +126,41 @@ export class OffresListComponent implements OnInit {
   
 }
 
-  getSafeHtml(html: string): SafeHtml {
-  return this.sanitizer.bypassSecurityTrustHtml(html || '');
+  // ✅ MODIFIÉ — Force target="_blank" sur tous les liens
+getSafeHtml(html: string): SafeHtml {
+  if (!html) return this.sanitizer.bypassSecurityTrustHtml('');
+
+  // Forcer target="_blank" sur tous les liens qui ne l'ont pas encore
+  const processed = html.replace(
+    /<a(?![^>]*target=)([^>]*href=)/gi,
+    '<a target="_blank" rel="noopener noreferrer"$1'
+  );
+
+  return this.sanitizer.bypassSecurityTrustHtml(processed);
+}
+
+// ✅ NOUVEAU — Clic sur un lien dans le contenu HTML → ouvre dans un nouvel onglet
+// ✅ VERSION ROBUSTE — Gestion des clics sur les liens
+onContentLinkClick(event: MouseEvent): void {
+  // Cherche le lien depuis la cible du clic
+  let el = event.target as HTMLElement | null;
+
+  // Remonte jusqu'à trouver un <a> (max 5 niveaux)
+  let depth = 0;
+  while (el && depth < 5) {
+    if (el.tagName?.toLowerCase() === 'a') {
+      const href = (el as HTMLAnchorElement).getAttribute('href')
+                || (el as HTMLAnchorElement).href;
+      if (href) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.open(href, '_blank', 'noopener,noreferrer');
+        return;
+      }
+    }
+    el = el.parentElement;
+    depth++;
+  }
 }
   private detectAuthentication(): void {
     console.log('%c🔍 DÉTECTION AUTHENTIFICATION', 'background: purple; color: white; font-size: 14px; padding: 4px;');
@@ -408,7 +445,21 @@ private fetchAllPages(page: number, accumulated: Offre[]): void {
     const end = fu instanceof Date ? fu.getTime() : new Date(fu).getTime();
     return !isNaN(end) ? end > Date.now() : true;
   }
-  openOffreDetails(o: Offre) { this.selectedOffre = o; this.detailsVisible = true; }
+  openOffreDetails(o: Offre) {
+    this.selectedOffre = o;
+    this.selectedOffreSafeHtml = this.buildSafeHtml(o.description || ''); // ✅
+    this.detailsVisible = true;
+  }
+
+  buildSafeHtml(html: string): SafeHtml {
+    if (!html) return this.sanitizer.bypassSecurityTrustHtml('');
+    const processed = html
+      .replace(/<a(?![^>]*target=)([^>]*href=)/gi,
+        '<a target="_blank" rel="noopener noreferrer"$1')
+      .replace(/<a /gi,
+        '<a style="color:#111d9d;text-decoration:underline;cursor:pointer;" ');
+    return this.sanitizer.bypassSecurityTrustHtml(processed);
+  }
   goToJob(id: number) { this.router.navigate(['/offres', id]); }
   onApplyFile(e: Event) { this.cvFile = (e.target as HTMLInputElement).files?.[0] || null; }
   onApplyLmFile(e: Event) { this.lmFile = (e.target as HTMLInputElement).files?.[0] || null; }
@@ -521,4 +572,28 @@ getBannerSrc(index: number): string {
   ];
   return banners[index % banners.length];
 }
+
+// ✅ NOUVEAU — Attache les event listeners directement sur les <a>
+  private patchLinks(): void {
+    const container = document.querySelector('.offer-content-html');
+    if (!container) return;
+
+    const links = container.querySelectorAll('a[href]');
+    if (links.length === 0) return;
+
+    links.forEach(link => {
+      // Évite de doubler les listeners
+      if ((link as any).__patched) return;
+      (link as any).__patched = true;
+
+      link.addEventListener('click', (e: Event) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const href = (link as HTMLAnchorElement).getAttribute('href') || '';
+        if (href) window.open(href, '_blank', 'noopener,noreferrer');
+      });
+    });
+
+    this.linksPatched = true;
+  }
 }

@@ -76,44 +76,36 @@ export class OffreComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private readonly ALLOW_ALL = true;
 
-  // UI state
   offreDialog = false;
   rejetDialog = false;
   submitted = false;
   detailsDialog = false;
   featureDialogVisible = false;
 
-  // ✅ Éditeur contenteditable
   @ViewChild('editorDiv') editorDiv!: ElementRef<HTMLDivElement>;
   private editorSelection: { node: Node; offset: number } | null = null;
 
-  // Dialog tableau
   showTableDialog = false;
   tableRows = 3;
   tableCols = 3;
 
   selectedOffres: Offre[] = [];
   selectedOffreForDetails?: Offre;
-
   selectedEntrepriseCM: any = null;
 
-  // Signals
   offres = signal<Offre[]>([]);
   loading = signal<boolean>(false);
 
-  // Data
   offre!: Offre;
   categories: any[] = [];
   role = '';
   motifRejet = '';
   minDate = new Date();
 
-  // Table
   @ViewChild('dt') dt!: Table;
   cols!: Column[];
   exportColumns!: ExportColumn[];
 
-  // Vedette (feature) UI
   featureForm = {
     sponsored_level: 1 as number,
     mode: 'duration' as 'duration' | 'until',
@@ -195,11 +187,33 @@ export class OffreComponent implements OnInit, OnDestroy {
     this.onEditorInput();
   }
 
+  // ✅ MODIFIÉ — Lien cliquable avec target="_blank"
   insertLink(): void {
-    const url = prompt('URL du lien :');
-    if (url) {
-      document.execCommand('createLink', false, url);
-      this.onEditorInput();
+    const url = prompt('URL du lien (ex: https://exemple.com) :');
+    if (!url) return;
+
+    // Ajoute https:// si manquant
+    const fullUrl = url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : 'https://' + url;
+
+    // Texte sélectionné ou URL comme texte par défaut
+    const sel = window.getSelection();
+    const selectedText = sel && !sel.isCollapsed ? sel.toString() : fullUrl;
+
+    // Insérer le lien avec target="_blank" et styles
+    const linkHtml = `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" style="color:#111d9d;text-decoration:underline;font-weight:500;">${selectedText}</a>`;
+    document.execCommand('insertHTML', false, linkHtml);
+    this.onEditorInput();
+  }
+
+  // ✅ NOUVEAU — Clic sur un lien dans l'éditeur → ouvre dans un nouvel onglet
+  onEditorClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    const link = target.closest('a') as HTMLAnchorElement | null;
+    if (link && link.href) {
+      event.preventDefault();
+      window.open(link.href, '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -234,98 +248,110 @@ export class OffreComponent implements OnInit, OnDestroy {
     this.showTableDialog = true;
   }
 
-insertTable(): void {
-  const rows = Math.max(1, Math.min(this.tableRows || 3, 20));
-  const cols = Math.max(1, Math.min(this.tableCols || 3, 10));
+  insertTable(): void {
+    const rows = Math.max(1, Math.min(this.tableRows || 3, 20));
+    const cols = Math.max(1, Math.min(this.tableCols || 3, 10));
 
-  const editor = this.editorDiv?.nativeElement;
-  if (!editor) return;
+    const editor = this.editorDiv?.nativeElement;
+    if (!editor) return;
 
-  // ✅ Styles inline directs — indépendants du CSS Angular
-  const tableStyle = 'border-collapse:collapse;width:100%;margin:12px 0;table-layout:fixed;';
-  const thStyle    = 'border:2px solid #94a3b8;padding:8px 12px;background:#e2e8f0;font-weight:700;text-align:left;min-width:80px;';
-  const tdStyle    = 'border:2px solid #94a3b8;padding:8px 12px;min-width:80px;background:#ffffff;';
+    const tableStyle = 'border-collapse:collapse;width:100%;margin:12px 0;table-layout:fixed;';
+    const thStyle    = 'border:2px solid #94a3b8;padding:8px 12px;background:#e2e8f0;font-weight:700;text-align:left;min-width:80px;';
+    const tdStyle    = 'border:2px solid #94a3b8;padding:8px 12px;min-width:80px;background:#ffffff;';
 
-  const table = document.createElement('table');
-  table.setAttribute('style', tableStyle);
+    const table = document.createElement('table');
+    table.setAttribute('style', tableStyle);
 
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  for (let c = 0; c < cols; c++) {
-    const th = document.createElement('th');
-    th.setAttribute('style', thStyle);
-    th.textContent = `En-tête ${c + 1}`;
-    headerRow.appendChild(th);
-  }
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  for (let r = 1; r < rows; r++) {
-    const tr = document.createElement('tr');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
     for (let c = 0; c < cols; c++) {
-      const td = document.createElement('td');
-      td.setAttribute('style', tdStyle);
-      td.innerHTML = '&nbsp;';
-      tr.appendChild(td);
+      const th = document.createElement('th');
+      th.setAttribute('style', thStyle);
+      th.textContent = `En-tête ${c + 1}`;
+      headerRow.appendChild(th);
     }
-    tbody.appendChild(tr);
-  }
-  table.appendChild(tbody);
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
 
-  const p = document.createElement('p');
-  p.innerHTML = '<br>';
-
-  // ✅ Insertion dans le DOM
-  const sel = window.getSelection();
-  if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
-    const range = sel.getRangeAt(0);
-    let node: Node = range.startContainer;
-    while (node.parentNode && node.parentNode !== editor) {
-      node = node.parentNode;
+    const tbody = document.createElement('tbody');
+    for (let r = 1; r < rows; r++) {
+      const tr = document.createElement('tr');
+      for (let c = 0; c < cols; c++) {
+        const td = document.createElement('td');
+        td.setAttribute('style', tdStyle);
+        td.innerHTML = '&nbsp;';
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
     }
-    if (node.parentNode === editor) {
-      editor.insertBefore(table, node.nextSibling);
-      editor.insertBefore(p, table.nextSibling);
+    table.appendChild(tbody);
+
+    const p = document.createElement('p');
+    p.innerHTML = '<br>';
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editor.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+      const range = sel.getRangeAt(0);
+      let node: Node = range.startContainer;
+      while (node.parentNode && node.parentNode !== editor) {
+        node = node.parentNode;
+      }
+      if (node.parentNode === editor) {
+        editor.insertBefore(table, node.nextSibling);
+        editor.insertBefore(p, table.nextSibling);
+      } else {
+        editor.appendChild(table);
+        editor.appendChild(p);
+      }
     } else {
       editor.appendChild(table);
       editor.appendChild(p);
     }
-  } else {
-    editor.appendChild(table);
-    editor.appendChild(p);
+
+    this.offre.description = editor.innerHTML;
+
+    setTimeout(() => {
+      const firstCell = table.querySelector('th') as HTMLElement;
+      if (firstCell) {
+        firstCell.focus();
+        const r = document.createRange();
+        r.selectNodeContents(firstCell);
+        r.collapse(false);
+        const s = window.getSelection();
+        s?.removeAllRanges();
+        s?.addRange(r);
+      }
+    }, 50);
+
+    this.showTableDialog = false;
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Tableau inséré ✓',
+      detail: `Tableau ${rows}×${cols} — Cliquez sur une cellule pour modifier`,
+      life: 3000
+    });
   }
 
-  // ✅ Sync modèle Angular
-  this.offre.description = editor.innerHTML;
-
-  // ✅ Curseur dans la première cellule
-  setTimeout(() => {
-    const firstCell = table.querySelector('th') as HTMLElement;
-    if (firstCell) {
-      firstCell.focus();
-      const r = document.createRange();
-      r.selectNodeContents(firstCell);
-      r.collapse(false);
-      const s = window.getSelection();
-      s?.removeAllRanges();
-      s?.addRange(r);
-    }
-  }, 50);
-
-  this.showTableDialog = false;
-
-  this.messageService.add({
-    severity: 'success',
-    summary: 'Tableau inséré ✓',
-    detail: `Tableau ${rows}×${cols} — Cliquez sur une cellule pour modifier`,
-    life: 3000
-  });
-}
-
+  // ✅ MODIFIÉ — Force target="_blank" sur tous les liens dans le dialog détails
   getSafeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html || '');
+    if (!html) return this.sanitizer.bypassSecurityTrustHtml('');
+
+    // Forcer target="_blank" sur tous les liens qui ne l'ont pas encore
+    const processed = html.replace(
+      /<a\s/gi,
+      (match) => {
+        // Si le lien a déjà target=, ne pas doubler
+        return match;
+      }
+    ).replace(
+      /<a(?![^>]*target=)([^>]*href=)/gi,
+      '<a target="_blank" rel="noopener noreferrer"$1'
+    );
+
+    return this.sanitizer.bypassSecurityTrustHtml(processed);
   }
+
   // ========== LIFECYCLE ==========
 
   ngOnInit(): void {
@@ -377,7 +403,6 @@ insertTable(): void {
 
   loadInitialData(): void {
     this.loading.set(true);
-
     forkJoin({ categories: this.offreService.getCategories() })
       .pipe(takeUntil(this.destroy$), finalize(() => this.loading.set(false)))
       .subscribe({
@@ -540,7 +565,7 @@ insertTable(): void {
 
     this.submitted = false;
     this.offreDialog = true;
-    this.initEditor(); // ✅ Après avoir défini this.offre
+    this.initEditor();
   }
 
   editOffre(offre: Offre): void {
@@ -553,7 +578,7 @@ insertTable(): void {
     }
     this.submitted = false;
     this.offreDialog = true;
-    this.initEditor(); // ✅ Après avoir défini this.offre
+    this.initEditor();
   }
 
   hideDialog(): void {

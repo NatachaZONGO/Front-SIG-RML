@@ -540,7 +540,8 @@
               (input)="onEditorInput()"
               (keydown)="onEditorKeydown($event)"
               (mouseup)="saveEditorSelection()"
-              (keyup)="saveEditorSelection()">
+              (keyup)="saveEditorSelection()"
+              (click)="onEditorClick($event)">
             </div>
 
             <small class="text-red-500 text-xs" *ngIf="submitted && !offre.description">
@@ -1027,5 +1028,31 @@
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
   border-bottom: 2px solid #e2e8f0 !important;
+}
+
+/* ===== LIENS DANS L'ÉDITEUR ===== */
+.editor-content a {
+  color: #111d9d !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.editor-content a:hover {
+  color: #ff7104 !important;
+}
+
+/* ===== LIENS DANS LE DIALOG DÉTAILS ===== */
+::ng-deep .offer-description a {
+  color: #111d9d !important;
+  text-decoration: underline !important;
+  font-weight: 500;
+  cursor: pointer !important;
+  transition: color 0.2s ease;
+}
+
+::ng-deep .offer-description a:hover {
+  color: #ff7104 !important;
 }
 </style>

@@ -146,7 +146,7 @@
                 required
                 placeholder="Ex: Kaboré Jean"
                 class="form-input"
-                [class.input-error]="submitted && contactForm.controls['nom']?.invalid" />
+                [class.input-error]="submitted && contactForm.controls['nom'].invalid" />
             </div>
             <small class="error-msg"
               *ngIf="submitted && contactForm.controls['nom']?.invalid">
@@ -165,10 +165,10 @@
                 required email
                 placeholder="votre@email.com"
                 class="form-input"
-                [class.input-error]="submitted && contactForm.controls['email']?.invalid" />
+                [class.input-error]="submitted && contactForm.controls['email'].invalid" />
             </div>
             <small class="error-msg"
-              *ngIf="submitted && contactForm.controls['email']?.invalid">
+              *ngIf="submitted && contactForm.controls['email'].invalid">
               Veuillez saisir un email valide.
             </small>
           </div>
@@ -200,10 +200,10 @@
               placeholder="Choisir un sujet"
               [style]="{ width: '100%' }"
               styleClass="form-select"
-              [class.input-error]="submitted && contactForm.controls['sujet']?.invalid">
+              [class.input-error]="submitted && contactForm.controls['sujet'].invalid">
             </p-select>
             <small class="error-msg"
-              *ngIf="submitted && contactForm.controls['sujet']?.invalid">
+              *ngIf="submitted && contactForm.controls['sujet'].invalid">
               Veuillez choisir un sujet.
             </small>
           </div>
@@ -219,11 +219,11 @@
             rows="6"
             placeholder="Décrivez votre demande en détail..."
             class="form-textarea"
-            [class.input-error]="submitted && contactForm.controls['message']?.invalid"
+            [class.input-error]="submitted && contactForm.controls['message'].invalid"
             autoResize="true">
           </textarea>
           <small class="error-msg"
-            *ngIf="submitted && contactForm.controls['message']?.invalid">
+            *ngIf="submitted && contactForm.controls['message'].invalid">
             Le message est obligatoire.
           </small>
           <small class="char-count">
